@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* FullCalendar - style de base */
+.fc {
+  font-family: 'Inter', sans-serif;
+}
+
+.fc-toolbar {
+  margin-bottom: 1rem;
+}
+
+.fc-button {
+  background-color: #fbbf24; /* jaune Tailwind */
+  color: black;
+  border: none;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.fc-button:hover {
+  background-color: #f59e0b;
+}
+
+.fc-event {
+  background-color: #fbbf24;
+  color: black;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  padding: 2px;
+}
+
+.fc-daygrid-day-number {
+  font-weight: 600;
+}
+
