@@ -53,11 +53,11 @@ export default function RampesGardexApp() {
 
   // === DONNÉES ===
   const [commandes, setCommandes] = useState([
-    { id: 1, num: 'CMD-2024-001', client: 'Construction Leblanc', representant: 'Marc Dupont', type: 'Standard', statut: 'Active', dateInstallation: '2026-01-28', heuresEstimees: 6, heuresReelles: null, notes: 'Rampe aluminium 12 pieds', enProduction: true, productionTerminee: false, adresse: '123 Rue Principale, Montréal', equipe: 'Équipe A' },
-    { id: 2, num: 'CMD-2024-002', client: 'Rénovations ABC', representant: 'Julie Tremblay', type: 'Commercial', statut: 'Active', dateInstallation: '2026-01-29', heuresEstimees: 12, heuresReelles: null, notes: 'Projet commercial - 3 rampes', enProduction: true, productionTerminee: false, adresse: '456 Boul. St-Laurent, Laval', equipe: 'Équipe B' },
-    { id: 3, num: 'CMD-2024-003', client: 'Gestion Immobilière XYZ', representant: 'Pierre Roy', type: 'Multi-phases', statut: 'Active', dateInstallation: '2026-01-30', heuresEstimees: 24, heuresReelles: null, notes: 'Multi-logements - Phase 1', enProduction: false, productionTerminee: false, adresse: '789 Ave du Parc, Longueuil', equipe: null },
-    { id: 4, num: 'CMD-2024-004', client: 'Résidence Soleil', representant: 'Marc Dupont', type: 'Standard', statut: 'Complétée', dateInstallation: '2026-01-20', heuresEstimees: 4, heuresReelles: 5, notes: 'Installation complétée', enProduction: false, productionTerminee: true, dateCompletion: '2026-01-20', adresse: '321 Rue du Soleil, Brossard', equipe: 'Équipe A' },
-    { id: 5, num: 'CMD-2024-005', client: 'Centre Médical Plus', representant: 'Julie Tremblay', type: 'Commercial', statut: 'Complétée', dateInstallation: '2026-01-18', heuresEstimees: 8, heuresReelles: 7, notes: 'Projet terminé sous budget', enProduction: false, productionTerminee: true, dateCompletion: '2026-01-18', adresse: '654 Boul. Santé, Terrebonne', equipe: 'Équipe C' },
+    { id: 1, num: 'CMD-2024-001', client: 'Construction Leblanc', representant: 'Marc Dupont', type: 'Standard', activite: 'Installation', statut: 'Active', dateInstallation: '2026-01-28', heuresEstimees: 6, heuresReelles: null, notes: 'Rampe aluminium 12 pieds', enProduction: true, productionTerminee: false, adresse: '123 Rue Principale, Montréal', equipe: 'Équipe A' },
+    { id: 2, num: 'CMD-2024-002', client: 'Rénovations ABC', representant: 'Julie Tremblay', type: 'Commercial', activite: 'Livraison', statut: 'Active', dateInstallation: '2026-01-29', heuresEstimees: 12, heuresReelles: null, notes: 'Projet commercial - 3 rampes', enProduction: true, productionTerminee: false, adresse: '456 Boul. St-Laurent, Laval', equipe: 'Équipe B' },
+    { id: 3, num: 'CMD-2024-003', client: 'Gestion Immobilière XYZ', representant: 'Pierre Roy', type: 'Multi-phases', activite: 'Transport', statut: 'Active', dateInstallation: '2026-01-30', heuresEstimees: 24, heuresReelles: null, notes: 'Multi-logements - Phase 1', enProduction: false, productionTerminee: false, adresse: '789 Ave du Parc, Longueuil', equipe: null },
+    { id: 4, num: 'CMD-2024-004', client: 'Résidence Soleil', representant: 'Marc Dupont', type: 'Standard', activite: 'Cueillette', statut: 'Complétée', dateInstallation: '2026-01-20', heuresEstimees: 4, heuresReelles: 5, notes: 'Installation complétée', enProduction: false, productionTerminee: true, dateCompletion: '2026-01-20', adresse: '321 Rue du Soleil, Brossard', equipe: 'Équipe A' },
+    { id: 5, num: 'CMD-2024-005', client: 'Centre Médical Plus', representant: 'Julie Tremblay', type: 'Commercial', activite: 'Installation', statut: 'Complétée', dateInstallation: '2026-01-18', heuresEstimees: 8, heuresReelles: 7, notes: 'Projet terminé sous budget', enProduction: false, productionTerminee: true, dateCompletion: '2026-01-18', adresse: '654 Boul. Santé, Terrebonne', equipe: 'Équipe C' },
   ]);
 
   const [inventaire] = useState([
@@ -133,6 +133,49 @@ export default function RampesGardexApp() {
   ];
 
   // === FONCTIONS ===
+  // Couleurs selon la politique: Cueillette=jaune, Livraison=bleu, Installation=rouge, Transport=vert
+  const getActiviteColor = (activite) => {
+    switch(activite) {
+      case 'Cueillette': return 'text-yellow-900';
+      case 'Livraison': return 'text-blue-900';
+      case 'Installation': return 'text-white';
+      case 'Transport': return 'text-white';
+      default: return 'text-slate-800';
+    }
+  };
+
+  const getActiviteBgColor = (activite) => {
+    switch(activite) {
+      case 'Cueillette': return 'bg-yellow-400 text-yellow-900';
+      case 'Livraison': return 'bg-blue-500 text-white';
+      case 'Installation': return 'bg-red-600 text-white';
+      case 'Transport': return 'bg-green-500 text-white';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  };
+
+  // Couleur de fond pour les cartes complètes (style calendrier) - TRÈS VISIBLE
+  const getActiviteCardBg = (activite) => {
+    switch(activite) {
+      case 'Cueillette': return 'bg-yellow-400 border-yellow-500 text-yellow-900';
+      case 'Livraison': return 'bg-blue-500 border-blue-600 text-white';
+      case 'Installation': return 'bg-red-600 border-red-700 text-white';
+      case 'Transport': return 'bg-green-500 border-green-600 text-white';
+      default: return 'bg-slate-200 border-slate-300 text-slate-800';
+    }
+  };
+
+  // Couleur de fond pour les lignes de tableau
+  const getActiviteRowBg = (activite) => {
+    switch(activite) {
+      case 'Cueillette': return 'bg-yellow-50 hover:bg-yellow-100';
+      case 'Livraison': return 'bg-blue-50 hover:bg-blue-100';
+      case 'Installation': return 'bg-red-50 hover:bg-red-100';
+      case 'Transport': return 'bg-green-50 hover:bg-green-100';
+      default: return 'hover:bg-slate-50';
+    }
+  };
+
   const completeCommande = (id) => {
     setCommandes(prev => prev.map(cmd => 
       cmd.id === id ? { ...cmd, statut: 'Complétée', dateCompletion: '2026-01-22' } : cmd
@@ -205,9 +248,9 @@ export default function RampesGardexApp() {
             <div>
               <p className="text-slate-500 text-sm font-medium">Installations aujourd'hui</p>
               <p className="text-4xl font-bold text-slate-800 mt-3">3</p>
-              <p className="text-xs text-blue-600 font-medium mt-2">Voir le calendrier →</p>
+              <p className="text-xs text-red-600 font-medium mt-2">Voir le calendrier →</p>
             </div>
-            <div className="p-3 bg-blue-50 rounded-xl text-blue-500"><Icon name="wrench" size={28}/></div>
+            <div className="p-3 bg-red-50 rounded-xl text-red-500"><Icon name="wrench" size={28}/></div>
           </div>
         </div>
 
@@ -239,14 +282,15 @@ export default function RampesGardexApp() {
           <h2 className="text-lg font-bold text-slate-800 mb-4">Prochaines installations</h2>
           <div className="space-y-3">
             {commandes.filter(c => c.statut === 'Active').slice(0, 3).map(cmd => (
-              <div key={cmd.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+              <div key={cmd.id} className={`flex items-center justify-between p-3 rounded-xl border-2 ${getActiviteCardBg(cmd.activite)}`}>
                 <div>
-                  <p className="font-semibold text-slate-800">{cmd.client}</p>
-                  <p className="text-sm text-slate-500">{cmd.num}</p>
+                  <p className="font-bold">{cmd.client}</p>
+                  <p className="text-sm font-medium opacity-90">{cmd.num}</p>
+                  <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-slate-700">{cmd.dateInstallation}</p>
-                  <p className="text-xs text-slate-500">{cmd.equipe || 'Non assigné'}</p>
+                  <p className="text-sm font-medium">{cmd.dateInstallation}</p>
+                  <p className="text-xs opacity-75">{cmd.equipe || 'Non assigné'}</p>
                 </div>
               </div>
             ))}
@@ -426,8 +470,13 @@ export default function RampesGardexApp() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredCommandes.map(cmd => (
-                <tr key={cmd.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 font-mono font-semibold text-slate-800">{cmd.num}</td>
+                <tr key={cmd.id} className={`${getActiviteRowBg(cmd.activite)} transition-colors`}>
+                  <td className="px-6 py-4">
+                    <div className={`inline-block px-4 py-2 rounded-lg border-2 shadow-sm ${getActiviteCardBg(cmd.activite)}`}>
+                      <span className="font-mono font-bold text-sm">{cmd.num}</span>
+                      <p className="text-xs font-semibold mt-0.5 opacity-90">{cmd.activite}</p>
+                    </div>
+                  </td>
                   <td className="px-6 py-4">
                     <div className="font-medium text-slate-800">{cmd.client}</div>
                     <div className="text-sm text-slate-500">{cmd.representant}</div>
@@ -497,12 +546,13 @@ export default function RampesGardexApp() {
                   </div>
                   <div className="space-y-2">
                     {commandes.filter(c => c.statut === 'Active' && c.dateInstallation === `2026-01-${weekDates[index]}`).map(cmd => (
-                      <div key={cmd.id} onClick={() => toggleProduction(cmd.id)} className={`p-3 rounded-lg text-sm cursor-pointer transition-all ${cmd.enProduction ? 'bg-emerald-100 border border-emerald-200' : 'bg-slate-100 hover:bg-slate-200'}`}>
+                      <div key={cmd.id} onClick={() => toggleProduction(cmd.id)} className={`p-3 rounded-lg text-sm cursor-pointer transition-all border-2 ${cmd.enProduction ? 'ring-2 ring-offset-1 ring-slate-800' : ''} ${getActiviteCardBg(cmd.activite)}`}>
                         <div className="flex items-center gap-2">
                           <input type="checkbox" checked={cmd.enProduction} onChange={() => {}} className="w-4 h-4 rounded"/>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-slate-800 truncate">{cmd.num}</p>
-                            <p className="text-xs text-slate-500 truncate">{cmd.client}</p>
+                            <p className="font-bold truncate">{cmd.num}</p>
+                            <p className="text-xs opacity-90 truncate">{cmd.client}</p>
+                            <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
                           </div>
                         </div>
                       </div>
@@ -535,14 +585,15 @@ export default function RampesGardexApp() {
             ) : (
               <div className="divide-y divide-slate-100">
                 {commandesEnProduction.map(cmd => (
-                  <div key={cmd.id} className="p-4 hover:bg-slate-50 flex items-center justify-between">
+                  <div key={cmd.id} className={`p-4 flex items-center justify-between ${getActiviteRowBg(cmd.activite)}`}>
                     <div className="flex items-center gap-4">
-                      <div onClick={() => finaliserProduction(cmd.id)} className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center cursor-pointer hover:bg-emerald-200 text-emerald-600">
+                      <div onClick={() => finaliserProduction(cmd.id)} className="w-12 h-12 bg-white rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 text-emerald-600 border border-slate-200">
                         <Icon name="check" size={24}/>
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-800">{cmd.num}</p>
-                        <p className="text-sm text-slate-500">{cmd.client}</p>
+                      <div className={`px-3 py-2 rounded-lg border-2 ${getActiviteCardBg(cmd.activite)}`}>
+                        <p className="font-bold">{cmd.num}</p>
+                        <p className="text-sm opacity-90">{cmd.client}</p>
+                        <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
                       </div>
                     </div>
                     <div className="text-right mr-4">
@@ -620,12 +671,13 @@ export default function RampesGardexApp() {
               </div>
               <div className="p-4 space-y-3">
                 {commandes.filter(c => c.equipe === equipe && c.statut === 'Active').map(cmd => (
-                  <div key={cmd.id} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div key={cmd.id} className={`p-3 rounded-xl border-2 ${getActiviteCardBg(cmd.activite)}`}>
                     <div className="flex justify-between items-start mb-2">
-                      <span className="font-mono text-sm font-medium text-slate-800">{cmd.num}</span>
-                      <span className="text-xs text-slate-500">{cmd.dateInstallation}</span>
+                      <span className="font-mono text-sm font-bold">{cmd.num}</span>
+                      <span className="text-xs opacity-75">{cmd.dateInstallation}</span>
                     </div>
-                    <p className="text-sm text-slate-600">{cmd.client}</p>
+                    <p className="text-sm">{cmd.client}</p>
+                    <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
                   </div>
                 ))}
               </div>
@@ -635,12 +687,13 @@ export default function RampesGardexApp() {
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           <h3 className="font-bold text-slate-800 mb-4">Commandes non planifiées</h3>
           {commandes.filter(c => !c.equipe && c.statut === 'Active').map(cmd => (
-            <div key={cmd.id} className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-100 mb-3">
+            <div key={cmd.id} className={`flex items-center justify-between p-4 rounded-xl border-2 mb-3 ${getActiviteCardBg(cmd.activite)}`}>
               <div>
-                <p className="font-medium text-slate-800">{cmd.num} - {cmd.client}</p>
-                <p className="text-sm text-slate-500">Date prévue: {cmd.dateInstallation}</p>
+                <p className="font-bold">{cmd.num} <span className="font-normal opacity-90">- {cmd.client}</span></p>
+                <p className="text-sm opacity-75">Date prévue: {cmd.dateInstallation}</p>
+                <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
               </div>
-              <select className="px-4 py-2 border border-slate-200 rounded-lg bg-white">
+              <select className="px-4 py-2 border border-slate-200 rounded-lg bg-white text-slate-800">
                 <option>Assigner une équipe</option>
                 {equipes.map(eq => <option key={eq}>{eq}</option>)}
               </select>
@@ -668,28 +721,29 @@ export default function RampesGardexApp() {
       </div>
       <div className="grid gap-4">
         {commandes.map(inst => (
-          <div key={inst.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+          <div key={inst.id} className={`rounded-2xl shadow-sm border-2 p-6 ${getActiviteCardBg(inst.activite)}`}>
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <span className="font-mono font-bold text-slate-800">{inst.num}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${inst.statut === 'Complétée' ? 'bg-emerald-100 text-emerald-800' : inst.equipe ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
+                  <span className="font-mono font-bold text-lg">{inst.num}</span>
+                  <span className="px-2 py-0.5 rounded bg-white/20 text-xs font-semibold">{inst.activite}</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${inst.statut === 'Complétée' ? 'bg-white/30' : inst.equipe ? 'bg-white/20' : 'bg-black/10'}`}>
                     {inst.statut === 'Complétée' ? 'Complétée' : inst.equipe ? 'Planifiée' : 'Non planifiée'}
                   </span>
                 </div>
-                <p className="text-lg font-medium text-slate-700">{inst.client}</p>
-                <p className="text-sm text-slate-500 mt-1">{inst.adresse}</p>
+                <p className="text-lg font-medium">{inst.client}</p>
+                <p className="text-sm opacity-75 mt-1">{inst.adresse}</p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-sm">
-                  <p className="text-slate-500">Équipe</p>
-                  <p className="font-medium text-slate-800">{inst.equipe || 'Non assignée'}</p>
+                  <p className="opacity-75">Équipe</p>
+                  <p className="font-medium">{inst.equipe || 'Non assignée'}</p>
                 </div>
                 <div className="text-sm">
-                  <p className="text-slate-500">Date</p>
-                  <p className="font-medium text-slate-800">{inst.dateInstallation}</p>
+                  <p className="opacity-75">Date</p>
+                  <p className="font-medium">{inst.dateInstallation}</p>
                 </div>
-                <button className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg flex items-center gap-2">
+                <button className="px-4 py-2 bg-white/20 hover:bg-white/30 font-medium rounded-lg flex items-center gap-2">
                   <Icon name="camera" size={18}/>Photos
                 </button>
               </div>
@@ -751,17 +805,17 @@ export default function RampesGardexApp() {
                 <p className="text-sm text-slate-500">Aujourd'hui</p>
                 <p className="text-2xl font-bold text-slate-800 mt-1">{cueillettes.filter(c => c.date === '2026-01-22').length}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-blue-100">
-                <p className="text-sm text-slate-500">Cueillettes</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{cueillettes.filter(c => c.type === 'Cueillette').length}</p>
+              <div className="bg-yellow-400 p-4 rounded-xl border-2 border-yellow-500">
+                <p className="text-sm text-yellow-900">Cueillettes</p>
+                <p className="text-2xl font-bold text-yellow-900 mt-1">{cueillettes.filter(c => c.type === 'Cueillette').length}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-emerald-100">
-                <p className="text-sm text-slate-500">Livraisons</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">{cueillettes.filter(c => c.type === 'Livraison').length}</p>
+              <div className="bg-blue-500 p-4 rounded-xl border-2 border-blue-600">
+                <p className="text-sm text-blue-100">Livraisons</p>
+                <p className="text-2xl font-bold text-white mt-1">{cueillettes.filter(c => c.type === 'Livraison').length}</p>
               </div>
-              <div className="bg-white p-4 rounded-xl border border-purple-100">
-                <p className="text-sm text-slate-500">Transports</p>
-                <p className="text-2xl font-bold text-purple-600 mt-1">{cueillettes.filter(c => c.type === 'Transport').length}</p>
+              <div className="bg-green-500 p-4 rounded-xl border-2 border-green-600">
+                <p className="text-sm text-green-100">Transports</p>
+                <p className="text-2xl font-bold text-white mt-1">{cueillettes.filter(c => c.type === 'Transport').length}</p>
               </div>
             </div>
 
@@ -801,11 +855,11 @@ export default function RampesGardexApp() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredCueillettes.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-50">
+                    <tr key={item.id} className={`${item.type === 'Cueillette' ? 'bg-yellow-50 hover:bg-yellow-100' : item.type === 'Livraison' ? 'bg-blue-50 hover:bg-blue-100' : 'bg-green-50 hover:bg-green-100'}`}>
                       <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.type === 'Cueillette' ? 'bg-blue-100 text-blue-800' : item.type === 'Livraison' ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}`}>
-                          {item.type}
-                        </span>
+                        <div className={`inline-block px-4 py-2 rounded-lg border-2 ${item.type === 'Cueillette' ? 'bg-yellow-400 border-yellow-500 text-yellow-900' : item.type === 'Livraison' ? 'bg-blue-500 border-blue-600 text-white' : 'bg-green-500 border-green-600 text-white'}`}>
+                          <span className="font-bold text-sm">{item.type}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="font-medium text-slate-800">{item.commande}</div>
@@ -866,10 +920,10 @@ export default function RampesGardexApp() {
                     </div>
                     <div className="space-y-2">
                       {jourCueillettes.map(c => (
-                        <div key={c.id} className={`p-2 rounded-lg text-xs ${c.type === 'Cueillette' ? 'bg-blue-100 border border-blue-200' : c.type === 'Livraison' ? 'bg-emerald-100 border border-emerald-200' : 'bg-purple-100 border border-purple-200'}`}>
-                          <div className="font-semibold">{c.heure}</div>
+                        <div key={c.id} className={`p-2 rounded-lg text-xs border-2 ${c.type === 'Cueillette' ? 'bg-yellow-400 border-yellow-500 text-yellow-900' : c.type === 'Livraison' ? 'bg-blue-500 border-blue-600 text-white' : 'bg-green-500 border-green-600 text-white'}`}>
+                          <div className="font-bold">{c.heure}</div>
                           <div className="truncate">{c.client}</div>
-                          <div className="text-slate-500 truncate">{c.type}</div>
+                          <div className="font-semibold truncate">{c.type}</div>
                         </div>
                       ))}
                     </div>
@@ -1424,19 +1478,38 @@ export default function RampesGardexApp() {
 
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-100 rounded-xl">
-            <Icon name={sidebarOpen ? 'x' : 'menu'} size={24}/>
-          </button>
+        <header className="bg-slate-800 shadow-sm border-b border-slate-700 px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-slate-100 rounded-xl relative">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-slate-700 rounded-xl text-white">
+              <Icon name={sidebarOpen ? 'x' : 'menu'} size={24}/>
+            </button>
+            
+            {/* Légende des couleurs */}
+            <div className="flex items-center gap-2 ml-4">
+              <div className="px-3 py-1.5 bg-blue-500 text-white rounded font-bold text-sm border-2 border-blue-600">
+                Livraison
+              </div>
+              <div className="px-3 py-1.5 bg-yellow-400 text-yellow-900 rounded font-bold text-sm border-2 border-yellow-500">
+                Cueillette
+              </div>
+              <div className="px-3 py-1.5 bg-red-600 text-white rounded font-bold text-sm border-2 border-red-700">
+                Installation
+              </div>
+              <div className="px-3 py-1.5 bg-green-500 text-white rounded font-bold text-sm border-2 border-green-600">
+                Transport
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4">
+            <button className="p-2 hover:bg-slate-700 rounded-xl relative text-white">
               <Icon name="bell" size={22}/>
               <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"/>
             </button>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="text-sm font-semibold text-slate-800">Admin Utilisateur</p>
-                <p className="text-xs text-slate-500">admin@rampesgardex.com</p>
+                <p className="text-sm font-semibold text-white">Admin Utilisateur</p>
+                <p className="text-xs text-slate-400">admin@rampesgardex.com</p>
               </div>
               <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full flex items-center justify-center font-bold text-slate-900">A</div>
             </div>
