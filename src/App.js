@@ -41,9 +41,7 @@ const Icon = ({ name, size = 20 }) => {
   );
 };
 
-// Application principale
 export default function RampesGardexApp() {
-  
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentScreen, setCurrentScreen] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -89,6 +87,25 @@ export default function RampesGardexApp() {
     { id: 2, fournisseur: 'Fasteners Pro', produit: 'Vis spéciales marine', delaiInitial: '2026-01-22', nouveauDelai: '2026-01-25', raison: 'Transport retardé' },
   ]);
 
+  const [cueillettes, setCueillettes] = useState([
+    { id: 1, type: 'Cueillette', commande: 'CMD-2024-001', client: 'Construction Leblanc', adresse: '123 Rue Principale, Montréal', date: '2026-01-23', heure: '09:00', statut: 'Planifiée', chauffeur: 'Jean Fortin', vehicule: 'Camion #1', notes: 'Rampe usagée à récupérer' },
+    { id: 2, type: 'Livraison', commande: 'CMD-2024-002', client: 'Rénovations ABC', adresse: '456 Boul. St-Laurent, Laval', date: '2026-01-23', heure: '13:30', statut: 'En cours', chauffeur: 'Pierre Gagnon', vehicule: 'Camion #2', notes: 'Livraison matériaux' },
+    { id: 3, type: 'Transport', commande: 'CMD-2024-003', client: 'Gestion Immobilière XYZ', adresse: '789 Ave du Parc, Longueuil', date: '2026-01-24', heure: '08:00', statut: 'Planifiée', chauffeur: 'Jean Fortin', vehicule: 'Camion #1', notes: 'Transport équipe installation' },
+    { id: 4, type: 'Cueillette', commande: 'CMD-2024-004', client: 'Résidence Soleil', adresse: '321 Rue du Soleil, Brossard', date: '2026-01-22', heure: '10:00', statut: 'Complétée', chauffeur: 'Pierre Gagnon', vehicule: 'Camion #2', notes: 'Ancienne rampe récupérée' },
+  ]);
+
+  const [vehicules] = useState([
+    { id: 1, nom: 'Camion #1', type: 'Camion cube 16 pieds', plaque: 'ABC 123', statut: 'Disponible' },
+    { id: 2, nom: 'Camion #2', type: 'Camion cube 20 pieds', plaque: 'XYZ 789', statut: 'En route' },
+    { id: 3, nom: 'Fourgonnette #1', type: 'Ford Transit', plaque: 'QWE 456', statut: 'Disponible' },
+  ]);
+
+  const [chauffeurs] = useState([
+    { id: 1, nom: 'Jean Fortin', telephone: '514-555-1111', permis: 'Classe 5', statut: 'Actif' },
+    { id: 2, nom: 'Pierre Gagnon', telephone: '514-555-2222', permis: 'Classe 3', statut: 'En livraison' },
+    { id: 3, nom: 'Marc Bouchard', telephone: '514-555-3333', permis: 'Classe 5', statut: 'Congé' },
+  ]);
+
   const clients = [
     { id: 1, nom: 'Construction Leblanc', contact: 'Jean Leblanc', telephone: '514-555-0101', email: 'jean@leblanc.ca', commandes: 5 },
     { id: 2, nom: 'Rénovations ABC', contact: 'Marie Côté', telephone: '450-555-0202', email: 'marie@abc-reno.ca', commandes: 3 },
@@ -102,7 +119,9 @@ export default function RampesGardexApp() {
     { id: 'production', icon: 'factory', label: 'Production' },
     { id: 'planification', icon: 'calendar', label: 'Planification' },
     { id: 'installations', icon: 'wrench', label: 'Installations' },
+    { id: 'cueillettes', icon: 'truck', label: 'Cueillettes / Transport' },
     { id: 'inventaire', icon: 'package', label: 'Inventaire' },
+    { id: 'achats', icon: 'cart', label: 'Achats' },
     { id: 'rentabilite', icon: 'trend', label: 'Rentabilité' },
     { id: 'attentes', icon: 'alert', label: 'Attentes' },
     { id: 'delais', icon: 'clock', label: 'Délais de livraison' },
@@ -681,6 +700,269 @@ export default function RampesGardexApp() {
     </div>
   );
 
+  // === CUEILLETTES / TRANSPORT ===
+  const Cueillettes = () => {
+    const [cueillettesTab, setCueillettesTab] = useState('liste');
+    const [filterType, setFilterType] = useState('tous');
+    const [filterStatut, setFilterStatut] = useState('tous');
+
+    const filteredCueillettes = cueillettes
+      .filter(c => filterType === 'tous' || c.type === filterType)
+      .filter(c => filterStatut === 'tous' || c.statut === filterStatut);
+
+    const completeCueillette = (id) => {
+      setCueillettes(prev => prev.map(c => c.id === id ? { ...c, statut: 'Complétée' } : c));
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Cueillettes / Transport</h1>
+            <p className="text-slate-500 mt-1">Gestion des cueillettes, livraisons et transports</p>
+          </div>
+          <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
+            <Icon name="plus" size={20}/>Nouvelle tâche
+          </button>
+        </div>
+
+        {/* Onglets */}
+        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+          <button onClick={() => setCueillettesTab('liste')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${cueillettesTab === 'liste' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="file" size={18}/>Liste des tâches
+          </button>
+          <button onClick={() => setCueillettesTab('calendrier')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${cueillettesTab === 'calendrier' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="calendar" size={18}/>Calendrier
+          </button>
+          <button onClick={() => setCueillettesTab('vehicules')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${cueillettesTab === 'vehicules' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="truck" size={18}/>Véhicules
+          </button>
+          <button onClick={() => setCueillettesTab('chauffeurs')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${cueillettesTab === 'chauffeurs' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="users" size={18}/>Chauffeurs
+          </button>
+        </div>
+
+        {/* LISTE DES TÂCHES */}
+        {cueillettesTab === 'liste' && (
+          <>
+            {/* Stats rapides */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-slate-100">
+                <p className="text-sm text-slate-500">Aujourd'hui</p>
+                <p className="text-2xl font-bold text-slate-800 mt-1">{cueillettes.filter(c => c.date === '2026-01-22').length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-blue-100">
+                <p className="text-sm text-slate-500">Cueillettes</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">{cueillettes.filter(c => c.type === 'Cueillette').length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-emerald-100">
+                <p className="text-sm text-slate-500">Livraisons</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-1">{cueillettes.filter(c => c.type === 'Livraison').length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-purple-100">
+                <p className="text-sm text-slate-500">Transports</p>
+                <p className="text-2xl font-bold text-purple-600 mt-1">{cueillettes.filter(c => c.type === 'Transport').length}</p>
+              </div>
+            </div>
+
+            {/* Filtres */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative flex-1">
+                  <input type="text" placeholder="Rechercher..." className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl"/>
+                </div>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
+                  <option value="tous">Tous les types</option>
+                  <option value="Cueillette">Cueillette</option>
+                  <option value="Livraison">Livraison</option>
+                  <option value="Transport">Transport</option>
+                </select>
+                <select value={filterStatut} onChange={(e) => setFilterStatut(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
+                  <option value="tous">Tous les statuts</option>
+                  <option value="Planifiée">Planifiée</option>
+                  <option value="En cours">En cours</option>
+                  <option value="Complétée">Complétée</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Tableau */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Type</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Commande / Client</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Date / Heure</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Chauffeur / Véhicule</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredCueillettes.map(item => (
+                    <tr key={item.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.type === 'Cueillette' ? 'bg-blue-100 text-blue-800' : item.type === 'Livraison' ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}`}>
+                          {item.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-800">{item.commande}</div>
+                        <div className="text-sm text-slate-500">{item.client}</div>
+                        <div className="text-xs text-slate-400 mt-1">{item.adresse}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-800">{item.date}</div>
+                        <div className="text-sm text-slate-500">{item.heure}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-800">{item.chauffeur}</div>
+                        <div className="text-sm text-slate-500">{item.vehicule}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${item.statut === 'Complétée' ? 'bg-emerald-100 text-emerald-800' : item.statut === 'En cours' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}`}>
+                          {item.statut}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-2">
+                          <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="edit" size={18}/></button>
+                          {item.statut !== 'Complétée' && (
+                            <button onClick={() => completeCueillette(item.id)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"><Icon name="check" size={18}/></button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* CALENDRIER */}
+        {cueillettesTab === 'calendrier' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <button className="p-2 hover:bg-slate-100 rounded-lg"><Icon name="left" size={24}/></button>
+              <h2 className="text-xl font-bold text-slate-800">Semaine du 20 au 24 janvier 2026</h2>
+              <button className="p-2 hover:bg-slate-100 rounded-lg"><Icon name="right" size={24}/></button>
+            </div>
+            <div className="grid grid-cols-5 gap-4">
+              {['Lun 20', 'Mar 21', 'Mer 22', 'Jeu 23', 'Ven 24'].map((jour, index) => {
+                const dates = ['2026-01-20', '2026-01-21', '2026-01-22', '2026-01-23', '2026-01-24'];
+                const jourCueillettes = cueillettes.filter(c => c.date === dates[index]);
+                const isToday = dates[index] === '2026-01-22';
+                return (
+                  <div key={jour} className={`border rounded-xl p-4 min-h-[250px] ${isToday ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200'}`}>
+                    <div className="text-center mb-4">
+                      <p className={`text-sm font-bold ${isToday ? 'text-amber-600' : 'text-slate-800'}`}>{jour}</p>
+                      {jourCueillettes.length > 0 && (
+                        <span className="inline-block px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-medium mt-1">
+                          {jourCueillettes.length} tâche(s)
+                        </span>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      {jourCueillettes.map(c => (
+                        <div key={c.id} className={`p-2 rounded-lg text-xs ${c.type === 'Cueillette' ? 'bg-blue-100 border border-blue-200' : c.type === 'Livraison' ? 'bg-emerald-100 border border-emerald-200' : 'bg-purple-100 border border-purple-200'}`}>
+                          <div className="font-semibold">{c.heure}</div>
+                          <div className="truncate">{c.client}</div>
+                          <div className="text-slate-500 truncate">{c.type}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* VÉHICULES */}
+        {cueillettesTab === 'vehicules' && (
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
+                <Icon name="plus" size={20}/>Ajouter véhicule
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {vehicules.map(v => (
+                <div key={v.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
+                      <Icon name="truck" size={24}/>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${v.statut === 'Disponible' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                      {v.statut}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-slate-800 text-lg">{v.nom}</h3>
+                  <p className="text-slate-500 text-sm mt-1">{v.type}</p>
+                  <p className="text-slate-400 text-sm mt-1">Plaque: {v.plaque}</p>
+                  <div className="flex gap-2 mt-4">
+                    <button className="flex-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg text-sm">Modifier</button>
+                    <button className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium rounded-lg text-sm">Assigner</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* CHAUFFEURS */}
+        {cueillettesTab === 'chauffeurs' && (
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
+                <Icon name="plus" size={20}/>Ajouter chauffeur
+              </button>
+            </div>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Chauffeur</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Permis</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {chauffeurs.map(c => (
+                    <tr key={c.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">
+                            {c.nom.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <span className="font-medium text-slate-800">{c.nom}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{c.telephone}</td>
+                      <td className="px-6 py-4 text-slate-600">{c.permis}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${c.statut === 'Actif' ? 'bg-emerald-100 text-emerald-800' : c.statut === 'En livraison' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'}`}>
+                          {c.statut}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // === INVENTAIRE ===
   const Inventaire = () => (
     <div className="space-y-6">
@@ -730,6 +1012,138 @@ export default function RampesGardexApp() {
       </div>
     </div>
   );
+
+  // === ACHATS ===
+  const Achats = () => {
+    const [achatsTab, setAchatsTab] = useState('commandes');
+    const [achatsData] = useState([
+      { id: 1, numero: 'PO-2024-001', fournisseur: 'Alu-Québec', date: '2026-01-15', montant: 4500, statut: 'Livrée', items: 'Aluminium 6063-T5 (200 pieds)' },
+      { id: 2, numero: 'PO-2024-002', fournisseur: 'Fasteners Pro', date: '2026-01-18', montant: 850, statut: 'En transit', items: 'Vis inox #10 (5000 unités)' },
+      { id: 3, numero: 'PO-2024-003', fournisseur: 'Rampes Canada', date: '2026-01-20', montant: 2200, statut: 'En attente', items: 'Main courante ronde (100 pieds)' },
+    ]);
+
+    const [fournisseurs] = useState([
+      { id: 1, nom: 'Alu-Québec', contact: 'Martin Gagnon', telephone: '514-555-1000', email: 'martin@alu-quebec.ca', delaiMoyen: '5 jours' },
+      { id: 2, nom: 'Fasteners Pro', contact: 'Sophie Lavoie', telephone: '450-555-2000', email: 'sophie@fastenerspro.ca', delaiMoyen: '3 jours' },
+      { id: 3, nom: 'Rampes Canada', contact: 'Pierre Tremblay', telephone: '514-555-3000', email: 'pierre@rampescanada.ca', delaiMoyen: '7 jours' },
+    ]);
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Achats</h1>
+            <p className="text-slate-500 mt-1">Gestion des commandes fournisseurs</p>
+          </div>
+          <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
+            <Icon name="plus" size={20}/>Nouvelle commande
+          </button>
+        </div>
+
+        {/* Onglets */}
+        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+          <button onClick={() => setAchatsTab('commandes')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'commandes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            Commandes fournisseurs
+          </button>
+          <button onClick={() => setAchatsTab('fournisseurs')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'fournisseurs' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            Fournisseurs
+          </button>
+        </div>
+
+        {/* COMMANDES FOURNISSEURS */}
+        {achatsTab === 'commandes' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-slate-100">
+                <p className="text-sm text-slate-500">En attente</p>
+                <p className="text-2xl font-bold text-amber-600 mt-1">{achatsData.filter(a => a.statut === 'En attente').length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-blue-100">
+                <p className="text-sm text-slate-500">En transit</p>
+                <p className="text-2xl font-bold text-blue-600 mt-1">{achatsData.filter(a => a.statut === 'En transit').length}</p>
+              </div>
+              <div className="bg-white p-4 rounded-xl border border-emerald-100">
+                <p className="text-sm text-slate-500">Livrées ce mois</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-1">{achatsData.filter(a => a.statut === 'Livrée').length}</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">N° Commande</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fournisseur</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Articles</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Montant</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {achatsData.map(achat => (
+                    <tr key={achat.id} className="hover:bg-slate-50">
+                      <td className="px-6 py-4 font-mono font-semibold text-slate-800">{achat.numero}</td>
+                      <td className="px-6 py-4 text-slate-700">{achat.fournisseur}</td>
+                      <td className="px-6 py-4 text-slate-600 text-sm">{achat.items}</td>
+                      <td className="px-6 py-4 text-slate-600">{achat.date}</td>
+                      <td className="px-6 py-4 font-medium text-slate-800">{achat.montant.toLocaleString()} $</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${achat.statut === 'Livrée' ? 'bg-emerald-100 text-emerald-800' : achat.statut === 'En transit' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
+                          {achat.statut}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+
+        {/* FOURNISSEURS */}
+        {achatsTab === 'fournisseurs' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fournisseur</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contact</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Courriel</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Délai moyen</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {fournisseurs.map(f => (
+                  <tr key={f.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 font-semibold text-slate-800">{f.nom}</td>
+                    <td className="px-6 py-4 text-slate-600">{f.contact}</td>
+                    <td className="px-6 py-4 text-slate-600">{f.telephone}</td>
+                    <td className="px-6 py-4 text-slate-600">{f.email}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm">{f.delaiMoyen}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex gap-2">
+                        <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
+                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="cart" size={18}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // === RENTABILITÉ ===
   const Rentabilite = () => (
@@ -966,7 +1380,9 @@ export default function RampesGardexApp() {
       case 'production': return <Production />;
       case 'planification': return <Planification />;
       case 'installations': return <Installations />;
+      case 'cueillettes': return <Cueillettes />;
       case 'inventaire': return <Inventaire />;
+      case 'achats': return <Achats />;
       case 'rentabilite': return <Rentabilite />;
       case 'attentes': return <Attentes />;
       case 'delais': return <Delais />;
