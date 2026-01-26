@@ -132,7 +132,7 @@ export default function RampesGardexApp() {
     { id: 'parametres', icon: 'settings', label: 'Paramètres' },
   ];
 
-  //etat et fonctions pour la gestion des clients
+  
   const [clientsList, setClientsList] = useState([
     { 
       id: 1, 
@@ -320,12 +320,292 @@ export default function RampesGardexApp() {
       default: return 'hover:bg-slate-50';
     }
   };
+  const [commandesList, setCommandesList] = useState([
+    { 
+      id: 1, 
+      num: 'CMD-2024-001', 
+      client: 'Construction Leblanc',
+      reference: 'REF-001',
+      representant: 'Martin Dupuis',
+      service: 'Installation',
+      typeCommande: 'Standard',
+      ville: 'Montréal',
+      commentaire: 'Client prioritaire - Livraison avant 10h',
+      dateEntree: '2024-01-15',
+      datePrevue: '2024-02-20',
+      dateProduction: '2024-02-01',
+      datePriseMesure: '2024-01-20',
+      dateLivraison: '2024-02-18',
+      prixVenteMateriaux: 5000,
+      prixVenteInstallation: 2500,
+      mettreTempInstallation: true,
+      tempsEstimeInstallation: 4,
+      piedsCarresFibre: 120,
+      projet: false,
+      reprise: false,
+      mesure: 'Oui',
+      mesureDonneeLe: '2024-01-22',
+      plan: 'Oui',
+      envoyeProduction: 'Oui',
+      productionTerminee: 'Oui',
+      termine: '',
+      // Achats
+      achatFibre: 'Commandé',
+      dateReceptionFibre: '2024-01-25',
+      achatLimons: 'Reçu',
+      dateReceptionLimons: '2024-01-26',
+      achatVerres: 'Commandé',
+      dateReceptionVerre: '2024-01-28',
+      achatColonnes: 'Reçu',
+      dateReceptionColonnes: '2024-01-27',
+      achatPeinture: '',
+      dateReceptionPeinture: '',
+      achatAttaches: 'Reçu',
+      dateReceptionAttaches: '2024-01-24',
+      achatPlancherAluminium: '',
+      dateReceptionPlancherAluminium: '',
+      structure: false,
+      couleur: 'Noir',
+      // Pieds de rampes
+      piedsRampesBarrotin: 35,
+      piedsRampesVerre: 0,
+      piedsRampesMurIntimite: 0,
+      piedsRampesMainDouble: 0,
+      piedsRampesGardexVision: 0,
+      piedsRampesGardexVisionUrbaine: 0,
+      piedsRampesGardexVisionOptimum: 0,
+      piedsLineairesRampes: 35,
+      // Avertissements
+      avertissementClient: '',
+      dateAvertissement: '',
+      avertissementPriseMesure: '',
+      dateAvertissementPriseMesure: '',
+      // Livraison
+      livraison: 'Effectuée',
+      statut: 'Active',
+      activite: 'Installation'
+    },
+    { 
+      id: 2, 
+      num: 'CMD-2024-002', 
+      client: 'Rénovations ABC',
+      reference: 'REF-002',
+      representant: 'Sophie Tremblay',
+      service: 'Livraison',
+      typeCommande: 'Commercial',
+      ville: 'Laval',
+      commentaire: '',
+      dateEntree: '2024-01-18',
+      datePrevue: '2024-02-25',
+      dateProduction: '2024-02-05',
+      datePriseMesure: '2024-01-22',
+      dateLivraison: '',
+      prixVenteMateriaux: 15000,
+      prixVenteInstallation: 8000,
+      mettreTempInstallation: true,
+      tempsEstimeInstallation: 12,
+      piedsCarresFibre: 350,
+      projet: true,
+      reprise: false,
+      mesure: 'Oui',
+      mesureDonneeLe: '2024-01-25',
+      plan: 'Oui',
+      envoyeProduction: 'Oui',
+      productionTerminee: '',
+      termine: '',
+      achatFibre: 'Commandé',
+      dateReceptionFibre: '2024-02-01',
+      achatLimons: 'Commandé',
+      dateReceptionLimons: '2024-02-01',
+      achatVerres: '',
+      dateReceptionVerre: '',
+      achatColonnes: 'Commandé',
+      dateReceptionColonnes: '2024-02-02',
+      achatPeinture: 'Commandé',
+      dateReceptionPeinture: '2024-02-03',
+      achatAttaches: 'Commandé',
+      dateReceptionAttaches: '2024-02-01',
+      achatPlancherAluminium: '',
+      dateReceptionPlancherAluminium: '',
+      structure: false,
+      couleur: 'Blanc',
+      piedsRampesBarrotin: 0,
+      piedsRampesVerre: 150,
+      piedsRampesMurIntimite: 50,
+      piedsRampesMainDouble: 0,
+      piedsRampesGardexVision: 0,
+      piedsRampesGardexVisionUrbaine: 0,
+      piedsRampesGardexVisionOptimum: 0,
+      piedsLineairesRampes: 200,
+      avertissementClient: '',
+      dateAvertissement: '',
+      avertissementPriseMesure: '',
+      dateAvertissementPriseMesure: '',
+      livraison: 'Non effectuée',
+      statut: 'Active',
+      activite: 'Livraison',
+      // Champs Commercial
+      nombreBalcons: 10,
+      nombrePoteaux: 45,
+      piedsLineairesEstime: 320,
+      piedsLineairesReels: 0,
+      differencesPiedsLineaires: 0,
+      balconsDetails: [
+        { id: 1, balcon: '201à205', coutBalcon: 8091, piedsLineaires: 110, poteaux: 20, produit: true, installationTerminee: true, reprise: false },
+        { id: 2, balcon: '206', coutBalcon: 2059, piedsLineaires: 28, poteaux: 6, produit: true, installationTerminee: true, reprise: false },
+        { id: 3, balcon: '207', coutBalcon: 2427, piedsLineaires: 33, poteaux: 7, produit: true, installationTerminee: false, reprise: false },
+        { id: 4, balcon: '208à211', coutBalcon: 7723, piedsLineaires: 105, poteaux: 20, produit: true, installationTerminee: false, reprise: false },
+        { id: 5, balcon: '212', coutBalcon: 2059, piedsLineaires: 28, poteaux: 6, produit: false, installationTerminee: false, reprise: false },
+      ]
+    },
+    { 
+      id: 3, 
+      num: 'CMD-2024-003', 
+      client: 'Gestion Immobilière XYZ',
+      reference: 'REF-003',
+      representant: 'Martin Dupuis',
+      service: 'Cueillette',
+      typeCommande: 'Multi-phase',
+      ville: 'Longueuil',
+      commentaire: 'Projet multi-logements phase 1',
+      dateEntree: '2024-01-20',
+      datePrevue: '2024-03-15',
+      dateProduction: '2024-02-15',
+      datePriseMesure: '2024-01-28',
+      dateLivraison: '',
+      prixVenteMateriaux: 25000,
+      prixVenteInstallation: 12000,
+      mettreTempInstallation: true,
+      tempsEstimeInstallation: 24,
+      piedsCarresFibre: 500,
+      projet: true,
+      reprise: false,
+      mesure: 'Oui',
+      mesureDonneeLe: '2024-01-30',
+      plan: 'Oui',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      achatFibre: '',
+      dateReceptionFibre: '',
+      achatLimons: '',
+      dateReceptionLimons: '',
+      achatVerres: '',
+      dateReceptionVerre: '',
+      achatColonnes: '',
+      dateReceptionColonnes: '',
+      achatPeinture: '',
+      dateReceptionPeinture: '',
+      achatAttaches: '',
+      dateReceptionAttaches: '',
+      achatPlancherAluminium: '',
+      dateReceptionPlancherAluminium: '',
+      structure: true,
+      couleur: 'Gris',
+      piedsRampesBarrotin: 100,
+      piedsRampesVerre: 200,
+      piedsRampesMurIntimite: 100,
+      piedsRampesMainDouble: 50,
+      piedsRampesGardexVision: 50,
+      piedsRampesGardexVisionUrbaine: 0,
+      piedsRampesGardexVisionOptimum: 0,
+      piedsLineairesRampes: 500,
+      avertissementClient: '',
+      dateAvertissement: '',
+      avertissementPriseMesure: '',
+      dateAvertissementPriseMesure: '',
+      livraison: 'Non effectuée',
+      statut: 'Active',
+      activite: 'Cueillette'
+    },
+  ]);
+  const [showCommandeModal, setShowCommandeModal] = useState(false);
+  const [editingCommande, setEditingCommande] = useState(null);
+  const [selectedCommandeDetail, setSelectedCommandeDetail] = useState(null);
+  const [commandeSearchTerm, setCommandeSearchTerm] = useState('');
+  const [commandeFilterClient, setCommandeFilterClient] = useState('tous');
+  const [commandeFilterRepresentant, setCommandeFilterRepresentant] = useState('tous');
+  const [commandeFilterService, setCommandeFilterService] = useState('tous');
+  const [commandeFormSection, setCommandeFormSection] = useState(1); // Pour navigation dans le formulaire
 
-  const completeCommande = (id) => {
-    setCommandes(prev => prev.map(cmd => 
-      cmd.id === id ? { ...cmd, statut: 'Complétée', dateCompletion: '2026-01-22' } : cmd
-    ));
+  const emptyCommandeForm = {
+    num: '',
+    client: '',
+    reference: '',
+    representant: '',
+    service: 'Installation',
+    typeCommande: 'Standard',
+    ville: '',
+    commentaire: '',
+    dateEntree: '',
+    datePrevue: '',
+    dateProduction: '',
+    datePriseMesure: '',
+    dateLivraison: '',
+    prixVenteMateriaux: 0,
+    prixVenteInstallation: 0,
+    mettreTempInstallation: false,
+    tempsEstimeInstallation: 0,
+    piedsCarresFibre: 0,
+    projet: false,
+    reprise: false,
+    mesure: '',
+    mesureDonneeLe: '',
+    plan: '',
+    envoyeProduction: '',
+    productionTerminee: '',
+    termine: '',
+    achatFibre: '',
+    dateReceptionFibre: '',
+    achatLimons: '',
+    dateReceptionLimons: '',
+    achatVerres: '',
+    dateReceptionVerre: '',
+    achatColonnes: '',
+    dateReceptionColonnes: '',
+    achatPeinture: '',
+    dateReceptionPeinture: '',
+    achatAttaches: '',
+    dateReceptionAttaches: '',
+    achatPlancherAluminium: '',
+    dateReceptionPlancherAluminium: '',
+    structure: false,
+    couleur: '',
+    piedsRampesBarrotin: 0,
+    piedsRampesVerre: 0,
+    piedsRampesMurIntimite: 0,
+    piedsRampesMainDouble: 0,
+    piedsRampesGardexVision: 0,
+    piedsRampesGardexVisionUrbaine: 0,
+    piedsRampesGardexVisionOptimum: 0,
+    piedsLineairesRampes: 0,
+    avertissementClient: '',
+    dateAvertissement: '',
+    avertissementPriseMesure: '',
+    dateAvertissementPriseMesure: '',
+    livraison: 'Non effectuée',
+    statut: 'Active',
+    activite: 'Installation',
+    // Champs Commercial
+    nombreBalcons: 0,
+    nombrePoteaux: 0,
+    piedsLineairesEstime: 0,
+    piedsLineairesReels: 0,
+    differencesPiedsLineaires: 0,
+    balconsDetails: []
   };
+
+  const [commandeForm, setCommandeForm] = useState(emptyCommandeForm);
+
+  const representants = ['Martin Dupuis', 'Sophie Tremblay', 'Jean Gagnon', 'Marie Lavoie'];
+  const services = ['Installation', 'Livraison', 'Cueillette', 'Transport'];
+  const typesCommande = ['Standard', 'Commercial', 'Multi-phase', 'Multi-plan'];
+  const couleurs = ['Noir', 'Blanc', 'Gris', 'Bronze', 'Argent', 'Brun'];
+  const optionsAchat = ['', 'Commandé', 'Reçu', 'En attente', 'N/A'];
+  const optionsOuiNon = ['', 'Oui', 'Non'];
+  const optionsAvertissement = ['', 'Par courriel', 'Par téléphone', 'En personne'];
+
+
 
   const toggleProduction = (id) => {
     setCommandes(prev => prev.map(cmd => 
@@ -976,139 +1256,912 @@ export default function RampesGardexApp() {
   };
 
   // === COMMANDES ===
+ // === ÉTATS COMMANDES ===
+  
+  
+  // Générer les détails de balcons
+  const generateBalconsDetails = (nombre) => {
+    const details = [];
+    for (let i = 1; i <= nombre; i++) {
+      details.push({
+        id: i,
+        balcon: '',
+        coutBalcon: 0,
+        piedsLineaires: 0,
+        poteaux: 0,
+        produit: false,
+        installationTerminee: false,
+        reprise: false
+      });
+    }
+    return details;
+  };
+
+  const updateBalconDetail = (index, field, value) => {
+    const newDetails = [...commandeForm.balconsDetails];
+    newDetails[index] = { ...newDetails[index], [field]: value };
+    
+    // Calculer automatiquement les totaux
+    const totalPiedsLineaires = newDetails.reduce((acc, b) => acc + (parseFloat(b.piedsLineaires) || 0), 0);
+    const totalPoteaux = newDetails.reduce((acc, b) => acc + (parseFloat(b.poteaux) || 0), 0);
+    
+    setCommandeForm({
+      ...commandeForm,
+      balconsDetails: newDetails,
+      piedsLineairesReels: totalPiedsLineaires,
+      nombrePoteaux: totalPoteaux,
+      differencesPiedsLineaires: totalPiedsLineaires - (commandeForm.piedsLineairesEstime || 0)
+    });
+  };
+
+  const openAddCommande = () => {
+    setEditingCommande(null);
+    setCommandeForm({
+      ...emptyCommandeForm,
+      num: `CMD-${new Date().getFullYear()}-${String(commandesList.length + 1).padStart(3, '0')}`,
+      dateEntree: new Date().toISOString().split('T')[0]
+    });
+    setCommandeFormSection(1);
+    setShowCommandeModal(true);
+  };
+
+  const openEditCommande = (commande) => {
+    setEditingCommande(commande);
+    setCommandeForm({ ...commande });
+    setCommandeFormSection(1);
+    setShowCommandeModal(true);
+  };
+
+  const saveCommande = () => {
+    if (editingCommande) {
+      setCommandesList(prev => prev.map(c => c.id === editingCommande.id ? { ...c, ...commandeForm } : c));
+    } else {
+      const newId = Math.max(...commandesList.map(c => c.id), 0) + 1;
+      setCommandesList(prev => [...prev, { id: newId, ...commandeForm }]);
+    }
+    setShowCommandeModal(false);
+  };
+
+  const deleteCommande = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette commande?')) {
+      setCommandesList(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const completeCommande = (id) => {
+    setCommandesList(prev => prev.map(c => c.id === id ? { ...c, statut: 'Complétée', dateCompletion: new Date().toISOString().split('T')[0] } : c));
+  };
+
+  // Obtenir les clients uniques
+  const uniqueClients = [...new Set(commandesList.map(c => c.client))];
+  const uniqueRepresentants = [...new Set(commandesList.map(c => c.representant))];
+
+  // === COMMANDES ===
   const Commandes = () => {
-    if (selectedCommande) {
+    // Filtrage
+    const filteredCommandes = commandesList
+      .filter(cmd => commandeTab === 'actives' ? cmd.statut === 'Active' : cmd.statut === 'Complétée')
+      .filter(cmd => commandeFilterClient === 'tous' || cmd.client === commandeFilterClient)
+      .filter(cmd => commandeFilterRepresentant === 'tous' || cmd.representant === commandeFilterRepresentant)
+      .filter(cmd => commandeFilterService === 'tous' || cmd.service === commandeFilterService)
+      .filter(cmd => {
+        if (!commandeSearchTerm) return true;
+        const search = commandeSearchTerm.toLowerCase();
+        return (
+          cmd.num.toLowerCase().includes(search) ||
+          cmd.client.toLowerCase().includes(search) ||
+          cmd.reference?.toLowerCase().includes(search) ||
+          cmd.ville?.toLowerCase().includes(search)
+        );
+      });
+
+    // ==== VUE DÉTAILLÉE ====
+    if (selectedCommandeDetail) {
+      const cmd = commandesList.find(c => c.id === selectedCommandeDetail.id) || selectedCommandeDetail;
+      
       return (
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSelectedCommande(null)} className="p-2 hover:bg-slate-100 rounded-lg"><Icon name="left" size={24}/></button>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">Détail de la commande</h1>
-              <p className="text-slate-500 mt-1">{selectedCommande.num}</p>
+            <button onClick={() => setSelectedCommandeDetail(null)} className="p-2 hover:bg-slate-100 rounded-lg">
+              <Icon name="left" size={24}/>
+            </button>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-slate-800">Commande {cmd.num}</h1>
+              <p className="text-slate-500 mt-1">{cmd.client} • {cmd.typeCommande}</p>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => openEditCommande(cmd)} className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
+                <Icon name="edit" size={18}/>Modifier
+              </button>
+              {cmd.statut === 'Active' && (
+                <button onClick={() => { completeCommande(cmd.id); setSelectedCommandeDetail(null); }} className="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2">
+                  <Icon name="check" size={18}/>Compléter
+                </button>
+              )}
             </div>
           </div>
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Client</label>
-                <input type="text" defaultValue={selectedCommande.client} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+
+          {/* Informations principales */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              {/* Info générale */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-800 mb-4">Informations générales</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className="text-xs text-slate-500 uppercase">N° Commande</label><p className="font-semibold text-slate-800">{cmd.num}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Référence</label><p className="font-semibold text-slate-800">{cmd.reference || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Client</label><p className="font-semibold text-slate-800">{cmd.client}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Représentant</label><p className="font-semibold text-slate-800">{cmd.representant}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Service</label><p className="font-semibold text-slate-800">{cmd.service}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Type</label><p className="font-semibold text-slate-800">{cmd.typeCommande}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Ville</label><p className="font-semibold text-slate-800">{cmd.ville || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Livraison</label>
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${cmd.livraison === 'Effectuée' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}`}>{cmd.livraison}</span>
+                  </div>
+                </div>
+                {cmd.commentaire && (
+                  <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <p className="text-sm text-amber-800"><strong>Commentaire:</strong> {cmd.commentaire}</p>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Représentant</label>
-                <input type="text" defaultValue={selectedCommande.representant} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+
+              {/* Dates */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-800 mb-4">Dates</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className="text-xs text-slate-500 uppercase">Date d'entrée</label><p className="font-semibold text-slate-800">{cmd.dateEntree || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Date prévue</label><p className="font-semibold text-slate-800">{cmd.datePrevue || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Date production</label><p className="font-semibold text-slate-800">{cmd.dateProduction || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Prise de mesure</label><p className="font-semibold text-slate-800">{cmd.datePriseMesure || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Date livraison</label><p className="font-semibold text-slate-800">{cmd.dateLivraison || '—'}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Mesure donnée le</label><p className="font-semibold text-slate-800">{cmd.mesureDonneeLe || '—'}</p></div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Type de commande</label>
-                <select defaultValue={selectedCommande.type} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
-                  <option>Standard</option>
-                  <option>Commercial</option>
-                  <option>Multi-phases</option>
-                </select>
+
+              {/* Prix et mesures */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-800 mb-4">Prix et mesures</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className="text-xs text-slate-500 uppercase">Prix matériaux</label><p className="font-semibold text-slate-800">{cmd.prixVenteMateriaux?.toLocaleString() || 0} $</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Prix installation</label><p className="font-semibold text-slate-800">{cmd.prixVenteInstallation?.toLocaleString() || 0} $</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Temps estimé</label><p className="font-semibold text-slate-800">{cmd.tempsEstimeInstallation || 0} h</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Pi² fibre</label><p className="font-semibold text-slate-800">{cmd.piedsCarresFibre || 0}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Pieds linéaires</label><p className="font-semibold text-slate-800">{cmd.piedsLineairesRampes || 0}</p></div>
+                  <div><label className="text-xs text-slate-500 uppercase">Couleur</label><p className="font-semibold text-slate-800">{cmd.couleur || '—'}</p></div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Date d'installation prévue</label>
-                <input type="date" defaultValue={selectedCommande.dateInstallation} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Heures estimées</label>
-                <input type="number" defaultValue={selectedCommande.heuresEstimees} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Adresse</label>
-                <input type="text" defaultValue={selectedCommande.adresse} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Notes</label>
-                <textarea defaultValue={selectedCommande.notes} rows={3} className="w-full px-4 py-3 border border-slate-200 rounded-xl resize-none"/>
-              </div>
+
+              {/* Section Commercial */}
+              {cmd.typeCommande === 'Commercial' && cmd.balconsDetails && cmd.balconsDetails.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <h2 className="text-lg font-bold text-slate-800 mb-4">Détails Commercial - Balcons</h2>
+                  <div className="grid grid-cols-4 gap-4 mb-4 p-4 bg-slate-50 rounded-xl">
+                    <div><label className="text-xs text-slate-500 uppercase">Nb Balcons</label><p className="text-2xl font-bold text-slate-800">{cmd.nombreBalcons}</p></div>
+                    <div><label className="text-xs text-slate-500 uppercase">Pieds lin. estimés</label><p className="text-2xl font-bold text-slate-800">{cmd.piedsLineairesEstime}</p></div>
+                    <div><label className="text-xs text-slate-500 uppercase">Pieds lin. réels</label><p className="text-2xl font-bold text-emerald-600">{cmd.piedsLineairesReels}</p></div>
+                    <div><label className="text-xs text-slate-500 uppercase">Différence</label><p className={`text-2xl font-bold ${cmd.differencesPiedsLineaires >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>{cmd.differencesPiedsLineaires}</p></div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-slate-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left">#</th>
+                          <th className="px-3 py-2 text-left">Balcon</th>
+                          <th className="px-3 py-2 text-right">Coût</th>
+                          <th className="px-3 py-2 text-right">Pi. Lin.</th>
+                          <th className="px-3 py-2 text-right">Poteaux</th>
+                          <th className="px-3 py-2 text-center">Produit</th>
+                          <th className="px-3 py-2 text-center">Inst. Term.</th>
+                          <th className="px-3 py-2 text-center">Reprise</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {cmd.balconsDetails.map((b, idx) => (
+                          <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                            <td className="px-3 py-2 font-medium">{b.id}</td>
+                            <td className="px-3 py-2">{b.balcon}</td>
+                            <td className="px-3 py-2 text-right">{b.coutBalcon?.toLocaleString()} $</td>
+                            <td className="px-3 py-2 text-right">{b.piedsLineaires}</td>
+                            <td className="px-3 py-2 text-right">{b.poteaux}</td>
+                            <td className="px-3 py-2 text-center">{b.produit ? '✓' : '—'}</td>
+                            <td className="px-3 py-2 text-center">{b.installationTerminee ? '✓' : '—'}</td>
+                            <td className="px-3 py-2 text-center">{b.reprise ? '✓' : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-100">
-              <button onClick={() => setSelectedCommande(null)} className="px-6 py-2.5 border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50">Annuler</button>
-              <button onClick={() => setSelectedCommande(null)} className="px-6 py-2.5 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-xl flex items-center gap-2">
-                <Icon name="save" size={18}/>Enregistrer
-              </button>
+
+            {/* Colonne droite */}
+            <div className="space-y-6">
+              {/* Statut */}
+              <div className={`rounded-2xl p-6 ${cmd.statut === 'Active' ? 'bg-emerald-500' : 'bg-slate-500'} text-white`}>
+                <h2 className="text-lg font-bold mb-2">Statut</h2>
+                <p className="text-3xl font-bold">{cmd.statut}</p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActiviteBgColor(cmd.activite)} ${getActiviteColor(cmd.activite)}`}>{cmd.activite}</span>
+                  {cmd.projet && <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20">Projet</span>}
+                  {cmd.reprise && <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20">Reprise</span>}
+                  {cmd.structure && <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white/20">Structure</span>}
+                </div>
+              </div>
+
+              {/* Production */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-800 mb-4">Production</h2>
+                <div className="space-y-3">
+                  {[
+                    { label: 'Mesure', value: cmd.mesure },
+                    { label: 'Plan', value: cmd.plan },
+                    { label: 'Envoyé en production', value: cmd.envoyeProduction },
+                    { label: 'Production terminée', value: cmd.productionTerminee },
+                    { label: 'Terminé', value: cmd.termine },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center">
+                      <span className="text-sm text-slate-600">{item.label}</span>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${item.value === 'Oui' ? 'bg-emerald-100 text-emerald-800' : item.value === 'Non' ? 'bg-red-100 text-red-800' : 'bg-slate-100 text-slate-600'}`}>
+                        {item.value || '—'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Achats */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h2 className="text-lg font-bold text-slate-800 mb-4">Achats</h2>
+                <div className="space-y-2 text-sm">
+                  {[
+                    { label: 'Fibre', value: cmd.achatFibre, date: cmd.dateReceptionFibre },
+                    { label: 'Limons', value: cmd.achatLimons, date: cmd.dateReceptionLimons },
+                    { label: 'Verres', value: cmd.achatVerres, date: cmd.dateReceptionVerre },
+                    { label: 'Colonnes', value: cmd.achatColonnes, date: cmd.dateReceptionColonnes },
+                    { label: 'Peinture', value: cmd.achatPeinture, date: cmd.dateReceptionPeinture },
+                    { label: 'Attaches', value: cmd.achatAttaches, date: cmd.dateReceptionAttaches },
+                    { label: 'Plancher alu.', value: cmd.achatPlancherAluminium, date: cmd.dateReceptionPlancherAluminium },
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center py-1 border-b border-slate-100 last:border-0">
+                      <span className="text-slate-600">{item.label}</span>
+                      <div className="text-right">
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold ${item.value === 'Reçu' ? 'bg-emerald-100 text-emerald-800' : item.value === 'Commandé' ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-500'}`}>
+                          {item.value || '—'}
+                        </span>
+                        {item.date && <p className="text-xs text-slate-400 mt-0.5">{item.date}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
       );
     }
 
-    const filteredCommandes = commandes.filter(cmd => commandeTab === 'actives' ? cmd.statut === 'Active' : cmd.statut === 'Complétée');
+    // ==== MODAL FORMULAIRE ====
+    const renderCommandeModal = () => (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+            <h2 className="text-xl font-bold text-slate-800">
+              {editingCommande ? `Modifier ${editingCommande.num}` : 'Nouvelle commande'}
+            </h2>
+            <div className="flex items-center gap-2">
+              <button onClick={saveCommande} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg flex items-center gap-2">
+                <Icon name="save" size={18}/>Enregistrer
+              </button>
+              <button onClick={() => setShowCommandeModal(false)} className="p-2 hover:bg-slate-200 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+          </div>
 
+          {/* Navigation sections */}
+          <div className="flex gap-1 p-2 bg-slate-100 overflow-x-auto">
+            {['Général', 'Dates & Prix', 'Production', 'Achats', 'Rampes', 'Commercial'].map((section, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCommandeFormSection(idx + 1)}
+                className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${commandeFormSection === idx + 1 ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600 hover:bg-white/50'}`}
+              >
+                {section}
+              </button>
+            ))}
+          </div>
+
+          {/* Contenu */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {/* Section 1: Général */}
+            {commandeFormSection === 1 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2"><span className="text-red-500">*</span> N° Commande</label>
+                    <input type="text" value={commandeForm.num} onChange={(e) => setCommandeForm({...commandeForm, num: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Nom du client</label>
+                    <select value={commandeForm.client} onChange={(e) => setCommandeForm({...commandeForm, client: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      <option value="">Sélectionner un client</option>
+                      {clientsList.map(c => <option key={c.id} value={c.nom}>{c.nom}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Référence</label>
+                    <input type="text" value={commandeForm.reference} onChange={(e) => setCommandeForm({...commandeForm, reference: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">Commentaire</label>
+                  <textarea value={commandeForm.commentaire} onChange={(e) => setCommandeForm({...commandeForm, commentaire: e.target.value})} rows={3} className="w-full px-4 py-3 border border-slate-200 rounded-xl resize-none"/>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Représentant</label>
+                    <select value={commandeForm.representant} onChange={(e) => setCommandeForm({...commandeForm, representant: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      <option value="">Sélectionner</option>
+                      {representants.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Service</label>
+                    <select value={commandeForm.service} onChange={(e) => setCommandeForm({...commandeForm, service: e.target.value, activite: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {services.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Ville</label>
+                    <input type="text" value={commandeForm.ville} onChange={(e) => setCommandeForm({...commandeForm, ville: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Type de commande</label>
+                    <select 
+                      value={commandeForm.typeCommande} 
+                      onChange={(e) => {
+                        const type = e.target.value;
+                        setCommandeForm({
+                          ...commandeForm, 
+                          typeCommande: type,
+                          balconsDetails: type === 'Commercial' ? generateBalconsDetails(commandeForm.nombreBalcons || 0) : []
+                        });
+                      }} 
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white"
+                    >
+                      {typesCommande.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Statut livraison</label>
+                    <select value={commandeForm.livraison} onChange={(e) => setCommandeForm({...commandeForm, livraison: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      <option value="Non effectuée">Non effectuée</option>
+                      <option value="Effectuée">Effectuée</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
+                    <span className="text-sm font-medium text-slate-700">Projet</span>
+                    <button onClick={() => setCommandeForm({...commandeForm, projet: !commandeForm.projet})} className={`w-12 h-6 rounded-full transition-colors relative ${commandeForm.projet ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${commandeForm.projet ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
+                    <span className="text-sm font-medium text-slate-700">Reprise</span>
+                    <button onClick={() => setCommandeForm({...commandeForm, reprise: !commandeForm.reprise})} className={`w-12 h-6 rounded-full transition-colors relative ${commandeForm.reprise ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${commandeForm.reprise ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
+                    <span className="text-sm font-medium text-slate-700">Structure</span>
+                    <button onClick={() => setCommandeForm({...commandeForm, structure: !commandeForm.structure})} className={`w-12 h-6 rounded-full transition-colors relative ${commandeForm.structure ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${commandeForm.structure ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl">
+                    <span className="text-sm font-medium text-slate-700">Temps inst.</span>
+                    <button onClick={() => setCommandeForm({...commandeForm, mettreTempInstallation: !commandeForm.mettreTempInstallation})} className={`w-12 h-6 rounded-full transition-colors relative ${commandeForm.mettreTempInstallation ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${commandeForm.mettreTempInstallation ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section 2: Dates & Prix */}
+            {commandeFormSection === 2 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-bold text-slate-800">Dates</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date d'entrée du dossier</label>
+                    <input type="date" value={commandeForm.dateEntree} onChange={(e) => setCommandeForm({...commandeForm, dateEntree: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date prévue</label>
+                    <input type="date" value={commandeForm.datePrevue} onChange={(e) => setCommandeForm({...commandeForm, datePrevue: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date de production</label>
+                    <input type="date" value={commandeForm.dateProduction} onChange={(e) => setCommandeForm({...commandeForm, dateProduction: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date de prise de mesure</label>
+                    <input type="date" value={commandeForm.datePriseMesure} onChange={(e) => setCommandeForm({...commandeForm, datePriseMesure: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date de livraison</label>
+                    <input type="date" value={commandeForm.dateLivraison} onChange={(e) => setCommandeForm({...commandeForm, dateLivraison: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Mesure donnée le</label>
+                    <input type="date" value={commandeForm.mesureDonneeLe} onChange={(e) => setCommandeForm({...commandeForm, mesureDonneeLe: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-800 pt-4">Prix et mesures</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Prix vente matériaux ($)</label>
+                    <input type="number" value={commandeForm.prixVenteMateriaux} onChange={(e) => setCommandeForm({...commandeForm, prixVenteMateriaux: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Prix vente installation ($)</label>
+                    <input type="number" value={commandeForm.prixVenteInstallation} onChange={(e) => setCommandeForm({...commandeForm, prixVenteInstallation: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Temps estimé installation (h)</label>
+                    <input type="number" value={commandeForm.tempsEstimeInstallation} onChange={(e) => setCommandeForm({...commandeForm, tempsEstimeInstallation: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds carrés de fibre</label>
+                    <input type="number" value={commandeForm.piedsCarresFibre} onChange={(e) => setCommandeForm({...commandeForm, piedsCarresFibre: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-800 pt-4">Avertissements</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Avertissement du client</label>
+                    <select value={commandeForm.avertissementClient} onChange={(e) => setCommandeForm({...commandeForm, avertissementClient: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsAvertissement.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date de l'avertissement</label>
+                    <input type="date" value={commandeForm.dateAvertissement} onChange={(e) => setCommandeForm({...commandeForm, dateAvertissement: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Avertissement prise de mesure</label>
+                    <select value={commandeForm.avertissementPriseMesure} onChange={(e) => setCommandeForm({...commandeForm, avertissementPriseMesure: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsAvertissement.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Date avertissement prise de mesure</label>
+                    <input type="date" value={commandeForm.dateAvertissementPriseMesure} onChange={(e) => setCommandeForm({...commandeForm, dateAvertissementPriseMesure: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section 3: Production */}
+            {commandeFormSection === 3 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Mesure</label>
+                    <select value={commandeForm.mesure} onChange={(e) => setCommandeForm({...commandeForm, mesure: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsOuiNon.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Plan</label>
+                    <select value={commandeForm.plan} onChange={(e) => setCommandeForm({...commandeForm, plan: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsOuiNon.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Envoyé en production</label>
+                    <select value={commandeForm.envoyeProduction} onChange={(e) => setCommandeForm({...commandeForm, envoyeProduction: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsOuiNon.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Production terminée</label>
+                    <select value={commandeForm.productionTerminee} onChange={(e) => setCommandeForm({...commandeForm, productionTerminee: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsOuiNon.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Terminé</label>
+                    <select value={commandeForm.termine} onChange={(e) => setCommandeForm({...commandeForm, termine: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      {optionsOuiNon.map(o => <option key={o} value={o}>{o || 'Sélectionner'}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Couleur</label>
+                    <select value={commandeForm.couleur} onChange={(e) => setCommandeForm({...commandeForm, couleur: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white">
+                      <option value="">Sélectionner</option>
+                      {couleurs.map(c => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section 4: Achats */}
+            {commandeFormSection === 4 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { label: 'Fibre', achat: 'achatFibre', date: 'dateReceptionFibre' },
+                    { label: 'Limons', achat: 'achatLimons', date: 'dateReceptionLimons' },
+                    { label: 'Verres', achat: 'achatVerres', date: 'dateReceptionVerre' },
+                    { label: 'Colonnes', achat: 'achatColonnes', date: 'dateReceptionColonnes' },
+                    { label: 'Peinture', achat: 'achatPeinture', date: 'dateReceptionPeinture' },
+                    { label: 'Attaches', achat: 'achatAttaches', date: 'dateReceptionAttaches' },
+                    { label: 'Plancher aluminium', achat: 'achatPlancherAluminium', date: 'dateReceptionPlancherAluminium' },
+                  ].map((item, idx) => (
+                    <div key={idx} className="p-4 border border-slate-200 rounded-xl">
+                      <h4 className="font-semibold text-slate-800 mb-3">Achat de {item.label.toLowerCase()}</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs text-slate-500 mb-1">Statut</label>
+                          <select value={commandeForm[item.achat]} onChange={(e) => setCommandeForm({...commandeForm, [item.achat]: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-sm">
+                            {optionsAchat.map(o => <option key={o} value={o}>{o || 'Non commandé'}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-slate-500 mb-1">Date de réception</label>
+                          <input type="date" value={commandeForm[item.date]} onChange={(e) => setCommandeForm({...commandeForm, [item.date]: e.target.value})} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"/>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Section 5: Rampes */}
+            {commandeFormSection === 5 && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds rampes en barrotin</label>
+                    <input type="number" value={commandeForm.piedsRampesBarrotin} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesBarrotin: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds rampes en verre</label>
+                    <input type="number" value={commandeForm.piedsRampesVerre} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesVerre: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds rampes mur intimité</label>
+                    <input type="number" value={commandeForm.piedsRampesMurIntimite} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesMurIntimite: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds rampes main double</label>
+                    <input type="number" value={commandeForm.piedsRampesMainDouble} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesMainDouble: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds Gardex Vision</label>
+                    <input type="number" value={commandeForm.piedsRampesGardexVision} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesGardexVision: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds Gardex Vision Urbaine</label>
+                    <input type="number" value={commandeForm.piedsRampesGardexVisionUrbaine} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesGardexVisionUrbaine: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds Gardex Vision Optimum</label>
+                    <input type="number" value={commandeForm.piedsRampesGardexVisionOptimum} onChange={(e) => setCommandeForm({...commandeForm, piedsRampesGardexVisionOptimum: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds linéaires de rampes (total)</label>
+                    <input type="number" value={commandeForm.piedsLineairesRampes} onChange={(e) => setCommandeForm({...commandeForm, piedsLineairesRampes: parseFloat(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Section 6: Commercial */}
+            {commandeFormSection === 6 && (
+              <div className="space-y-6">
+                {commandeForm.typeCommande !== 'Commercial' ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <p>Cette section est réservée aux commandes de type <strong>Commercial</strong>.</p>
+                    <p className="text-sm mt-2">Changez le type de commande dans la section Général pour accéder à ces options.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="p-4 bg-purple-50 border border-purple-200 rounded-xl">
+                      <p className="text-purple-800 font-medium">Commande commerciale - Remplissez les informations des balcons</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2"><span className="text-red-500">*</span> Nombre de balcons</label>
+                        <input 
+                          type="number" 
+                          value={commandeForm.nombreBalcons} 
+                          onChange={(e) => {
+                            const nb = parseInt(e.target.value) || 0;
+                            setCommandeForm({
+                              ...commandeForm, 
+                              nombreBalcons: nb,
+                              balconsDetails: generateBalconsDetails(nb)
+                            });
+                          }} 
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2"><span className="text-red-500">*</span> Pieds linéaires estimés</label>
+                        <input type="number" value={commandeForm.piedsLineairesEstime} onChange={(e) => setCommandeForm({...commandeForm, piedsLineairesEstime: parseFloat(e.target.value) || 0, differencesPiedsLineaires: (commandeForm.piedsLineairesReels || 0) - (parseFloat(e.target.value) || 0)})} className="w-full px-4 py-3 border border-slate-200 rounded-xl"/>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Pieds linéaires réels</label>
+                        <input type="number" value={commandeForm.piedsLineairesReels} readOnly className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50"/>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-700 mb-2">Différence</label>
+                        <input type="number" value={commandeForm.differencesPiedsLineaires} readOnly className={`w-full px-4 py-3 border rounded-xl ${commandeForm.differencesPiedsLineaires >= 0 ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}/>
+                      </div>
+                    </div>
+
+                    {commandeForm.balconsDetails.length > 0 && (
+                      <div className="mt-6">
+                        <h3 className="text-lg font-bold text-slate-800 mb-4">Détails par balcon</h3>
+                        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                          <table className="w-full text-sm">
+                            <thead className="bg-slate-100">
+                              <tr>
+                                <th className="px-3 py-3 text-left font-semibold">#</th>
+                                <th className="px-3 py-3 text-left font-semibold">Balcon</th>
+                                <th className="px-3 py-3 text-left font-semibold">Coût ($)</th>
+                                <th className="px-3 py-3 text-left font-semibold">Pieds lin.</th>
+                                <th className="px-3 py-3 text-left font-semibold">Poteaux</th>
+                                <th className="px-3 py-3 text-center font-semibold">Produit</th>
+                                <th className="px-3 py-3 text-center font-semibold">Inst. terminée</th>
+                                <th className="px-3 py-3 text-center font-semibold">Reprise</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {commandeForm.balconsDetails.map((balcon, idx) => (
+                                <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                                  <td className="px-3 py-2 font-medium">{balcon.id}</td>
+                                  <td className="px-3 py-2">
+                                    <input type="text" value={balcon.balcon} onChange={(e) => updateBalconDetail(idx, 'balcon', e.target.value)} className="w-full px-2 py-1 border border-slate-200 rounded text-sm"/>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <input type="number" value={balcon.coutBalcon} onChange={(e) => updateBalconDetail(idx, 'coutBalcon', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 border border-slate-200 rounded text-sm"/>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <input type="number" value={balcon.piedsLineaires} onChange={(e) => updateBalconDetail(idx, 'piedsLineaires', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 border border-slate-200 rounded text-sm"/>
+                                  </td>
+                                  <td className="px-3 py-2">
+                                    <input type="number" value={balcon.poteaux} onChange={(e) => updateBalconDetail(idx, 'poteaux', parseFloat(e.target.value) || 0)} className="w-full px-2 py-1 border border-slate-200 rounded text-sm"/>
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <input type="checkbox" checked={balcon.produit} onChange={(e) => updateBalconDetail(idx, 'produit', e.target.checked)} className="w-4 h-4 accent-emerald-500"/>
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <input type="checkbox" checked={balcon.installationTerminee} onChange={(e) => updateBalconDetail(idx, 'installationTerminee', e.target.checked)} className="w-4 h-4 accent-emerald-500"/>
+                                  </td>
+                                  <td className="px-3 py-2 text-center">
+                                    <input type="checkbox" checked={balcon.reprise} onChange={(e) => updateBalconDetail(idx, 'reprise', e.target.checked)} className="w-4 h-4 accent-red-500"/>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                            <tfoot className="bg-slate-200 font-semibold">
+                              <tr>
+                                <td className="px-3 py-2" colSpan={2}>TOTAL</td>
+                                <td className="px-3 py-2">{commandeForm.balconsDetails.reduce((a, b) => a + (b.coutBalcon || 0), 0).toLocaleString()} $</td>
+                                <td className="px-3 py-2">{commandeForm.piedsLineairesReels}</td>
+                                <td className="px-3 py-2">{commandeForm.nombrePoteaux}</td>
+                                <td colSpan={3}></td>
+                              </tr>
+                            </tfoot>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+
+    // ==== LISTE PRINCIPALE ====
     return (
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        {showCommandeModal && renderCommandeModal()}
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Gestion des commandes</h1>
             <p className="text-slate-500 mt-1">Suivez et gérez toutes vos commandes</p>
           </div>
-          <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
+          <button onClick={openAddCommande} className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-xl transition-all">
             <Icon name="plus" size={20}/>Nouvelle commande
           </button>
         </div>
 
+        {/* Tabs */}
         <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
           <button onClick={() => setCommandeTab('actives')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${commandeTab === 'actives' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            Actives ({commandes.filter(c => c.statut === 'Active').length})
+            Actives ({commandesList.filter(c => c.statut === 'Active').length})
           </button>
           <button onClick={() => setCommandeTab('completes')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${commandeTab === 'completes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            Complétées ({commandes.filter(c => c.statut === 'Complétée').length})
+            Complétées ({commandesList.filter(c => c.statut === 'Complétée').length})
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="p-4 border-b border-slate-100 flex gap-4">
-            <div className="relative flex-1">
-              <input type="text" placeholder="Rechercher..." className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl"/>
+        {/* Filtres */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="relative lg:col-span-1">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><Icon name="search" size={20}/></div>
+              <input 
+                type="text" 
+                value={commandeSearchTerm}
+                onChange={(e) => setCommandeSearchTerm(e.target.value)}
+                placeholder="Rechercher..." 
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400"
+              />
             </div>
-            <select className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
-              <option>Tous les types</option>
-              <option>Standard</option>
-              <option>Commercial</option>
-              <option>Multi-phases</option>
+            <select value={commandeFilterClient} onChange={(e) => setCommandeFilterClient(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
+              <option value="tous">Tous les clients</option>
+              {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
+            <select value={commandeFilterRepresentant} onChange={(e) => setCommandeFilterRepresentant(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
+              <option value="tous">Tous les représentants</option>
+              {uniqueRepresentants.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select value={commandeFilterService} onChange={(e) => setCommandeFilterService(e.target.value)} className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
+              <option value="tous">Tous les services</option>
+              {services.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <button 
+              onClick={() => { setCommandeSearchTerm(''); setCommandeFilterClient('tous'); setCommandeFilterRepresentant('tous'); setCommandeFilterService('tous'); }}
+              className="px-4 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2"
+            >
+              <Icon name="x" size={16}/>Réinitialiser
+            </button>
           </div>
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">N° Commande</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Type</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">{commandeTab === 'actives' ? 'Date prévue' : 'Date complétée'}</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
-                <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredCommandes.map(cmd => (
-                <tr key={cmd.id} className={`${getActiviteRowBg(cmd.activite)} transition-colors`}>
-                  <td className="px-6 py-4">
-                    <div className={`inline-block px-4 py-2 rounded-lg border-2 shadow-sm ${getActiviteCardBg(cmd.activite)}`}>
-                      <span className="font-mono font-bold text-sm">{cmd.num}</span>
-                      <p className="text-xs font-semibold mt-0.5 opacity-90">{cmd.activite}</p>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium text-slate-800">{cmd.client}</div>
-                    <div className="text-sm text-slate-500">{cmd.representant}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cmd.type === 'Standard' ? 'bg-blue-100 text-blue-800' : cmd.type === 'Commercial' ? 'bg-purple-100 text-purple-800' : 'bg-orange-100 text-orange-800'}`}>{cmd.type}</span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600">{commandeTab === 'actives' ? cmd.dateInstallation : cmd.dateCompletion}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cmd.statut === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>{cmd.statut}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex gap-2">
-                      <button onClick={() => setSelectedCommande(cmd)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="edit" size={18}/></button>
-                      {cmd.statut === 'Active' && <button onClick={() => completeCommande(cmd.id)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg"><Icon name="check" size={18}/></button>}
-                    </div>
-                  </td>
+        </div>
+
+        {/* Statistiques */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-100">
+            <p className="text-sm text-slate-500">Total affiché</p>
+            <p className="text-2xl font-bold text-slate-800">{filteredCommandes.length}</p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <p className="text-sm text-blue-600">Livraisons</p>
+            <p className="text-2xl font-bold text-blue-700">{filteredCommandes.filter(c => c.service === 'Livraison').length}</p>
+          </div>
+          <div className="bg-red-50 p-4 rounded-xl border border-red-100">
+            <p className="text-sm text-red-600">Installations</p>
+            <p className="text-2xl font-bold text-red-700">{filteredCommandes.filter(c => c.service === 'Installation').length}</p>
+          </div>
+          <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-100">
+            <p className="text-sm text-yellow-600">Cueillettes</p>
+            <p className="text-2xl font-bold text-yellow-700">{filteredCommandes.filter(c => c.service === 'Cueillette').length}</p>
+          </div>
+        </div>
+
+        {/* Tableau */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">N° Commande</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Service</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Date prévue</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Livraison</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredCommandes.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-slate-500">Aucune commande trouvée</td>
+                  </tr>
+                ) : (
+                  filteredCommandes.map(cmd => (
+                    <tr key={cmd.id} className={`${getActiviteRowBg(cmd.service)} hover:bg-opacity-75 transition-colors cursor-pointer`} onClick={() => setSelectedCommandeDetail(cmd)}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`inline-block px-3 py-1.5 rounded-lg border-2 shadow-sm ${getActiviteCardBg(cmd.service)}`}>
+                            <span className="font-mono font-bold text-sm">{cmd.num}</span>
+                          </div>
+                          {cmd.commentaire && (
+                            <div className="relative group">
+                              <div className="w-6 h-6 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center cursor-pointer">
+                                <Icon name="mail" size={14}/>
+                              </div>
+                              <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10">
+                                <div className="bg-slate-800 text-white text-xs rounded-lg p-3 max-w-xs shadow-lg">
+                                  {cmd.commentaire}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-slate-800">{cmd.client}</div>
+                        <div className="text-sm text-slate-500">{cmd.representant}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          cmd.typeCommande === 'Standard' ? 'bg-blue-100 text-blue-800' : 
+                          cmd.typeCommande === 'Commercial' ? 'bg-purple-100 text-purple-800' : 
+                          cmd.typeCommande === 'Multi-phase' ? 'bg-orange-100 text-orange-800' :
+                          'bg-teal-100 text-teal-800'
+                        }`}>
+                          {cmd.typeCommande}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>
+                          {cmd.service}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{cmd.datePrevue || '—'}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${cmd.livraison === 'Effectuée' ? 'bg-emerald-100 text-emerald-800' : 'bg-orange-100 text-orange-800'}`}>
+                          {cmd.livraison}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex gap-1">
+                          <button onClick={() => openEditCommande(cmd)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Modifier">
+                            <Icon name="edit" size={18}/>
+                          </button>
+                          {cmd.statut === 'Active' && (
+                            <button onClick={() => completeCommande(cmd.id)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg" title="Compléter">
+                              <Icon name="check" size={18}/>
+                            </button>
+                          )}
+                          <button onClick={() => deleteCommande(cmd.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg" title="Supprimer">
+                            <Icon name="x" size={18}/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Légende */}
+        <div className="bg-slate-50 rounded-xl p-4 flex flex-wrap items-center gap-4 text-sm">
+          <span className="text-slate-600 font-medium">Légende services:</span>
+          <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-blue-500"></div><span>Livraison</span></div>
+          <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-yellow-400"></div><span>Cueillette</span></div>
+          <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-red-600"></div><span>Installation</span></div>
+          <div className="flex items-center gap-2"><div className="w-4 h-4 rounded-full bg-green-500"></div><span>Transport</span></div>
         </div>
       </div>
     );
