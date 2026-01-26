@@ -132,6 +132,151 @@ export default function RampesGardexApp() {
     { id: 'parametres', icon: 'settings', label: 'Paramètres' },
   ];
 
+  //etat et fonctions pour la gestion des clients
+  const [clientsList, setClientsList] = useState([
+    { 
+      id: 1, 
+      nom: 'Construction Leblanc', 
+      type: 'Entrepreneur',
+      adresse: '123 Rue Principale',
+      ville: 'Montréal',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: 'H2X 1Y6',
+      telephone: '514-555-0101',
+      cellulaire: '514-555-0102',
+      fax: '',
+      contact: 'Jean Leblanc', 
+      emails: ['jean@leblanc.ca'],
+      communicationTexto: false,
+      communicationCourriel: true,
+      communicationTelephone: true,
+      commentaires: '',
+      commandesEnCours: [
+        { type: 'Installation', count: 2 },
+        { type: 'Livraison', count: 1 }
+      ]
+    },
+    { 
+      id: 2, 
+      nom: 'Rénovations ABC', 
+      type: 'Entrepreneur',
+      adresse: '456 Boul. St-Laurent',
+      ville: 'Laval',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: 'H7N 3B6',
+      telephone: '450-555-0202',
+      cellulaire: '',
+      fax: '450-555-0203',
+      contact: 'Marie Côté', 
+      emails: ['marie@abc-reno.ca', 'info@abc-reno.ca'],
+      communicationTexto: true,
+      communicationCourriel: true,
+      communicationTelephone: false,
+      commentaires: 'Client prioritaire',
+      commandesEnCours: [
+        { type: 'Cueillette', count: 1 },
+        { type: 'Transport', count: 2 }
+      ]
+    },
+    { 
+      id: 3, 
+      nom: 'Gestion Immobilière XYZ', 
+      type: 'Distributeur',
+      adresse: '789 Ave du Parc',
+      ville: 'Longueuil',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: 'J4H 2T5',
+      telephone: '514-555-0303',
+      cellulaire: '514-555-0304',
+      fax: '',
+      contact: 'Robert Martin', 
+      emails: ['robert@xyz-immo.ca', 'admin@xyz-immo.ca', 'facturation@xyz-immo.ca'],
+      communicationTexto: false,
+      communicationCourriel: true,
+      communicationTelephone: true,
+      commentaires: 'Multi-logements - contrat annuel',
+      commandesEnCours: [
+        { type: 'Installation', count: 3 },
+        { type: 'Livraison', count: 2 },
+        { type: 'Cueillette', count: 1 },
+        { type: 'Transport', count: 1 }
+      ]
+    },
+    { 
+      id: 4, 
+      nom: 'Michel Tremblay', 
+      type: 'Résidentiel',
+      adresse: '321 Rue des Érables',
+      ville: 'Brossard',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: 'J4W 2R5',
+      telephone: '450-555-0404',
+      cellulaire: '450-555-0405',
+      fax: '',
+      contact: 'Michel Tremblay', 
+      emails: ['michel.tremblay@gmail.com'],
+      communicationTexto: true,
+      communicationCourriel: false,
+      communicationTelephone: true,
+      commentaires: '',
+      commandesEnCours: [
+        { type: 'Installation', count: 1 }
+      ]
+    },
+    { 
+      id: 5, 
+      nom: 'Pro-Rampes Québec', 
+      type: 'Ambassadeur',
+      adresse: '555 Boul. Industriel',
+      ville: 'Québec',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: 'G1K 4E2',
+      telephone: '418-555-0505',
+      cellulaire: '418-555-0506',
+      fax: '418-555-0507',
+      contact: 'Sylvie Gagnon', 
+      emails: ['sylvie@prorampes.ca', 'ventes@prorampes.ca'],
+      communicationTexto: true,
+      communicationCourriel: true,
+      communicationTelephone: true,
+      commentaires: 'Ambassadeur région Québec',
+      commandesEnCours: []
+    },
+  ]);
+
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
+  const [clientForm, setClientForm] = useState({
+    nom: '',
+    type: 'Entrepreneur',
+    adresse: '',
+    ville: '',
+    province: 'Québec',
+    pays: 'Canada',
+    codePostal: '',
+    telephone: '',
+    cellulaire: '',
+    fax: '',
+    contact: '',
+    emails: [''],
+    communicationTexto: false,
+    communicationCourriel: false,
+    communicationTelephone: false,
+    commentaires: ''
+  });
+
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [clientFilterType, setClientFilterType] = useState('tous');
+
+  const typesClient = ['Entrepreneur', 'Résidentiel', 'Distributeur', 'Ambassadeur'];
+  const provinces = ['Québec', 'Ontario', 'Nouveau-Brunswick', 'Nouvelle-Écosse', 'Manitoba', 'Saskatchewan', 'Alberta', 'Colombie-Britannique', 'Île-du-Prince-Édouard', 'Terre-Neuve-et-Labrador'];
+
+
   // === FONCTIONS ===
   // Couleurs selon la politique: Cueillette=jaune, Livraison=bleu, Installation=rouge, Transport=vert
   const getActiviteColor = (activite) => {
@@ -319,50 +464,516 @@ export default function RampesGardexApp() {
   );
 
   // === CLIENTS ===
-  const Clients = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Gestion des clients</h1>
-          <p className="text-slate-500 mt-1">Gérez votre base de clients</p>
+  // Fonctions CRUD Clients
+  const openAddClient = () => {
+    setEditingClient(null);
+    setClientForm({
+      nom: '',
+      type: 'Entrepreneur',
+      adresse: '',
+      ville: '',
+      province: 'Québec',
+      pays: 'Canada',
+      codePostal: '',
+      telephone: '',
+      cellulaire: '',
+      fax: '',
+      contact: '',
+      emails: [''],
+      communicationTexto: false,
+      communicationCourriel: false,
+      communicationTelephone: false,
+      commentaires: ''
+    });
+    setShowClientModal(true);
+  };
+
+  const openEditClient = (client) => {
+    setEditingClient(client);
+    setClientForm({ ...client, emails: [...client.emails] });
+    setShowClientModal(true);
+  };
+
+  const saveClient = () => {
+    // Filtrer les emails vides
+    const cleanedEmails = clientForm.emails.filter(e => e.trim() !== '');
+    const clientData = { ...clientForm, emails: cleanedEmails.length > 0 ? cleanedEmails : [''] };
+    
+    if (editingClient) {
+      setClientsList(prev => prev.map(c => c.id === editingClient.id ? { ...c, ...clientData } : c));
+    } else {
+      const newId = Math.max(...clientsList.map(c => c.id), 0) + 1;
+      setClientsList(prev => [...prev, { id: newId, ...clientData, commandesEnCours: [] }]);
+    }
+    setShowClientModal(false);
+  };
+
+  const deleteClient = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client? Cette action est irréversible.')) {
+      setClientsList(prev => prev.filter(c => c.id !== id));
+    }
+  };
+
+  const addEmailField = () => {
+    setClientForm(prev => ({ ...prev, emails: [...prev.emails, ''] }));
+  };
+
+  const removeEmailField = (index) => {
+    if (clientForm.emails.length > 1) {
+      setClientForm(prev => ({ ...prev, emails: prev.emails.filter((_, i) => i !== index) }));
+    }
+  };
+
+  const updateEmail = (index, value) => {
+    setClientForm(prev => ({
+      ...prev,
+      emails: prev.emails.map((e, i) => i === index ? value : e)
+    }));
+  };
+
+  // Fonction pour obtenir la couleur du badge de type
+  const getTypeColor = (type) => {
+    switch(type) {
+      case 'Entrepreneur': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Résidentiel': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Distributeur': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Ambassadeur': return 'bg-amber-100 text-amber-800 border-amber-200';
+      default: return 'bg-slate-100 text-slate-800 border-slate-200';
+    }
+  };
+
+  // Fonction pour obtenir la couleur des cercles de commandes
+  const getCommandeColor = (type) => {
+    switch(type) {
+      case 'Livraison': return 'bg-blue-500';
+      case 'Cueillette': return 'bg-yellow-400';
+      case 'Installation': return 'bg-red-600';
+      case 'Transport': return 'bg-green-500';
+      default: return 'bg-slate-400';
+    }
+  };
+
+  // === CLIENTS ===
+  const Clients = () => {
+    // Filtrage des clients
+    const filteredClients = clientsList
+      .filter(c => clientFilterType === 'tous' || c.type === clientFilterType)
+      .filter(c => {
+        if (!clientSearchTerm) return true;
+        const search = clientSearchTerm.toLowerCase();
+        return (
+          c.nom.toLowerCase().includes(search) ||
+          c.adresse.toLowerCase().includes(search) ||
+          c.ville.toLowerCase().includes(search) ||
+          c.telephone.includes(search) ||
+          c.contact.toLowerCase().includes(search)
+        );
+      });
+
+    return (
+      <div className="space-y-6">
+        {/* Modal Ajouter/Modifier Client */}
+        {showClientModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              {/* Header Modal */}
+              <div className="flex items-center justify-between p-6 border-b border-slate-200 bg-slate-50">
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {editingClient ? 'Modifier le client' : 'Nouveau client'}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={saveClient} className="p-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg" title="Enregistrer">
+                    <Icon name="save" size={24}/>
+                  </button>
+                  <button onClick={() => setShowClientModal(false)} className="p-2 hover:bg-slate-200 rounded-lg" title="Fermer">
+                    <Icon name="x" size={24}/>
+                  </button>
+                </div>
+              </div>
+              
+              {/* Contenu scrollable */}
+              <div className="overflow-y-auto max-h-[calc(90vh-80px)] p-6">
+                <div className="space-y-6">
+                  {/* Informations principales */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <span className="text-red-500">*</span> Nom du client
+                      </label>
+                      <input 
+                        type="text" 
+                        value={clientForm.nom} 
+                        onChange={(e) => setClientForm({...clientForm, nom: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="Nom de l'entreprise ou du client"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Type de client</label>
+                      <select 
+                        value={clientForm.type} 
+                        onChange={(e) => setClientForm({...clientForm, type: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-amber-400"
+                      >
+                        {typesClient.map(t => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Adresse */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Adresse</label>
+                      <input 
+                        type="text" 
+                        value={clientForm.adresse} 
+                        onChange={(e) => setClientForm({...clientForm, adresse: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="Numéro et rue"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Ville</label>
+                      <input 
+                        type="text" 
+                        value={clientForm.ville} 
+                        onChange={(e) => setClientForm({...clientForm, ville: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="Ville"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <span className="text-red-500">*</span> Province
+                      </label>
+                      <select 
+                        value={clientForm.province} 
+                        onChange={(e) => setClientForm({...clientForm, province: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-amber-400"
+                      >
+                        {provinces.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <span className="text-red-500">*</span> Pays
+                      </label>
+                      <select 
+                        value={clientForm.pays} 
+                        onChange={(e) => setClientForm({...clientForm, pays: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-amber-400"
+                      >
+                        <option value="Canada">Canada</option>
+                        <option value="États-Unis">États-Unis</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Code Postal</label>
+                      <input 
+                        type="text" 
+                        value={clientForm.codePostal} 
+                        onChange={(e) => setClientForm({...clientForm, codePostal: e.target.value.toUpperCase()})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="A1A 1A1"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Préférences de communication */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-3">Préférences de communication</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+                        <span className="text-sm font-medium text-slate-700">Communication par: Texto</span>
+                        <button 
+                          onClick={() => setClientForm({...clientForm, communicationTexto: !clientForm.communicationTexto})}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${clientForm.communicationTexto ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${clientForm.communicationTexto ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+                        <span className="text-sm font-medium text-slate-700">Communication par: Courriel</span>
+                        <button 
+                          onClick={() => setClientForm({...clientForm, communicationCourriel: !clientForm.communicationCourriel})}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${clientForm.communicationCourriel ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${clientForm.communicationCourriel ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                        </button>
+                      </div>
+                      <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl">
+                        <span className="text-sm font-medium text-slate-700">Communication par: Téléphone</span>
+                        <button 
+                          onClick={() => setClientForm({...clientForm, communicationTelephone: !clientForm.communicationTelephone})}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${clientForm.communicationTelephone ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                        >
+                          <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform ${clientForm.communicationTelephone ? 'translate-x-6' : 'translate-x-0.5'}`}/>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Téléphones */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Téléphone</label>
+                      <input 
+                        type="tel" 
+                        value={clientForm.telephone} 
+                        onChange={(e) => setClientForm({...clientForm, telephone: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="514-555-0000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Cellulaire (texto)</label>
+                      <input 
+                        type="tel" 
+                        value={clientForm.cellulaire} 
+                        onChange={(e) => setClientForm({...clientForm, cellulaire: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="514-555-0000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">Fax</label>
+                      <input 
+                        type="tel" 
+                        value={clientForm.fax} 
+                        onChange={(e) => setClientForm({...clientForm, fax: e.target.value})} 
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                        placeholder="514-555-0000"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Personne contact */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Personne contact</label>
+                    <input 
+                      type="text" 
+                      value={clientForm.contact} 
+                      onChange={(e) => setClientForm({...clientForm, contact: e.target.value})} 
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                      placeholder="Nom de la personne contact"
+                    />
+                  </div>
+
+                  {/* Emails dynamiques */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-slate-700">Adresses courriel</label>
+                      <button 
+                        onClick={addEmailField}
+                        className="text-sm text-amber-600 hover:text-amber-700 font-medium flex items-center gap-1"
+                      >
+                        <Icon name="plus" size={16}/> Ajouter un courriel
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {clientForm.emails.map((email, index) => (
+                        <div key={index} className="flex gap-2">
+                          <input 
+                            type="email" 
+                            value={email} 
+                            onChange={(e) => updateEmail(index, e.target.value)} 
+                            className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400" 
+                            placeholder={`Courriel ${index + 1}`}
+                          />
+                          {clientForm.emails.length > 1 && (
+                            <button 
+                              onClick={() => removeEmailField(index)}
+                              className="p-3 text-red-500 hover:bg-red-50 rounded-xl"
+                            >
+                              <Icon name="x" size={20}/>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Commentaires */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Commentaires</label>
+                    <textarea 
+                      value={clientForm.commentaires} 
+                      onChange={(e) => setClientForm({...clientForm, commentaires: e.target.value})} 
+                      rows={3}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400 resize-none" 
+                      placeholder="Notes ou commentaires sur le client..."
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Gestion des clients</h1>
+            <p className="text-slate-500 mt-1">Gérez votre base de clients</p>
+          </div>
+          <button 
+            onClick={openAddClient}
+            className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+          >
+            <Icon name="plus" size={20}/>Ajouter client
+          </button>
         </div>
-        <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
-          <Icon name="plus" size={20}/>Ajouter client
-        </button>
+
+        {/* Filtres et recherche */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                <Icon name="search" size={20}/>
+              </div>
+              <input 
+                type="text" 
+                value={clientSearchTerm}
+                onChange={(e) => setClientSearchTerm(e.target.value)}
+                placeholder="Rechercher par nom, adresse, téléphone..." 
+                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-amber-400"
+              />
+            </div>
+            <select 
+              value={clientFilterType}
+              onChange={(e) => setClientFilterType(e.target.value)}
+              className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white focus:outline-none focus:border-amber-400"
+            >
+              <option value="tous">Tous les types</option>
+              {typesClient.map(t => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* Statistiques rapides */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-100">
+            <p className="text-sm text-slate-500">Total clients</p>
+            <p className="text-2xl font-bold text-slate-800 mt-1">{clientsList.length}</p>
+          </div>
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <p className="text-sm text-blue-600">Entrepreneurs</p>
+            <p className="text-2xl font-bold text-blue-700 mt-1">{clientsList.filter(c => c.type === 'Entrepreneur').length}</p>
+          </div>
+          <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+            <p className="text-sm text-green-600">Résidentiels</p>
+            <p className="text-2xl font-bold text-green-700 mt-1">{clientsList.filter(c => c.type === 'Résidentiel').length}</p>
+          </div>
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+            <p className="text-sm text-amber-600">Ambassadeurs</p>
+            <p className="text-2xl font-bold text-amber-700 mt-1">{clientsList.filter(c => c.type === 'Ambassadeur').length}</p>
+          </div>
+        </div>
+
+        {/* Tableau des clients */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Type</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contact</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Commandes en cours</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredClients.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-slate-500">
+                      Aucun client trouvé
+                    </td>
+                  </tr>
+                ) : (
+                  filteredClients.map(client => (
+                    <tr key={client.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <div className="font-semibold text-slate-800">{client.nom}</div>
+                        <div className="text-sm text-slate-500">{client.emails[0]}</div>
+                        <div className="text-xs text-slate-400 mt-1">{client.adresse}, {client.ville}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getTypeColor(client.type)}`}>
+                          {client.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600">{client.contact}</td>
+                      <td className="px-6 py-4 text-slate-600">{client.telephone}</td>
+                      <td className="px-6 py-4">
+                        {client.commandesEnCours.length === 0 ? (
+                          <span className="text-slate-400 text-sm">Aucune</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {client.commandesEnCours.map((cmd, idx) => (
+                              <div key={idx} className="flex items-center gap-1" title={`${cmd.count} ${cmd.type}`}>
+                                {[...Array(cmd.count)].map((_, i) => (
+                                  <div 
+                                    key={i} 
+                                    className={`w-4 h-4 rounded-full ${getCommandeColor(cmd.type)} border-2 border-white shadow-sm`}
+                                    title={cmd.type}
+                                  />
+                                ))}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => openEditClient(client)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Modifier"
+                          >
+                            <Icon name="edit" size={18}/>
+                          </button>
+                          <button 
+                            onClick={() => deleteClient(client.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Supprimer"
+                          >
+                            <Icon name="x" size={18}/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Légende des couleurs */}
+        <div className="bg-slate-50 rounded-xl p-4 flex flex-wrap items-center gap-4 text-sm">
+          <span className="text-slate-600 font-medium">Légende commandes:</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-blue-500"></div>
+            <span className="text-slate-600">Livraison</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-yellow-400"></div>
+            <span className="text-slate-600">Cueillette</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-red-600"></div>
+            <span className="text-slate-600">Installation</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+            <span className="text-slate-600">Transport</span>
+          </div>
+        </div>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contact</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Commandes</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {clients.map(client => (
-              <tr key={client.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4">
-                  <div className="font-semibold text-slate-800">{client.nom}</div>
-                  <div className="text-sm text-slate-500">{client.email}</div>
-                </td>
-                <td className="px-6 py-4 text-slate-600">{client.contact}</td>
-                <td className="px-6 py-4 text-slate-600">{client.telephone}</td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-medium">{client.commandes}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+    );
+  };
 
   // === COMMANDES ===
   const Commandes = () => {
