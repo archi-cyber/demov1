@@ -50,7 +50,43 @@ export default function RampesGardexApp() {
   const [commandeTab, setCommandeTab] = useState('actives');
   const [attenteTab, setAttenteTab] = useState('clients');
   const [statsPeriode, setStatsPeriode] = useState('hebdomadaire');
+  /// === NOUVEAUX ÉTATS PRODUCTION ===
+  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 0, 1));
+  const [selectedProductionDate, setSelectedProductionDate] = useState(null);
+  const [showMettreEnProduction, setShowMettreEnProduction] = useState(false);
+  const [productionSearchTerm, setProductionSearchTerm] = useState('');
+  const [productionFilterSemaine, setProductionFilterSemaine] = useState('toutes');
 
+  const optionsAchat = [
+    { code: '', label: 'Non défini', color: 'bg-slate-100 text-slate-500' },
+    { code: '①', label: 'Achat à faire', color: 'bg-orange-100 text-orange-700' },
+    { code: '√', label: 'Achat fait', color: 'bg-blue-100 text-blue-700' },
+    { code: 'R', label: 'Achat réceptionné', color: 'bg-green-500 text-white' },
+    { code: 'P', label: 'Achat prêt à ramasser', color: 'bg-purple-100 text-purple-700' },
+    { code: 'B/O', label: 'Achat reçu partiellement (Back/Order)', color: 'bg-amber-100 text-amber-700' },
+  ];
+
+  // Options pour les codes de production
+  const optionsProduction = [
+    { code: '', label: 'Non défini', color: 'bg-slate-100 text-slate-500' },
+    { code: '√', label: 'Étape complétée', color: 'bg-emerald-500 text-white' },
+    { code: 'At.C', label: 'En attente réponse client', color: 'bg-yellow-100 text-yellow-700' },
+    { code: 'N/A', label: 'Non applicable', color: 'bg-slate-200 text-slate-600' },
+    { code: 'P', label: 'Étape partiellement complétée', color: 'bg-blue-100 text-blue-700' },
+    { code: 'D', label: 'Dossier donné au mesureur', color: 'bg-indigo-100 text-indigo-700' },
+    { code: 'M', label: 'Modification d\'un dossier', color: 'bg-orange-100 text-orange-700' },
+    { code: 'C-C', label: 'Attente confirmation Carol', color: 'bg-pink-100 text-pink-700' },
+    { code: 'C-RM', label: 'Attente Carol retourner mesures', color: 'bg-rose-100 text-rose-700' },
+    { code: 'B/O', label: 'Commande avec back order', color: 'bg-amber-100 text-amber-700' },
+    { code: 'At. Rep', label: 'Attente réponse représentant', color: 'bg-cyan-100 text-cyan-700' },
+  ];
+
+  // Fonction pour obtenir la couleur d'un code de statut
+  const getStatusColor = (code, type = 'achat') => {
+    const options = type === 'achat' ? optionsAchat : optionsProduction;
+    const option = options.find(o => o.code === code);
+    return option ? option.color : 'bg-slate-100 text-slate-500';
+  };
   // === DONNÉES ===
   const [commandes, setCommandes] = useState([
     { id: 1, num: 'CMD-2024-001', client: 'Construction Leblanc', representant: 'Marc Dupont', type: 'Standard', activite: 'Installation', statut: 'Active', dateInstallation: '2026-01-28', heuresEstimees: 6, heuresReelles: null, notes: 'Rampe aluminium 12 pieds', enProduction: true, productionTerminee: false, adresse: '123 Rue Principale, Montréal', equipe: 'Équipe A' },
@@ -601,7 +637,7 @@ export default function RampesGardexApp() {
   const services = ['Installation', 'Livraison', 'Cueillette', 'Transport'];
   const typesCommande = ['Standard', 'Commercial', 'Multi-phase', 'Multi-plan'];
   const couleurs = ['Noir', 'Blanc', 'Gris', 'Bronze', 'Argent', 'Brun'];
-  const optionsAchat = ['', 'Commandé', 'Reçu', 'En attente', 'N/A'];
+  //const optionsAchat = ['', 'Commandé', 'Reçu', 'En attente', 'N/A'];
   const optionsOuiNon = ['', 'Oui', 'Non'];
   const optionsAvertissement = ['', 'Par courriel', 'Par téléphone', 'En personne'];
 
@@ -2168,70 +2204,436 @@ export default function RampesGardexApp() {
   };
 
   // === PRODUCTION (COMPLET AVEC 3 ONGLETS) ===
+// === PRODUCTION ===
   const Production = () => {
-    const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'];
-    const weekDates = ['27', '28', '29', '30', '31'];
-    const commandesEnProduction = commandes.filter(c => c.enProduction && !c.productionTerminee);
+    // ===== CONSTANTES ET FONCTIONS UTILITAIRES =====
+    const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const dayNamesShort = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
+    // Générer les jours du mois
+    const getDaysInMonth = (date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDay = firstDay.getDay();
+      
+      const days = [];
+      const prevMonthLastDay = new Date(year, month, 0).getDate();
+      for (let i = startingDay - 1; i >= 0; i--) {
+        days.push({ day: prevMonthLastDay - i, currentMonth: false, date: new Date(year, month - 1, prevMonthLastDay - i) });
+      }
+      for (let i = 1; i <= daysInMonth; i++) {
+        days.push({ day: i, currentMonth: true, date: new Date(year, month, i) });
+      }
+      const remainingDays = 42 - days.length;
+      for (let i = 1; i <= remainingDays; i++) {
+        days.push({ day: i, currentMonth: false, date: new Date(year, month + 1, i) });
+      }
+      return days;
+    };
+
+    const days = getDaysInMonth(currentMonth);
+
+    const formatDateKey = (date) => date.toISOString().split('T')[0];
+
+    // Commandes en production (envoyeProduction = √ et pas encore terminées)
+    const commandesEnProduction = commandesList.filter(cmd => cmd.envoyeProduction === '√' && cmd.productionTerminee !== '√');
+    
+    // Commandes prêtes à être mises en production
+    const commandesPretesProduction = commandesList.filter(cmd => cmd.statut === 'Active' && cmd.productionTerminee !== '√');
+
+    // Obtenir les commandes pour une date donnée
+    const getCommandesForDate = (date) => {
+      const dateKey = formatDateKey(date);
+      return commandesEnProduction.filter(cmd => cmd.dateProduction === dateKey);
+    };
+
+    // Calculer les totaux pour une date
+    const getTotalsForDate = (date) => {
+      const cmds = getCommandesForDate(date);
+      return {
+        count: cmds.length,
+        piedsLineaires: cmds.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0),
+        poteaux: cmds.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0)
+      };
+    };
+
+    // Mettre une commande en production
+    const mettreEnProductionFn = (cmdId) => {
+      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, envoyeProduction: '√' } : cmd));
+    };
+
+    // Retirer de la production
+    const retirerDeProduction = (cmdId) => {
+      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, envoyeProduction: '' } : cmd));
+    };
+
+    // Terminer la production
+    const terminerProduction = (cmdId) => {
+      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, productionTerminee: '√' } : cmd));
+    };
+
+    // Obtenir les semaines du mois pour le filtre
+    const getSemainesDuMois = () => {
+      const semaines = [];
+      const year = currentMonth.getFullYear();
+      const month = currentMonth.getMonth();
+      let weekStart = new Date(year, month, 1);
+      while (weekStart.getMonth() === month) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        semaines.push({
+          label: `${weekStart.getDate()} - ${weekEnd.getDate() > weekStart.getDate() ? weekEnd.getDate() : new Date(year, month + 1, 0).getDate()} ${monthNames[month]}`,
+          start: new Date(weekStart),
+          end: weekEnd
+        });
+        weekStart = new Date(weekStart);
+        weekStart.setDate(weekStart.getDate() + 7);
+      }
+      return semaines;
+    };
+
+    const semaines = getSemainesDuMois();
+
+    // Calculer les statistiques
+    const getStatistiques = () => {
+      const now = new Date(2026, 0, 27);
+      let filteredCmds = commandesList.filter(cmd => cmd.envoyeProduction === '√');
+      
+      if (statsPeriode === 'journalier') {
+        filteredCmds = filteredCmds.filter(cmd => cmd.dateProduction === formatDateKey(now));
+      } else if (statsPeriode === 'hebdomadaire') {
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() - now.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        filteredCmds = filteredCmds.filter(cmd => {
+          const cmdDate = new Date(cmd.dateProduction);
+          return cmdDate >= weekStart && cmdDate <= weekEnd;
+        });
+      } else if (statsPeriode === 'mensuel') {
+        filteredCmds = filteredCmds.filter(cmd => {
+          const cmdDate = new Date(cmd.dateProduction);
+          return cmdDate.getMonth() === now.getMonth() && cmdDate.getFullYear() === now.getFullYear();
+        });
+      } else if (statsPeriode === 'annuel') {
+        filteredCmds = filteredCmds.filter(cmd => {
+          const cmdDate = new Date(cmd.dateProduction);
+          return cmdDate.getFullYear() === now.getFullYear();
+        });
+      }
+
+      return {
+        totalCommandes: filteredCmds.length,
+        piedsLineaires: filteredCmds.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0),
+        poteaux: filteredCmds.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0),
+        enProduction: filteredCmds.filter(cmd => cmd.productionTerminee !== '√').length,
+        terminees: filteredCmds.filter(cmd => cmd.productionTerminee === '√').length,
+        enAttente: commandesList.filter(cmd => cmd.statut === 'Active' && cmd.envoyeProduction !== '√').length
+      };
+    };
+
+    const stats = getStatistiques();
+
+    // ===== MODAL DÉTAILS D'UNE DATE =====
+    const DateDetailModal = () => {
+      if (!selectedProductionDate) return null;
+      const cmds = getCommandesForDate(selectedProductionDate);
+      const totals = getTotalsForDate(selectedProductionDate);
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <h2 className="text-xl font-bold">
+                Projet du : {selectedProductionDate.getDate()} {monthNames[selectedProductionDate.getMonth()]} {selectedProductionDate.getFullYear()}
+              </h2>
+              <button onClick={() => setSelectedProductionDate(null)} className="p-2 hover:bg-slate-700 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto max-h-[calc(90vh-200px)] p-4 space-y-4">
+              {cmds.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">Aucune commande en production pour cette date</div>
+              ) : (
+                cmds.map(cmd => (
+                  <div key={cmd.id} className="border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <span className="font-mono font-bold text-lg">{cmd.num}</span>
+                          <span className="text-slate-600">{cmd.client}</span>
+                        </div>
+                        <p className="text-sm text-slate-500 mb-3">{cmd.adresse}</p>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className={`px-3 py-1 rounded-full font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Date prévue</p>
+                            <p className="font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded inline-block">{cmd.datePrevue}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Date production</p>
+                            <p className="font-semibold">{cmd.dateProduction}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Date prise mesure</p>
+                            <p className="font-semibold text-amber-600 bg-amber-100 px-2 py-0.5 rounded inline-block">{cmd.datePriseMesure || '—'}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Mesure:</span>
+                            <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.mesure, 'production')}`}>{cmd.mesure || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Plan:</span>
+                            <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.plan, 'production')}`}>{cmd.plan || '—'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-slate-500">Envoyé prod:</span>
+                            <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.envoyeProduction, 'production')}`}>{cmd.envoyeProduction || '—'}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 mt-4 pt-4 border-t border-slate-100">
+                          <div><span className="text-slate-500 text-sm">Couleur:</span><span className="font-semibold ml-2">{cmd.couleur || '—'}</span></div>
+                          <div><span className="text-slate-500 text-sm">Pieds linéaires:</span><span className="font-bold text-lg ml-2">{cmd.piedsLineaires || 0}</span></div>
+                          <div><span className="text-slate-500 text-sm">Poteaux:</span><span className="font-bold text-lg ml-2">{cmd.nombrePoteaux || 0}</span></div>
+                        </div>
+                      </div>
+                      <button className="p-2 text-slate-400 hover:text-slate-600"><Icon name="right" size={24}/></button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="border-t border-slate-200 p-4 bg-slate-50">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setSelectedProductionDate(null)} className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Sortir</button>
+                <div className="flex-1 text-sm">
+                  <span className="font-semibold">{cmds.length}</span> commandes | 
+                  <span className="font-semibold text-emerald-600 ml-2">{totals.piedsLineaires}</span> pieds linéaires | 
+                  <span className="font-semibold text-blue-600 ml-2">{totals.poteaux}</span> poteaux
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ===== MODAL METTRE EN PRODUCTION =====
+    const MettreEnProductionModal = () => {
+      if (!showMettreEnProduction) return null;
+
+      const filteredCmds = commandesPretesProduction.filter(cmd => {
+        if (productionSearchTerm) {
+          const search = productionSearchTerm.toLowerCase();
+          if (!cmd.num.toLowerCase().includes(search) && !cmd.client.toLowerCase().includes(search)) return false;
+        }
+        if (productionFilterSemaine !== 'toutes') {
+          const semaine = semaines[parseInt(productionFilterSemaine)];
+          if (semaine) {
+            const cmdDate = new Date(cmd.datePrevue);
+            if (cmdDate < semaine.start || cmdDate > semaine.end) return false;
+          }
+        }
+        return true;
+      });
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setShowMettreEnProduction(false)} className="p-2 hover:bg-slate-700 rounded-lg"><Icon name="left" size={24}/></button>
+                <h2 className="text-xl font-bold">Envoyer des commandes en production</h2>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-slate-300">Commandes en production:</p>
+                  <p className="text-2xl font-bold">{commandesEnProduction.length}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center gap-4 p-4 bg-slate-100 border-b border-slate-200">
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-2 hover:bg-slate-200 rounded-full"><Icon name="left" size={28}/></button>
+              <h3 className="text-2xl font-bold text-slate-800 min-w-[200px] text-center">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h3>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 hover:bg-slate-200 rounded-full"><Icon name="right" size={28}/></button>
+            </div>
+
+            <div className="p-4 border-b border-slate-200 flex gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-600">Recherche</span>
+                <input type="text" value={productionSearchTerm} onChange={(e) => setProductionSearchTerm(e.target.value)} placeholder="# Projet" className="px-3 py-2 border border-slate-200 rounded-lg w-40"/>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-slate-600">Semaine</span>
+                <select value={productionFilterSemaine} onChange={(e) => setProductionFilterSemaine(e.target.value)} className="px-3 py-2 border border-slate-200 rounded-lg">
+                  <option value="toutes">Toutes les semaines</option>
+                  {semaines.map((s, idx) => <option key={idx} value={idx}>{s.label}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-100 sticky top-0">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold"># Projet</th>
+                    <th className="px-4 py-3 text-left font-semibold">Client</th>
+                    <th className="px-4 py-3 text-center font-semibold">Service</th>
+                    <th className="px-4 py-3 text-center font-semibold">Date Prévue<br/><span className="text-amber-600 text-xs">Date prise mesure</span></th>
+                    <th className="px-4 py-3 text-center font-semibold">Date Production</th>
+                    <th className="px-4 py-3 text-center font-semibold">Mesure</th>
+                    <th className="px-4 py-3 text-center font-semibold">Plan</th>
+                    <th className="px-4 py-3 text-center font-semibold">Envoyé Prod.</th>
+                    <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredCmds.map(cmd => (
+                    <tr key={cmd.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-mono font-bold">{cmd.num}</td>
+                      <td className="px-4 py-3">{cmd.client}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <p>{cmd.datePrevue}</p>
+                        <p className="text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs mt-1">{cmd.datePriseMesure || '—'}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <input type="date" value={cmd.dateProduction || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, dateProduction: e.target.value } : c))} className="px-2 py-1 border border-slate-200 rounded text-sm"/>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <select value={cmd.mesure || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, mesure: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.mesure, 'production')}`}>
+                          {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <select value={cmd.plan || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, plan: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.plan, 'production')}`}>
+                          {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <select value={cmd.envoyeProduction || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, envoyeProduction: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.envoyeProduction, 'production')}`}>
+                          {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {cmd.envoyeProduction === '√' ? (
+                          <button onClick={() => retirerDeProduction(cmd.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Retirer"><Icon name="x" size={18}/></button>
+                        ) : (
+                          <button onClick={() => mettreEnProductionFn(cmd.id)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Mettre en prod."><Icon name="check" size={18}/></button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50">
+              <button onClick={() => setShowMettreEnProduction(false)} className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Sortir</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ===== RENDU PRINCIPAL =====
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Production</h1>
-          <p className="text-slate-500 mt-1">Gérez la production de vos commandes</p>
+        <DateDetailModal />
+        <MettreEnProductionModal />
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Production</h1>
+            <p className="text-slate-500 mt-1">Gérez la production de vos commandes</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="px-2 py-1 bg-blue-500 text-white rounded">Livraison</span>
+              <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded">Cueillette</span>
+              <span className="px-2 py-1 bg-red-600 text-white rounded">Installation</span>
+              <span className="px-2 py-1 bg-green-500 text-white rounded">Transport</span>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-slate-500">Commandes en production:</p>
+              <p className="text-2xl font-bold text-slate-800">{commandesEnProduction.length}</p>
+            </div>
+            <button onClick={() => setShowMettreEnProduction(true)} className="flex items-center gap-2 px-4 py-3 border-2 border-slate-300 rounded-xl hover:bg-slate-50">
+              <div className="w-8 h-8 border-2 border-slate-400 rounded flex items-center justify-center"><Icon name="edit" size={18}/></div>
+              <span className="font-medium">Mettre en production</span>
+            </button>
+          </div>
         </div>
 
-        {/* ONGLETS */}
         <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
-          <button onClick={() => setProductionTab('calendrier')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'calendrier' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            <Icon name="calendar" size={18}/>Calendrier
-          </button>
-          <button onClick={() => setProductionTab('finaliser')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'finaliser' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            <Icon name="check" size={18}/>Finaliser
-          </button>
-          <button onClick={() => setProductionTab('statistiques')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'statistiques' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            <Icon name="chart" size={18}/>Statistiques
-          </button>
+          <button onClick={() => setProductionTab('calendrier')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'calendrier' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="calendar" size={18}/>Calendrier</button>
+          <button onClick={() => setProductionTab('finaliser')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'finaliser' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="check" size={18}/>Finaliser</button>
+          <button onClick={() => setProductionTab('statistiques')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'statistiques' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="chart" size={18}/>Statistiques</button>
         </div>
 
         {/* CALENDRIER */}
         {productionTab === 'calendrier' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-            <div className="flex items-center justify-between mb-6">
-              <button className="p-2 hover:bg-slate-100 rounded-lg"><Icon name="left" size={24}/></button>
-              <h2 className="text-xl font-bold text-slate-800">Semaine du 27 au 31 janvier 2026</h2>
-              <button className="p-2 hover:bg-slate-100 rounded-lg"><Icon name="right" size={24}/></button>
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="flex items-center justify-between p-4 bg-slate-800 text-white">
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-2 hover:bg-slate-700 rounded-full"><Icon name="left" size={28}/></button>
+              <h2 className="text-2xl font-bold">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
+              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 hover:bg-slate-700 rounded-full"><Icon name="right" size={28}/></button>
             </div>
-            <div className="grid grid-cols-5 gap-4">
-              {dayNames.map((day, index) => (
-                <div key={day} className={`border rounded-xl p-4 min-h-[200px] ${index === 1 ? 'border-amber-400 bg-amber-50/50' : 'border-slate-200'}`}>
-                  <div className="text-center mb-4">
-                    <p className="text-sm font-medium text-slate-500">{day}</p>
-                    <p className={`text-2xl font-bold ${index === 1 ? 'text-amber-600' : 'text-slate-800'}`}>{weekDates[index]}</p>
-                  </div>
-                  <div className="space-y-2">
-                    {commandes.filter(c => c.statut === 'Active' && c.dateInstallation === `2026-01-${weekDates[index]}`).map(cmd => (
-                      <div key={cmd.id} onClick={() => toggleProduction(cmd.id)} className={`p-3 rounded-lg text-sm cursor-pointer transition-all border-2 ${cmd.enProduction ? 'ring-2 ring-offset-1 ring-slate-800' : ''} ${getActiviteCardBg(cmd.activite)}`}>
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" checked={cmd.enProduction} onChange={() => {}} className="w-4 h-4 rounded"/>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-bold truncate">{cmd.num}</p>
-                            <p className="text-xs opacity-90 truncate">{cmd.client}</p>
-                            <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+
+            <div className="grid grid-cols-7 bg-slate-800 text-white">
+              {dayNamesShort.map((day, idx) => (
+                <div key={day} className="p-3 text-center border-r border-slate-700 last:border-r-0">
+                  <p className="font-medium">{day}</p>
+                  {idx > 0 && idx < 6 && <p className="text-xs text-slate-400">300</p>}
                 </div>
               ))}
             </div>
-            <div className="mt-4 flex gap-4 opacity-50">
-              <div className="flex-1 border border-dashed border-slate-300 rounded-xl p-4 text-center">
-                <p className="text-slate-400">Samedi - Fermé</p>
-              </div>
-              <div className="flex-1 border border-dashed border-slate-300 rounded-xl p-4 text-center">
-                <p className="text-slate-400">Dimanche - Fermé</p>
-              </div>
+
+            <div className="grid grid-cols-7">
+              {days.map((dayInfo, idx) => {
+                const totals = getTotalsForDate(dayInfo.date);
+                const cmds = getCommandesForDate(dayInfo.date);
+                const isWeekend = dayInfo.date.getDay() === 0 || dayInfo.date.getDay() === 6;
+                
+                return (
+                  <div key={idx} onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} className={`min-h-[120px] border-r border-b border-slate-200 p-2 ${!dayInfo.currentMonth ? 'bg-slate-100 text-slate-400' : isWeekend ? 'bg-slate-50' : 'bg-white'} ${totals.count > 0 ? 'cursor-pointer hover:bg-slate-50' : ''}`}>
+                    <p className={`text-lg font-bold mb-1 ${!dayInfo.currentMonth ? 'text-slate-300' : ''}`}>{dayInfo.day}</p>
+                    
+                    {totals.count > 0 && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-xs">
+                          <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium">{totals.count}</span>
+                          <span className="bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">{totals.piedsLineaires}</span>
+                        </div>
+                        
+                        {cmds.slice(0, 2).map(cmd => (
+                          <div key={cmd.id} className={`text-xs p-1.5 rounded ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)} truncate`}>
+                            <p className="font-bold truncate">{cmd.num}</p>
+                            <p className="truncate opacity-90">{cmd.client}</p>
+                          </div>
+                        ))}
+                        
+                        {cmds.length > 2 && <p className="text-xs text-slate-500 text-center">+{cmds.length - 2} autres</p>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
@@ -2239,37 +2641,59 @@ export default function RampesGardexApp() {
         {/* FINALISER */}
         {productionTab === 'finaliser' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div className="p-4 border-b border-slate-100">
-              <input type="text" placeholder="Rechercher une commande en production..." className="w-full px-4 py-2.5 border border-slate-200 rounded-xl"/>
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <input type="text" placeholder="Rechercher une commande..." className="flex-1 max-w-md px-4 py-2.5 border border-slate-200 rounded-xl"/>
+              <div className="text-sm text-slate-600"><span className="font-semibold">{commandesEnProduction.length}</span> commandes en production</div>
             </div>
+
             {commandesEnProduction.length === 0 ? (
-              <div className="p-12 text-center">
-                <p className="text-slate-500">Aucune commande en production</p>
-              </div>
+              <div className="p-12 text-center text-slate-500">Aucune commande en production</div>
             ) : (
-              <div className="divide-y divide-slate-100">
-                {commandesEnProduction.map(cmd => (
-                  <div key={cmd.id} className={`p-4 flex items-center justify-between ${getActiviteRowBg(cmd.activite)}`}>
-                    <div className="flex items-center gap-4">
-                      <div onClick={() => finaliserProduction(cmd.id)} className="w-12 h-12 bg-white rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-100 text-emerald-600 border border-slate-200">
-                        <Icon name="check" size={24}/>
-                      </div>
-                      <div className={`px-3 py-2 rounded-lg border-2 ${getActiviteCardBg(cmd.activite)}`}>
-                        <p className="font-bold">{cmd.num}</p>
-                        <p className="text-sm opacity-90">{cmd.client}</p>
-                        <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
-                      </div>
-                    </div>
-                    <div className="text-right mr-4">
-                      <p className="text-sm font-medium text-slate-700">{cmd.type}</p>
-                      <p className="text-xs text-slate-500">Installation: {cmd.dateInstallation}</p>
-                    </div>
-                    <button onClick={() => finaliserProduction(cmd.id)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg">
-                      Terminer production
-                    </button>
-                  </div>
-                ))}
-              </div>
+              <table className="w-full">
+                <thead className="bg-slate-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"># Projet</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Service</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Date Prod.</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Nb Poteaux</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Pieds Lin.</th>
+                    <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {commandesEnProduction.map(cmd => (
+                    <tr key={cmd.id} className={`${getActiviteRowBg(cmd.service)} hover:bg-opacity-75`}>
+                      <td className="px-4 py-4">
+                        <div className={`inline-block px-3 py-2 rounded-lg border-2 ${getActiviteCardBg(cmd.service)}`}>
+                          <p className="font-mono font-bold">{cmd.num}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-medium">{cmd.client}</p>
+                        <p className="text-sm text-slate-500">{cmd.adresse?.split(',')[0]}</p>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
+                      </td>
+                      <td className="px-4 py-4 text-center font-medium">{cmd.dateProduction}</td>
+                      <td className="px-4 py-4 text-center"><span className="text-xl font-bold text-slate-800">{cmd.nombrePoteaux || 0}</span></td>
+                      <td className="px-4 py-4 text-center"><span className="text-xl font-bold text-emerald-600">{cmd.piedsLineaires || 0}</span></td>
+                      <td className="px-4 py-4 text-center">
+                        <button onClick={() => terminerProduction(cmd.id)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg">Terminer production</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="bg-slate-100">
+                  <tr>
+                    <td colSpan={4} className="px-4 py-3 text-right font-semibold">TOTAUX:</td>
+                    <td className="px-4 py-3 text-center"><span className="text-xl font-bold">{commandesEnProduction.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0)}</span></td>
+                    <td className="px-4 py-3 text-center"><span className="text-xl font-bold text-emerald-600">{commandesEnProduction.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0)}</span></td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
             )}
           </div>
         )}
@@ -2279,36 +2703,78 @@ export default function RampesGardexApp() {
           <div className="space-y-6">
             <div className="flex gap-2 bg-white p-1 rounded-xl w-fit border border-slate-200">
               {['journalier', 'hebdomadaire', 'mensuel', 'annuel'].map(p => (
-                <button key={p} onClick={() => setStatsPeriode(p)} className={`px-4 py-2 rounded-lg font-medium capitalize ${statsPeriode === p ? 'bg-amber-100 text-amber-800' : 'text-slate-600'}`}>{p}</button>
+                <button key={p} onClick={() => setStatsPeriode(p)} className={`px-4 py-2 rounded-lg font-medium capitalize ${statsPeriode === p ? 'bg-amber-100 text-amber-800' : 'text-slate-600 hover:bg-slate-50'}`}>{p}</button>
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                <p className="text-slate-500 text-sm font-medium">Total commandes</p>
-                <p className="text-4xl font-bold text-slate-800 mt-2">{commandes.length}</p>
+                <p className="text-slate-500 text-sm font-medium">Total Commandes</p>
+                <p className="text-4xl font-bold text-slate-800 mt-2">{stats.totalCommandes}</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100">
-                <p className="text-slate-500 text-sm font-medium">En production</p>
-                <p className="text-4xl font-bold text-emerald-600 mt-2">{commandes.filter(c => c.enProduction).length}</p>
+              <div className="bg-emerald-50 p-6 rounded-2xl shadow-sm border border-emerald-100">
+                <p className="text-emerald-600 text-sm font-medium">Pieds Linéaires</p>
+                <p className="text-4xl font-bold text-emerald-700 mt-2">{stats.piedsLineaires}</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-blue-100">
-                <p className="text-slate-500 text-sm font-medium">Production terminée</p>
-                <p className="text-4xl font-bold text-blue-600 mt-2">{commandes.filter(c => c.productionTerminee).length}</p>
+              <div className="bg-blue-50 p-6 rounded-2xl shadow-sm border border-blue-100">
+                <p className="text-blue-600 text-sm font-medium">Nb Poteaux</p>
+                <p className="text-4xl font-bold text-blue-700 mt-2">{stats.poteaux}</p>
               </div>
-              <div className="bg-white p-6 rounded-2xl shadow-sm border border-amber-100">
-                <p className="text-slate-500 text-sm font-medium">En attente</p>
-                <p className="text-4xl font-bold text-amber-600 mt-2">{commandes.filter(c => !c.enProduction && !c.productionTerminee && c.statut === 'Active').length}</p>
+              <div className="bg-purple-50 p-6 rounded-2xl shadow-sm border border-purple-100">
+                <p className="text-purple-600 text-sm font-medium">En Production</p>
+                <p className="text-4xl font-bold text-purple-700 mt-2">{stats.enProduction}</p>
+              </div>
+              <div className="bg-green-50 p-6 rounded-2xl shadow-sm border border-green-100">
+                <p className="text-green-600 text-sm font-medium">Terminées</p>
+                <p className="text-4xl font-bold text-green-700 mt-2">{stats.terminees}</p>
+              </div>
+              <div className="bg-amber-50 p-6 rounded-2xl shadow-sm border border-amber-100">
+                <p className="text-amber-600 text-sm font-medium">En Attente</p>
+                <p className="text-4xl font-bold text-amber-700 mt-2">{stats.enAttente}</p>
               </div>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-              <h3 className="text-lg font-bold text-slate-800 mb-6">Volume de production</h3>
-              <div className="h-64 flex items-end justify-around gap-4">
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'].map((jour, i) => (
-                  <div key={jour} className="flex flex-col items-center gap-2 flex-1">
-                    <div className="w-full bg-gradient-to-t from-amber-500 to-amber-300 rounded-t-lg" style={{ height: `${[60, 80, 45, 90, 70][i]}%` }}/>
-                    <span className="text-sm font-medium text-slate-600">{jour}</span>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-800">Calendrier</h3>
+                  <div className="flex gap-2">
+                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:bg-slate-100 rounded"><Icon name="left" size={20}/></button>
+                    <span className="font-medium">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                    <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:bg-slate-100 rounded"><Icon name="right" size={20}/></button>
                   </div>
-                ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center text-sm">
+                  {dayNamesShort.map(d => <div key={d} className="p-2 font-semibold text-slate-500">{d}</div>)}
+                  {days.map((dayInfo, idx) => {
+                    const totals = getTotalsForDate(dayInfo.date);
+                    return (
+                      <div key={idx} onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} className={`p-2 rounded-lg ${!dayInfo.currentMonth ? 'text-slate-300' : totals.count > 0 ? 'bg-emerald-100 text-emerald-800 cursor-pointer hover:bg-emerald-200 font-bold' : ''}`}>
+                        {dayInfo.day}
+                        {totals.count > 0 && dayInfo.currentMonth && <p className="text-[10px] text-emerald-600">{totals.count}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <h3 className="text-lg font-bold text-slate-800 mb-6">Volume ({statsPeriode})</h3>
+                <div className="h-48 flex items-end justify-around gap-4">
+                  {(statsPeriode === 'hebdomadaire' ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'] : ['Sem1', 'Sem2', 'Sem3', 'Sem4']).map((label, i) => (
+                    <div key={label} className="flex flex-col items-center gap-2 flex-1">
+                      <div className="w-full flex gap-1 items-end justify-center h-32">
+                        <div className="w-6 bg-gradient-to-t from-amber-500 to-amber-300 rounded-t" style={{ height: `${[60, 80, 45, 90, 70][i]}%` }}/>
+                        <div className="w-6 bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-t" style={{ height: `${[40, 60, 75, 50, 85][i]}%` }}/>
+                      </div>
+                      <span className="text-sm font-medium text-slate-600">{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex justify-center gap-6 mt-4">
+                  <div className="flex items-center gap-2"><div className="w-4 h-4 bg-amber-400 rounded"/><span className="text-sm text-slate-600">Commandes</span></div>
+                  <div className="flex items-center gap-2"><div className="w-4 h-4 bg-emerald-400 rounded"/><span className="text-sm text-slate-600">Pieds lin.</span></div>
+                </div>
               </div>
             </div>
           </div>
