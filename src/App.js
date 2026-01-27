@@ -2206,7 +2206,7 @@ export default function RampesGardexApp() {
   // === PRODUCTION (COMPLET AVEC 3 ONGLETS) ===
 // === PRODUCTION ===
   const Production = () => {
-    // ===== CONSTANTES ET FONCTIONS UTILITAIRES =====
+    // ===== CONSTANTES =====
     const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
     const dayNamesShort = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
 
@@ -2219,35 +2219,52 @@ export default function RampesGardexApp() {
       const daysInMonth = lastDay.getDate();
       const startingDay = firstDay.getDay();
       
-      const days = [];
+      const daysArray = [];
       const prevMonthLastDay = new Date(year, month, 0).getDate();
       for (let i = startingDay - 1; i >= 0; i--) {
-        days.push({ day: prevMonthLastDay - i, currentMonth: false, date: new Date(year, month - 1, prevMonthLastDay - i) });
+        daysArray.push({ day: prevMonthLastDay - i, currentMonth: false, date: new Date(year, month - 1, prevMonthLastDay - i) });
       }
       for (let i = 1; i <= daysInMonth; i++) {
-        days.push({ day: i, currentMonth: true, date: new Date(year, month, i) });
+        daysArray.push({ day: i, currentMonth: true, date: new Date(year, month, i) });
       }
-      const remainingDays = 42 - days.length;
+      const remainingDays = 42 - daysArray.length;
       for (let i = 1; i <= remainingDays; i++) {
-        days.push({ day: i, currentMonth: false, date: new Date(year, month + 1, i) });
+        daysArray.push({ day: i, currentMonth: false, date: new Date(year, month + 1, i) });
       }
-      return days;
+      return daysArray;
     };
 
     const days = getDaysInMonth(currentMonth);
 
-    const formatDateKey = (date) => date.toISOString().split('T')[0];
+    // Formater une date en YYYY-MM-DD
+    const formatDateKey = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
 
-    // Commandes en production (envoyeProduction = √ et pas encore terminées)
-    const commandesEnProduction = commandesList.filter(cmd => cmd.envoyeProduction === '√' && cmd.productionTerminee !== '√');
+    // ===== COMMANDES EN PRODUCTION =====
+    // Une commande est en production si envoyeProduction = '√' et productionTerminee != '√'
+    const commandesEnProduction = commandesList.filter(cmd => 
+      cmd.envoyeProduction === '√' && cmd.productionTerminee !== '√'
+    );
     
-    // Commandes prêtes à être mises en production
-    const commandesPretesProduction = commandesList.filter(cmd => cmd.statut === 'Active' && cmd.productionTerminee !== '√');
+    // Toutes les commandes actives (pour le modal "Mettre en production")
+    const commandesPretesProduction = commandesList.filter(cmd => 
+      cmd.statut === 'Active'
+    );
 
-    // Obtenir les commandes pour une date donnée
+    // ===== FONCTIONS POUR LE CALENDRIER =====
+    
+    // Obtenir les commandes en production pour une date donnée
     const getCommandesForDate = (date) => {
       const dateKey = formatDateKey(date);
-      return commandesEnProduction.filter(cmd => cmd.dateProduction === dateKey);
+      return commandesEnProduction.filter(cmd => {
+        // Vérifier si la commande a une dateProduction qui correspond
+        if (!cmd.dateProduction) return false;
+        return cmd.dateProduction === dateKey;
+      });
     };
 
     // Calculer les totaux pour une date
@@ -2255,27 +2272,31 @@ export default function RampesGardexApp() {
       const cmds = getCommandesForDate(date);
       return {
         count: cmds.length,
-        piedsLineaires: cmds.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0),
-        poteaux: cmds.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0)
+        piedsLineaires: cmds.reduce((acc, cmd) => acc + (parseInt(cmd.piedsLineaires) || 0), 0),
+        poteaux: cmds.reduce((acc, cmd) => acc + (parseInt(cmd.nombrePoteaux) || 0), 0)
       };
     };
 
-    // Mettre une commande en production
+    // ===== ACTIONS =====
     const mettreEnProductionFn = (cmdId) => {
-      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, envoyeProduction: '√' } : cmd));
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, envoyeProduction: '√' } : cmd
+      ));
     };
 
-    // Retirer de la production
     const retirerDeProduction = (cmdId) => {
-      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, envoyeProduction: '' } : cmd));
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, envoyeProduction: '' } : cmd
+      ));
     };
 
-    // Terminer la production
     const terminerProduction = (cmdId) => {
-      setCommandesList(prev => prev.map(cmd => cmd.id === cmdId ? { ...cmd, productionTerminee: '√' } : cmd));
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, productionTerminee: '√' } : cmd
+      ));
     };
 
-    // Obtenir les semaines du mois pour le filtre
+    // Semaines du mois pour le filtre
     const getSemainesDuMois = () => {
       const semaines = [];
       const year = currentMonth.getFullYear();
@@ -2297,29 +2318,33 @@ export default function RampesGardexApp() {
 
     const semaines = getSemainesDuMois();
 
-    // Calculer les statistiques
+    // ===== STATISTIQUES =====
     const getStatistiques = () => {
-      const now = new Date(2026, 0, 27);
-      let filteredCmds = commandesList.filter(cmd => cmd.envoyeProduction === '√');
+      const now = new Date();
+      let filteredCmds = commandesEnProduction;
       
       if (statsPeriode === 'journalier') {
-        filteredCmds = filteredCmds.filter(cmd => cmd.dateProduction === formatDateKey(now));
+        const todayKey = formatDateKey(now);
+        filteredCmds = filteredCmds.filter(cmd => cmd.dateProduction === todayKey);
       } else if (statsPeriode === 'hebdomadaire') {
         const weekStart = new Date(now);
         weekStart.setDate(now.getDate() - now.getDay());
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekStart.getDate() + 6);
         filteredCmds = filteredCmds.filter(cmd => {
+          if (!cmd.dateProduction) return false;
           const cmdDate = new Date(cmd.dateProduction);
           return cmdDate >= weekStart && cmdDate <= weekEnd;
         });
       } else if (statsPeriode === 'mensuel') {
         filteredCmds = filteredCmds.filter(cmd => {
+          if (!cmd.dateProduction) return false;
           const cmdDate = new Date(cmd.dateProduction);
           return cmdDate.getMonth() === now.getMonth() && cmdDate.getFullYear() === now.getFullYear();
         });
       } else if (statsPeriode === 'annuel') {
         filteredCmds = filteredCmds.filter(cmd => {
+          if (!cmd.dateProduction) return false;
           const cmdDate = new Date(cmd.dateProduction);
           return cmdDate.getFullYear() === now.getFullYear();
         });
@@ -2327,15 +2352,19 @@ export default function RampesGardexApp() {
 
       return {
         totalCommandes: filteredCmds.length,
-        piedsLineaires: filteredCmds.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0),
-        poteaux: filteredCmds.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0),
-        enProduction: filteredCmds.filter(cmd => cmd.productionTerminee !== '√').length,
-        terminees: filteredCmds.filter(cmd => cmd.productionTerminee === '√').length,
+        piedsLineaires: filteredCmds.reduce((acc, cmd) => acc + (parseInt(cmd.piedsLineaires) || 0), 0),
+        poteaux: filteredCmds.reduce((acc, cmd) => acc + (parseInt(cmd.nombrePoteaux) || 0), 0),
+        enProduction: commandesEnProduction.length,
+        terminees: commandesList.filter(cmd => cmd.productionTerminee === '√').length,
         enAttente: commandesList.filter(cmd => cmd.statut === 'Active' && cmd.envoyeProduction !== '√').length
       };
     };
 
     const stats = getStatistiques();
+
+    // Calculer le total global des commandes en production
+    const totalPiedsLineairesEnProduction = commandesEnProduction.reduce((acc, cmd) => acc + (parseInt(cmd.piedsLineaires) || 0), 0);
+    const totalPoteauxEnProduction = commandesEnProduction.reduce((acc, cmd) => acc + (parseInt(cmd.nombrePoteaux) || 0), 0);
 
     // ===== MODAL DÉTAILS D'UNE DATE =====
     const DateDetailModal = () => {
@@ -2366,24 +2395,26 @@ export default function RampesGardexApp() {
                         <div className="flex items-center gap-3 mb-2">
                           <span className="font-mono font-bold text-lg">{cmd.num}</span>
                           <span className="text-slate-600">{cmd.client}</span>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
                         </div>
                         <p className="text-sm text-slate-500 mb-3">{cmd.adresse}</p>
                         
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <span className={`px-3 py-1 rounded-full font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
-                          </div>
-                          <div>
                             <p className="text-slate-500">Date prévue</p>
-                            <p className="font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded inline-block">{cmd.datePrevue}</p>
+                            <p className="font-semibold text-green-600 bg-green-100 px-2 py-0.5 rounded inline-block">{cmd.datePrevue || '—'}</p>
                           </div>
                           <div>
                             <p className="text-slate-500">Date production</p>
-                            <p className="font-semibold">{cmd.dateProduction}</p>
+                            <p className="font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded inline-block">{cmd.dateProduction || '—'}</p>
                           </div>
                           <div>
                             <p className="text-slate-500">Date prise mesure</p>
                             <p className="font-semibold text-amber-600 bg-amber-100 px-2 py-0.5 rounded inline-block">{cmd.datePriseMesure || '—'}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-500">Couleur</p>
+                            <p className="font-semibold">{cmd.couleur || '—'}</p>
                           </div>
                         </div>
 
@@ -2403,9 +2434,14 @@ export default function RampesGardexApp() {
                         </div>
 
                         <div className="flex items-center gap-6 mt-4 pt-4 border-t border-slate-100">
-                          <div><span className="text-slate-500 text-sm">Couleur:</span><span className="font-semibold ml-2">{cmd.couleur || '—'}</span></div>
-                          <div><span className="text-slate-500 text-sm">Pieds linéaires:</span><span className="font-bold text-lg ml-2">{cmd.piedsLineaires || 0}</span></div>
-                          <div><span className="text-slate-500 text-sm">Poteaux:</span><span className="font-bold text-lg ml-2">{cmd.nombrePoteaux || 0}</span></div>
+                          <div className="bg-emerald-50 px-4 py-2 rounded-lg">
+                            <span className="text-slate-500 text-sm">Pieds linéaires:</span>
+                            <span className="font-bold text-2xl text-emerald-600 ml-2">{cmd.piedsLineaires || 0}</span>
+                          </div>
+                          <div className="bg-blue-50 px-4 py-2 rounded-lg">
+                            <span className="text-slate-500 text-sm">Poteaux:</span>
+                            <span className="font-bold text-2xl text-blue-600 ml-2">{cmd.nombrePoteaux || 0}</span>
+                          </div>
                         </div>
                       </div>
                       <button className="p-2 text-slate-400 hover:text-slate-600"><Icon name="right" size={24}/></button>
@@ -2418,10 +2454,19 @@ export default function RampesGardexApp() {
             <div className="border-t border-slate-200 p-4 bg-slate-50">
               <div className="flex items-center gap-4">
                 <button onClick={() => setSelectedProductionDate(null)} className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Sortir</button>
-                <div className="flex-1 text-sm">
-                  <span className="font-semibold">{cmds.length}</span> commandes | 
-                  <span className="font-semibold text-emerald-600 ml-2">{totals.piedsLineaires}</span> pieds linéaires | 
-                  <span className="font-semibold text-blue-600 ml-2">{totals.poteaux}</span> poteaux
+                <div className="flex-1 flex items-center gap-6">
+                  <div className="bg-white px-4 py-2 rounded-lg border">
+                    <span className="text-slate-500 text-sm">Commandes:</span>
+                    <span className="font-bold text-xl ml-2">{cmds.length}</span>
+                  </div>
+                  <div className="bg-emerald-100 px-4 py-2 rounded-lg">
+                    <span className="text-emerald-700 text-sm">Total pieds linéaires:</span>
+                    <span className="font-bold text-xl text-emerald-700 ml-2">{totals.piedsLineaires}</span>
+                  </div>
+                  <div className="bg-blue-100 px-4 py-2 rounded-lg">
+                    <span className="text-blue-700 text-sm">Total poteaux:</span>
+                    <span className="font-bold text-xl text-blue-700 ml-2">{totals.poteaux}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2441,7 +2486,7 @@ export default function RampesGardexApp() {
         }
         if (productionFilterSemaine !== 'toutes') {
           const semaine = semaines[parseInt(productionFilterSemaine)];
-          if (semaine) {
+          if (semaine && cmd.datePrevue) {
             const cmdDate = new Date(cmd.datePrevue);
             if (cmdDate < semaine.start || cmdDate > semaine.end) return false;
           }
@@ -2457,10 +2502,14 @@ export default function RampesGardexApp() {
                 <button onClick={() => setShowMettreEnProduction(false)} className="p-2 hover:bg-slate-700 rounded-lg"><Icon name="left" size={24}/></button>
                 <h2 className="text-xl font-bold">Envoyer des commandes en production</h2>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-sm text-slate-300">Commandes en production:</p>
+              <div className="flex items-center gap-6">
+                <div className="text-center">
+                  <p className="text-sm text-slate-300">En production</p>
                   <p className="text-2xl font-bold">{commandesEnProduction.length}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-slate-300">Pieds lin. total</p>
+                  <p className="text-2xl font-bold text-emerald-400">{totalPiedsLineairesEnProduction}</p>
                 </div>
               </div>
             </div>
@@ -2471,10 +2520,10 @@ export default function RampesGardexApp() {
               <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 hover:bg-slate-200 rounded-full"><Icon name="right" size={28}/></button>
             </div>
 
-            <div className="p-4 border-b border-slate-200 flex gap-4">
+            <div className="p-4 border-b border-slate-200 flex gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-600">Recherche</span>
-                <input type="text" value={productionSearchTerm} onChange={(e) => setProductionSearchTerm(e.target.value)} placeholder="# Projet" className="px-3 py-2 border border-slate-200 rounded-lg w-40"/>
+                <input type="text" value={productionSearchTerm} onChange={(e) => setProductionSearchTerm(e.target.value)} placeholder="# Projet ou client" className="px-3 py-2 border border-slate-200 rounded-lg w-48"/>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-slate-600">Semaine</span>
@@ -2483,58 +2532,65 @@ export default function RampesGardexApp() {
                   {semaines.map((s, idx) => <option key={idx} value={idx}>{s.label}</option>)}
                 </select>
               </div>
+              <div className="flex-1 text-right text-sm text-slate-600">
+                {filteredCmds.length} commandes affichées
+              </div>
             </div>
 
             <div className="flex-1 overflow-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-100 sticky top-0">
                   <tr>
-                    <th className="px-4 py-3 text-left font-semibold"># Projet</th>
-                    <th className="px-4 py-3 text-left font-semibold">Client</th>
-                    <th className="px-4 py-3 text-center font-semibold">Service</th>
-                    <th className="px-4 py-3 text-center font-semibold">Date Prévue<br/><span className="text-amber-600 text-xs">Date prise mesure</span></th>
-                    <th className="px-4 py-3 text-center font-semibold">Date Production</th>
-                    <th className="px-4 py-3 text-center font-semibold">Mesure</th>
-                    <th className="px-4 py-3 text-center font-semibold">Plan</th>
-                    <th className="px-4 py-3 text-center font-semibold">Envoyé Prod.</th>
-                    <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                    <th className="px-3 py-3 text-left font-semibold"># Projet</th>
+                    <th className="px-3 py-3 text-left font-semibold">Client</th>
+                    <th className="px-3 py-3 text-center font-semibold">Service</th>
+                    <th className="px-3 py-3 text-center font-semibold">Date Prévue</th>
+                    <th className="px-3 py-3 text-center font-semibold">Date Production</th>
+                    <th className="px-3 py-3 text-center font-semibold">Pi. Lin.</th>
+                    <th className="px-3 py-3 text-center font-semibold">Mesure</th>
+                    <th className="px-3 py-3 text-center font-semibold">Plan</th>
+                    <th className="px-3 py-3 text-center font-semibold">Envoyé Prod.</th>
+                    <th className="px-3 py-3 text-center font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {filteredCmds.map(cmd => (
-                    <tr key={cmd.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-mono font-bold">{cmd.num}</td>
-                      <td className="px-4 py-3">{cmd.client}</td>
-                      <td className="px-4 py-3 text-center">
+                    <tr key={cmd.id} className={`hover:bg-slate-50 ${cmd.envoyeProduction === '√' ? 'bg-emerald-50' : ''}`}>
+                      <td className="px-3 py-3 font-mono font-bold">{cmd.num}</td>
+                      <td className="px-3 py-3">{cmd.client}</td>
+                      <td className="px-3 py-3 text-center">
                         <span className={`px-2 py-1 rounded text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <p>{cmd.datePrevue}</p>
-                        <p className="text-amber-600 bg-amber-100 px-2 py-0.5 rounded text-xs mt-1">{cmd.datePriseMesure || '—'}</p>
+                      <td className="px-3 py-3 text-center">{cmd.datePrevue || '—'}</td>
+                      <td className="px-3 py-3 text-center">
+                        <input 
+                          type="date" 
+                          value={cmd.dateProduction || ''} 
+                          onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, dateProduction: e.target.value } : c))} 
+                          className="px-2 py-1 border border-slate-200 rounded text-sm w-36"
+                        />
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <input type="date" value={cmd.dateProduction || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, dateProduction: e.target.value } : c))} className="px-2 py-1 border border-slate-200 rounded text-sm"/>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <select value={cmd.mesure || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, mesure: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.mesure, 'production')}`}>
+                      <td className="px-3 py-3 text-center font-bold text-emerald-600">{cmd.piedsLineaires || 0}</td>
+                      <td className="px-3 py-3 text-center">
+                        <select value={cmd.mesure || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, mesure: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold w-16 ${getStatusColor(cmd.mesure, 'production')}`}>
                           {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <select value={cmd.plan || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, plan: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.plan, 'production')}`}>
+                      <td className="px-3 py-3 text-center">
+                        <select value={cmd.plan || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, plan: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold w-16 ${getStatusColor(cmd.plan, 'production')}`}>
                           {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <select value={cmd.envoyeProduction || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, envoyeProduction: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold ${getStatusColor(cmd.envoyeProduction, 'production')}`}>
+                      <td className="px-3 py-3 text-center">
+                        <select value={cmd.envoyeProduction || ''} onChange={(e) => setCommandesList(prev => prev.map(c => c.id === cmd.id ? { ...c, envoyeProduction: e.target.value } : c))} className={`px-2 py-1 rounded text-xs font-bold w-16 ${getStatusColor(cmd.envoyeProduction, 'production')}`}>
                           {optionsProduction.map(o => <option key={o.code} value={o.code}>{o.code || '—'}</option>)}
                         </select>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-3 text-center">
                         {cmd.envoyeProduction === '√' ? (
-                          <button onClick={() => retirerDeProduction(cmd.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Retirer"><Icon name="x" size={18}/></button>
+                          <button onClick={() => retirerDeProduction(cmd.id)} className="px-3 py-1.5 bg-red-100 text-red-600 hover:bg-red-200 rounded font-medium text-xs">Retirer</button>
                         ) : (
-                          <button onClick={() => mettreEnProductionFn(cmd.id)} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Mettre en prod."><Icon name="check" size={18}/></button>
+                          <button onClick={() => mettreEnProductionFn(cmd.id)} className="px-3 py-1.5 bg-emerald-100 text-emerald-600 hover:bg-emerald-200 rounded font-medium text-xs">Ajouter</button>
                         )}
                       </td>
                     </tr>
@@ -2557,78 +2613,123 @@ export default function RampesGardexApp() {
         <DateDetailModal />
         <MettreEnProductionModal />
 
-        <div className="flex items-center justify-between">
+        {/* HEADER */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-800">Production</h1>
             <p className="text-slate-500 mt-1">Gérez la production de vos commandes</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Légende couleurs */}
             <div className="flex items-center gap-2 text-xs">
               <span className="px-2 py-1 bg-blue-500 text-white rounded">Livraison</span>
               <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded">Cueillette</span>
               <span className="px-2 py-1 bg-red-600 text-white rounded">Installation</span>
               <span className="px-2 py-1 bg-green-500 text-white rounded">Transport</span>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-slate-500">Commandes en production:</p>
-              <p className="text-2xl font-bold text-slate-800">{commandesEnProduction.length}</p>
+            {/* Stats rapides */}
+            <div className="flex items-center gap-4 bg-white px-4 py-2 rounded-xl border border-slate-200">
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Commandes</p>
+                <p className="text-xl font-bold text-slate-800">{commandesEnProduction.length}</p>
+              </div>
+              <div className="w-px h-8 bg-slate-200"></div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Pi. Lin.</p>
+                <p className="text-xl font-bold text-emerald-600">{totalPiedsLineairesEnProduction}</p>
+              </div>
+              <div className="w-px h-8 bg-slate-200"></div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Poteaux</p>
+                <p className="text-xl font-bold text-blue-600">{totalPoteauxEnProduction}</p>
+              </div>
             </div>
-            <button onClick={() => setShowMettreEnProduction(true)} className="flex items-center gap-2 px-4 py-3 border-2 border-slate-300 rounded-xl hover:bg-slate-50">
-              <div className="w-8 h-8 border-2 border-slate-400 rounded flex items-center justify-center"><Icon name="edit" size={18}/></div>
-              <span className="font-medium">Mettre en production</span>
+            {/* Bouton Mettre en production */}
+            <button onClick={() => setShowMettreEnProduction(true)} className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+              <Icon name="plus" size={20}/>
+              <span>Mettre en production</span>
             </button>
           </div>
         </div>
 
+        {/* ONGLETS */}
         <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
           <button onClick={() => setProductionTab('calendrier')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'calendrier' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="calendar" size={18}/>Calendrier</button>
           <button onClick={() => setProductionTab('finaliser')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'finaliser' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="check" size={18}/>Finaliser</button>
           <button onClick={() => setProductionTab('statistiques')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${productionTab === 'statistiques' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}><Icon name="chart" size={18}/>Statistiques</button>
         </div>
 
-        {/* CALENDRIER */}
+        {/* ===== CALENDRIER ===== */}
         {productionTab === 'calendrier' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Navigation mois */}
             <div className="flex items-center justify-between p-4 bg-slate-800 text-white">
               <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-2 hover:bg-slate-700 rounded-full"><Icon name="left" size={28}/></button>
               <h2 className="text-2xl font-bold">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</h2>
               <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-2 hover:bg-slate-700 rounded-full"><Icon name="right" size={28}/></button>
             </div>
 
-            <div className="grid grid-cols-7 bg-slate-800 text-white">
+            {/* En-têtes des jours */}
+            <div className="grid grid-cols-7 bg-slate-700 text-white">
               {dayNamesShort.map((day, idx) => (
-                <div key={day} className="p-3 text-center border-r border-slate-700 last:border-r-0">
-                  <p className="font-medium">{day}</p>
-                  {idx > 0 && idx < 6 && <p className="text-xs text-slate-400">300</p>}
+                <div key={day} className="p-3 text-center border-r border-slate-600 last:border-r-0">
+                  <p className="font-semibold uppercase text-sm">{day}</p>
                 </div>
               ))}
             </div>
 
+            {/* Grille des jours */}
             <div className="grid grid-cols-7">
               {days.map((dayInfo, idx) => {
                 const totals = getTotalsForDate(dayInfo.date);
                 const cmds = getCommandesForDate(dayInfo.date);
                 const isWeekend = dayInfo.date.getDay() === 0 || dayInfo.date.getDay() === 6;
+                const isToday = formatDateKey(dayInfo.date) === formatDateKey(new Date());
                 
                 return (
-                  <div key={idx} onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} className={`min-h-[120px] border-r border-b border-slate-200 p-2 ${!dayInfo.currentMonth ? 'bg-slate-100 text-slate-400' : isWeekend ? 'bg-slate-50' : 'bg-white'} ${totals.count > 0 ? 'cursor-pointer hover:bg-slate-50' : ''}`}>
-                    <p className={`text-lg font-bold mb-1 ${!dayInfo.currentMonth ? 'text-slate-300' : ''}`}>{dayInfo.day}</p>
+                  <div 
+                    key={idx} 
+                    onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} 
+                    className={`min-h-[130px] border-r border-b border-slate-200 p-2 transition-colors
+                      ${!dayInfo.currentMonth ? 'bg-slate-100 text-slate-400' : isWeekend ? 'bg-slate-50' : 'bg-white'} 
+                      ${totals.count > 0 ? 'cursor-pointer hover:bg-blue-50' : ''}
+                      ${isToday && dayInfo.currentMonth ? 'ring-2 ring-inset ring-amber-400' : ''}
+                    `}
+                  >
+                    {/* Numéro du jour */}
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-lg font-bold ${!dayInfo.currentMonth ? 'text-slate-300' : isToday ? 'text-amber-600' : ''}`}>
+                        {dayInfo.day}
+                      </span>
+                      {totals.count > 0 && dayInfo.currentMonth && (
+                        <div className="flex items-center gap-1">
+                          {/* Badge nombre de commandes */}
+                          <span className="bg-blue-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                            {totals.count}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                     
-                    {totals.count > 0 && (
+                    {/* Totaux du jour */}
+                    {totals.count > 0 && dayInfo.currentMonth && (
                       <div className="space-y-1">
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-medium">{totals.count}</span>
-                          <span className="bg-red-500 text-white px-1.5 py-0.5 rounded font-bold">{totals.piedsLineaires}</span>
+                        {/* Total pieds linéaires */}
+                        <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded text-center">
+                          {totals.piedsLineaires} pi.lin.
                         </div>
                         
+                        {/* Aperçu des commandes (max 2) */}
                         {cmds.slice(0, 2).map(cmd => (
-                          <div key={cmd.id} className={`text-xs p-1.5 rounded ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)} truncate`}>
+                          <div key={cmd.id} className={`text-xs p-1.5 rounded truncate ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>
                             <p className="font-bold truncate">{cmd.num}</p>
-                            <p className="truncate opacity-90">{cmd.client}</p>
+                            <p className="truncate opacity-90 text-[10px]">{cmd.client}</p>
                           </div>
                         ))}
                         
-                        {cmds.length > 2 && <p className="text-xs text-slate-500 text-center">+{cmds.length - 2} autres</p>}
+                        {cmds.length > 2 && (
+                          <p className="text-xs text-blue-600 font-medium text-center">+{cmds.length - 2} autres</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -2638,16 +2739,29 @@ export default function RampesGardexApp() {
           </div>
         )}
 
-        {/* FINALISER */}
+        {/* ===== FINALISER ===== */}
         {productionTab === 'finaliser' && (
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
               <input type="text" placeholder="Rechercher une commande..." className="flex-1 max-w-md px-4 py-2.5 border border-slate-200 rounded-xl"/>
-              <div className="text-sm text-slate-600"><span className="font-semibold">{commandesEnProduction.length}</span> commandes en production</div>
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-slate-600">
+                  <span className="font-bold text-lg text-slate-800">{commandesEnProduction.length}</span> commandes en production
+                </div>
+                <div className="text-sm">
+                  Total: <span className="font-bold text-emerald-600">{totalPiedsLineairesEnProduction}</span> pi.lin.
+                </div>
+              </div>
             </div>
 
             {commandesEnProduction.length === 0 ? (
-              <div className="p-12 text-center text-slate-500">Aucune commande en production</div>
+              <div className="p-12 text-center text-slate-500">
+                <Icon name="check" size={48} className="mx-auto mb-4 opacity-30"/>
+                <p>Aucune commande en production</p>
+                <button onClick={() => setShowMettreEnProduction(true)} className="mt-4 px-4 py-2 bg-amber-100 text-amber-800 rounded-lg font-medium">
+                  Mettre des commandes en production
+                </button>
+              </div>
             ) : (
               <table className="w-full">
                 <thead className="bg-slate-50">
@@ -2676,20 +2790,22 @@ export default function RampesGardexApp() {
                       <td className="px-4 py-4 text-center">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getActiviteBgColor(cmd.service)} ${getActiviteColor(cmd.service)}`}>{cmd.service}</span>
                       </td>
-                      <td className="px-4 py-4 text-center font-medium">{cmd.dateProduction}</td>
-                      <td className="px-4 py-4 text-center"><span className="text-xl font-bold text-slate-800">{cmd.nombrePoteaux || 0}</span></td>
+                      <td className="px-4 py-4 text-center font-medium">{cmd.dateProduction || '—'}</td>
+                      <td className="px-4 py-4 text-center"><span className="text-xl font-bold text-blue-600">{cmd.nombrePoteaux || 0}</span></td>
                       <td className="px-4 py-4 text-center"><span className="text-xl font-bold text-emerald-600">{cmd.piedsLineaires || 0}</span></td>
                       <td className="px-4 py-4 text-center">
-                        <button onClick={() => terminerProduction(cmd.id)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg">Terminer production</button>
+                        <button onClick={() => terminerProduction(cmd.id)} className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg">
+                          Terminer production
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-slate-100">
+                <tfoot className="bg-slate-200">
                   <tr>
-                    <td colSpan={4} className="px-4 py-3 text-right font-semibold">TOTAUX:</td>
-                    <td className="px-4 py-3 text-center"><span className="text-xl font-bold">{commandesEnProduction.reduce((acc, cmd) => acc + (cmd.nombrePoteaux || 0), 0)}</span></td>
-                    <td className="px-4 py-3 text-center"><span className="text-xl font-bold text-emerald-600">{commandesEnProduction.reduce((acc, cmd) => acc + (cmd.piedsLineaires || 0), 0)}</span></td>
+                    <td colSpan={4} className="px-4 py-3 text-right font-bold text-slate-700">TOTAUX:</td>
+                    <td className="px-4 py-3 text-center"><span className="text-2xl font-bold text-blue-600">{totalPoteauxEnProduction}</span></td>
+                    <td className="px-4 py-3 text-center"><span className="text-2xl font-bold text-emerald-600">{totalPiedsLineairesEnProduction}</span></td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -2698,15 +2814,17 @@ export default function RampesGardexApp() {
           </div>
         )}
 
-        {/* STATISTIQUES */}
+        {/* ===== STATISTIQUES ===== */}
         {productionTab === 'statistiques' && (
           <div className="space-y-6">
+            {/* Sélecteur de période */}
             <div className="flex gap-2 bg-white p-1 rounded-xl w-fit border border-slate-200">
               {['journalier', 'hebdomadaire', 'mensuel', 'annuel'].map(p => (
                 <button key={p} onClick={() => setStatsPeriode(p)} className={`px-4 py-2 rounded-lg font-medium capitalize ${statsPeriode === p ? 'bg-amber-100 text-amber-800' : 'text-slate-600 hover:bg-slate-50'}`}>{p}</button>
               ))}
             </div>
 
+            {/* Cartes statistiques */}
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                 <p className="text-slate-500 text-sm font-medium">Total Commandes</p>
@@ -2734,38 +2852,52 @@ export default function RampesGardexApp() {
               </div>
             </div>
 
+            {/* Calendrier et graphique */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Mini calendrier */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-slate-800">Calendrier</h3>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1))} className="p-1 hover:bg-slate-100 rounded"><Icon name="left" size={20}/></button>
-                    <span className="font-medium">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
+                    <span className="font-medium text-sm">{monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}</span>
                     <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1))} className="p-1 hover:bg-slate-100 rounded"><Icon name="right" size={20}/></button>
                   </div>
                 </div>
                 <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                  {dayNamesShort.map(d => <div key={d} className="p-2 font-semibold text-slate-500">{d}</div>)}
+                  {dayNamesShort.map(d => <div key={d} className="p-2 font-semibold text-slate-500 text-xs">{d}</div>)}
                   {days.map((dayInfo, idx) => {
                     const totals = getTotalsForDate(dayInfo.date);
                     return (
-                      <div key={idx} onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} className={`p-2 rounded-lg ${!dayInfo.currentMonth ? 'text-slate-300' : totals.count > 0 ? 'bg-emerald-100 text-emerald-800 cursor-pointer hover:bg-emerald-200 font-bold' : ''}`}>
+                      <div 
+                        key={idx} 
+                        onClick={() => totals.count > 0 && setSelectedProductionDate(dayInfo.date)} 
+                        className={`p-1 rounded-lg text-sm ${
+                          !dayInfo.currentMonth ? 'text-slate-300' : 
+                          totals.count > 0 ? 'bg-emerald-100 text-emerald-800 cursor-pointer hover:bg-emerald-200 font-bold' : ''
+                        }`}
+                      >
                         {dayInfo.day}
-                        {totals.count > 0 && dayInfo.currentMonth && <p className="text-[10px] text-emerald-600">{totals.count}</p>}
+                        {totals.count > 0 && dayInfo.currentMonth && (
+                          <p className="text-[9px] text-emerald-600">{totals.count} | {totals.piedsLineaires}</p>
+                        )}
                       </div>
                     );
                   })}
                 </div>
               </div>
 
+              {/* Graphique */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h3 className="text-lg font-bold text-slate-800 mb-6">Volume ({statsPeriode})</h3>
                 <div className="h-48 flex items-end justify-around gap-4">
-                  {(statsPeriode === 'hebdomadaire' ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'] : ['Sem1', 'Sem2', 'Sem3', 'Sem4']).map((label, i) => (
+                  {(statsPeriode === 'hebdomadaire' ? ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven'] : 
+                    statsPeriode === 'journalier' ? ['8h', '10h', '12h', '14h', '16h'] :
+                    ['Sem1', 'Sem2', 'Sem3', 'Sem4']).map((label, i) => (
                     <div key={label} className="flex flex-col items-center gap-2 flex-1">
                       <div className="w-full flex gap-1 items-end justify-center h-32">
-                        <div className="w-6 bg-gradient-to-t from-amber-500 to-amber-300 rounded-t" style={{ height: `${[60, 80, 45, 90, 70][i]}%` }}/>
-                        <div className="w-6 bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-t" style={{ height: `${[40, 60, 75, 50, 85][i]}%` }}/>
+                        <div className="w-6 bg-gradient-to-t from-amber-500 to-amber-300 rounded-t" style={{ height: `${[60, 80, 45, 90, 70][i] || 50}%` }}/>
+                        <div className="w-6 bg-gradient-to-t from-emerald-500 to-emerald-300 rounded-t" style={{ height: `${[40, 60, 75, 50, 85][i] || 50}%` }}/>
                       </div>
                       <span className="text-sm font-medium text-slate-600">{label}</span>
                     </div>
