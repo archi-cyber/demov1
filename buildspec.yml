@@ -7,23 +7,12 @@ phases:
     commands:
       - echo "Node version:"
       - node -v
-      - echo "NPM version:"
       - npm -v
-      - echo "Installing dependencies..."
       - npm ci
-
-  pre_build:
-    commands:
-      - echo "Pre-build started on $(date)"
 
   build:
     commands:
-      - echo "Build started on $(date)"
       - npm run build
-
-  post_build:
-    commands:
-      - echo "Build completed on $(date)"
 
 artifacts:
   base-directory: build
