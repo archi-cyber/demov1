@@ -76,6 +76,40 @@ export default function RampesGardexApp() {
   const [planificationFilterEquipe, setPlanificationFilterEquipe] = useState('toutes');
   const [planificationSearchTerm, setPlanificationSearchTerm] = useState('');
 
+  // === ÉTATS TERRAIN/INTERVENTIONS ===
+  const [terrainTab, setTerrainTab] = useState('aujourdhui'); // aujourdhui, semaine, toutes
+  const [terrainFilterType, setTerrainFilterType] = useState('tous'); // tous, installation, livraison, cueillette, transport
+  const [selectedIntervention, setSelectedIntervention] = useState(null);
+  const [showInspectionModal, setShowInspectionModal] = useState(false);
+  const [inspectionForm, setInspectionForm] = useState({
+    heureArrivee: '',
+    heureDepart: '',
+    personneRessource: '',
+    telephone: '',
+    // Inspection avant chantier
+    accessibiliteBalcon: null, // 'oui', 'non', 'na'
+    balconEncombre: null,
+    niveauBalconConforme: null,
+    backingConforme: null,
+    colonneCapage: null,
+    noteAvant: '',
+    photoAvant: null,
+    // Travaux
+    travauxNonComplete: false,
+    travauxNonCompleteNote: '',
+    // Inspection fin de chantier
+    mainsInstallees: null,
+    cacheVisInstallees: null,
+    capsulesPoteaux: null,
+    vuEnsemble: null,
+    photosGlobal: [],
+    noteApres: '',
+    // Signatures
+    signatureInstallateur: null,
+    signatureClient: null,
+    dateSignature: ''
+  });
+
   // === ÉTAT POUR LE FORMULAIRE DE PLANIFICATION ===
   const [formPlanif, setFormPlanif] = useState({
     date: '',
@@ -182,8 +216,8 @@ export default function RampesGardexApp() {
     { id: 'commandes', icon: 'file', label: 'Commandes' },
     { id: 'production', icon: 'factory', label: 'Production' },
     { id: 'planification', icon: 'calendar', label: 'Planification' },
-    { id: 'installations', icon: 'wrench', label: 'Installations' },
-    { id: 'cueillettes', icon: 'truck', label: 'Cueillettes / Transport' },
+    { id: 'interventions', icon: 'wrench', label: 'Interventions' },
+    { id: 'cueillettes', icon: 'truck', label: 'Cueillettes /Transport/livraison' },
     { id: 'inventaire', icon: 'package', label: 'Inventaire' },
     { id: 'achats', icon: 'cart', label: 'Achats' },
     { id: 'rentabilite', icon: 'trend', label: 'Rentabilité' },
@@ -4101,55 +4135,603 @@ export default function RampesGardexApp() {
     );
   };
   // === INSTALLATIONS ===
-  const Installations = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Installations</h1>
-          <p className="text-slate-500 mt-1">Suivi des installations terrain</p>
+  // === INTERVENTIONS TERRAIN ===
+  const Interventions = () => {
+    const today = '2026-01-28';
+     const getEquipeCouleur = (equipeNom) => {
+      const equipe = equipesList.find(e => e.nom === equipeNom);
+      return equipe ? equipe.couleur : 'bg-slate-500';
+    };
+    
+    // Filtrer les interventions
+    const getInterventions = () => {
+      let filtered = commandesList.filter(cmd => 
+        cmd.statut === 'Active' && 
+        cmd.equipe && 
+        cmd.datePrevue &&
+        (cmd.service === 'Installation' || cmd.service === 'Livraison' || cmd.service === 'Cueillette' || cmd.service === 'Transport')
+      );
+      
+      // Filtre par type
+      if (terrainFilterType !== 'tous') {
+        filtered = filtered.filter(cmd => cmd.service.toLowerCase() === terrainFilterType);
+      }
+      
+      // Filtre par période
+      if (terrainTab === 'aujourdhui') {
+        filtered = filtered.filter(cmd => cmd.datePrevue === today);
+      } else if (terrainTab === 'semaine') {
+        const weekStart = new Date(today);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        filtered = filtered.filter(cmd => {
+          const cmdDate = new Date(cmd.datePrevue);
+          return cmdDate >= weekStart && cmdDate <= weekEnd;
+        });
+      }
+      
+      return filtered;
+    };
+
+    const interventions = getInterventions();
+
+    // Obtenir l'icône selon le type
+    const getTypeIcon = (service) => {
+      switch(service) {
+        case 'Installation': return 'tool';
+        case 'Livraison': return 'truck';
+        case 'Cueillette': return 'package';
+        case 'Transport': return 'truck';
+        default: return 'file';
+      }
+    };
+
+    // Obtenir la couleur du badge selon le type
+    const getTypeBadgeColor = (service) => {
+      switch(service) {
+        case 'Installation': return 'bg-red-500 text-white';
+        case 'Livraison': return 'bg-blue-500 text-white';
+        case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
+        case 'Transport': return 'bg-green-500 text-white';
+        default: return 'bg-slate-500 text-white';
+      }
+    };
+
+    // Obtenir la couleur de bordure selon le type
+    const getTypeBorderColor = (service) => {
+      switch(service) {
+        case 'Installation': return 'border-l-red-500';
+        case 'Livraison': return 'border-l-blue-500';
+        case 'Cueillette': return 'border-l-yellow-500';
+        case 'Transport': return 'border-l-green-500';
+        default: return 'border-l-slate-500';
+      }
+    };
+
+    // Ouvrir le formulaire d'inspection
+    const ouvrirInspection = (intervention) => {
+      setSelectedIntervention(intervention);
+      setInspectionForm({
+        heureArrivee: '',
+        heureDepart: '',
+        personneRessource: intervention.client || '',
+        telephone: intervention.telephone || '',
+        accessibiliteBalcon: null,
+        balconEncombre: null,
+        niveauBalconConforme: null,
+        backingConforme: null,
+        colonneCapage: null,
+        noteAvant: '',
+        photoAvant: null,
+        travauxNonComplete: false,
+        travauxNonCompleteNote: '',
+        mainsInstallees: null,
+        cacheVisInstallees: null,
+        capsulesPoteaux: null,
+        vuEnsemble: null,
+        photosGlobal: [],
+        noteApres: '',
+        signatureInstallateur: null,
+        signatureClient: null,
+        dateSignature: today
+      });
+      setShowInspectionModal(true);
+    };
+
+    // Sauvegarder l'inspection
+    const sauvegarderInspection = () => {
+      if (selectedIntervention) {
+        setCommandesList(prev => prev.map(cmd => 
+          cmd.id === selectedIntervention.id 
+            ? { ...cmd, inspection: inspectionForm, inspectionComplete: true }
+            : cmd
+        ));
+        setShowInspectionModal(false);
+        setSelectedIntervention(null);
+      }
+    };
+
+    // Stats du jour
+    const statsJour = {
+      total: interventions.length,
+      installations: interventions.filter(i => i.service === 'Installation').length,
+      livraisons: interventions.filter(i => i.service === 'Livraison').length,
+      cueillettes: interventions.filter(i => i.service === 'Cueillette').length,
+      transports: interventions.filter(i => i.service === 'Transport').length,
+      heuresTotal: interventions.reduce((acc, i) => acc + (parseInt(i.tempsEstimeInstallation) || 1), 0)
+    };
+
+    // ===== MODAL FORMULAIRE D'INSPECTION =====
+    const InspectionModal = () => {
+      if (!showInspectionModal || !selectedIntervention) return null;
+
+      const CheckboxGroup = ({ label, value, onChange, showPhotoPreuve = false }) => (
+        <div className="flex items-center justify-between py-2 border-b border-slate-100">
+          <span className="text-sm flex-1">{label}</span>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => onChange('fait')}
+              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'fait' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >Fait</button>
+            <button 
+              onClick={() => onChange('na')}
+              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'na' ? 'bg-slate-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >N/A</button>
+            <button 
+              onClick={() => onChange('oui')}
+              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'oui' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >Oui</button>
+            <button 
+              onClick={() => onChange('non')}
+              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'non' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+            >Non</button>
+          </div>
         </div>
-        <select className="px-4 py-2.5 border border-slate-200 rounded-xl bg-white">
-          <option>Tous les statuts</option>
-          <option>Planifiée</option>
-          <option>En cours</option>
-          <option>Complétée</option>
-        </select>
-      </div>
-      <div className="grid gap-4">
-        {commandes.map(inst => (
-          <div key={inst.id} className={`rounded-2xl shadow-sm border-2 p-6 ${getActiviteCardBg(inst.activite)}`}>
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="font-mono font-bold text-lg">{inst.num}</span>
-                  <span className="px-2 py-0.5 rounded bg-white/20 text-xs font-semibold">{inst.activite}</span>
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${inst.statut === 'Complétée' ? 'bg-white/30' : inst.equipe ? 'bg-white/20' : 'bg-black/10'}`}>
-                    {inst.statut === 'Complétée' ? 'Complétée' : inst.equipe ? 'Planifiée' : 'Non planifiée'}
-                  </span>
+      );
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold">Inspection chantier #{selectedIntervention.num}</h2>
+                  <p className="text-sm text-slate-300">{selectedIntervention.client}</p>
                 </div>
-                <p className="text-lg font-medium">{inst.client}</p>
-                <p className="text-sm opacity-75 mt-1">{inst.adresse}</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm bg-slate-700 px-3 py-1 rounded">Date: {today}</span>
+                  <button onClick={() => setShowInspectionModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                    <Icon name="x" size={24}/>
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-sm">
-                  <p className="opacity-75">Équipe</p>
-                  <p className="font-medium">{inst.equipe || 'Non assignée'}</p>
+            </div>
+            
+            {/* Contenu scrollable */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Infos générales */}
+              <div className="bg-slate-50 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-800 mb-3">Informations du projet</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Personne ressource</label>
+                    <input 
+                      type="text"
+                      value={inspectionForm.personneRessource}
+                      onChange={(e) => setInspectionForm({...inspectionForm, personneRessource: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      placeholder="Nom du contact"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Téléphone</label>
+                    <input 
+                      type="tel"
+                      value={inspectionForm.telephone}
+                      onChange={(e) => setInspectionForm({...inspectionForm, telephone: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                      placeholder="(XXX) XXX-XXXX"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
+                    <input 
+                      type="time"
+                      value={inspectionForm.heureArrivee}
+                      onChange={(e) => setInspectionForm({...inspectionForm, heureArrivee: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
+                    <input 
+                      type="time"
+                      value={inspectionForm.heureDepart}
+                      onChange={(e) => setInspectionForm({...inspectionForm, heureDepart: e.target.value})}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    />
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <p className="opacity-75">Date</p>
-                  <p className="font-medium">{inst.dateInstallation}</p>
+              </div>
+
+              {/* Inspection avant chantier */}
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                  <Icon name="alert" size={18}/>
+                  Inspection avant chantier
+                </h3>
+                <div className="space-y-1">
+                  <CheckboxGroup 
+                    label="Accessibilité au balcon (Encombré Oui ou Non) Photo preuve"
+                    value={inspectionForm.accessibiliteBalcon}
+                    onChange={(v) => setInspectionForm({...inspectionForm, accessibiliteBalcon: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Vérifier niveau du balcon en fonction du plan correct Oui ou Non"
+                    value={inspectionForm.niveauBalconConforme}
+                    onChange={(v) => setInspectionForm({...inspectionForm, niveauBalconConforme: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Vérifier si backing conforme Oui ou Non"
+                    value={inspectionForm.backingConforme}
+                    onChange={(v) => setInspectionForm({...inspectionForm, backingConforme: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Si colonne capage fait Oui ou Non"
+                    value={inspectionForm.colonneCapage}
+                    onChange={(v) => setInspectionForm({...inspectionForm, colonneCapage: v})}
+                  />
                 </div>
-                <button className="px-4 py-2 bg-white/20 hover:bg-white/30 font-medium rounded-lg flex items-center gap-2">
-                  <Icon name="camera" size={18}/>Photos
+                <div className="mt-3">
+                  <label className="block text-xs text-amber-700 mb-1">Note:</label>
+                  <textarea 
+                    value={inspectionForm.noteAvant}
+                    onChange={(e) => setInspectionForm({...inspectionForm, noteAvant: e.target.value})}
+                    className="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm resize-none"
+                    rows={2}
+                    placeholder="Notes avant chantier..."
+                  />
+                </div>
+                <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium">
+                  <Icon name="camera" size={16}/>
+                  Prendre photo (avant)
+                </button>
+              </div>
+
+              {/* Travaux non complété */}
+              <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input 
+                    type="checkbox"
+                    checked={inspectionForm.travauxNonComplete}
+                    onChange={(e) => setInspectionForm({...inspectionForm, travauxNonComplete: e.target.checked})}
+                    className="w-5 h-5 rounded"
+                  />
+                  <span className="font-semibold text-red-800">Travaux non complété</span>
+                </label>
+                {inspectionForm.travauxNonComplete && (
+                  <textarea 
+                    value={inspectionForm.travauxNonCompleteNote}
+                    onChange={(e) => setInspectionForm({...inspectionForm, travauxNonCompleteNote: e.target.value})}
+                    className="w-full mt-3 px-3 py-2 border border-red-200 rounded-lg text-sm resize-none"
+                    rows={2}
+                    placeholder="Détails des travaux non complétés..."
+                  />
+                )}
+              </div>
+
+              {/* Inspection fin de chantier */}
+              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <Icon name="check" size={18}/>
+                  Inspection fin de chantier
+                </h3>
+                <div className="space-y-1">
+                  <CheckboxGroup 
+                    label="Mains installés"
+                    value={inspectionForm.mainsInstallees}
+                    onChange={(v) => setInspectionForm({...inspectionForm, mainsInstallees: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Cache-vis installés"
+                    value={inspectionForm.cacheVisInstallees}
+                    onChange={(v) => setInspectionForm({...inspectionForm, cacheVisInstallees: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Capsules sur les poteaux tous installées"
+                    value={inspectionForm.capsulesPoteaux}
+                    onChange={(v) => setInspectionForm({...inspectionForm, capsulesPoteaux: v})}
+                  />
+                  <CheckboxGroup 
+                    label="Regarder vu d'ensemble (niveau)"
+                    value={inspectionForm.vuEnsemble}
+                    onChange={(v) => setInspectionForm({...inspectionForm, vuEnsemble: v})}
+                  />
+                </div>
+                <div className="mt-3">
+                  <label className="block text-xs text-green-700 mb-1">Note:</label>
+                  <textarea 
+                    value={inspectionForm.noteApres}
+                    onChange={(e) => setInspectionForm({...inspectionForm, noteApres: e.target.value})}
+                    className="w-full px-3 py-2 border border-green-200 rounded-lg text-sm resize-none"
+                    rows={2}
+                    placeholder="Notes fin de chantier..."
+                  />
+                </div>
+                <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium">
+                  <Icon name="camera" size={16}/>
+                  PHOTOS global du projet
+                </button>
+              </div>
+
+              {/* Signatures */}
+              <div className="bg-slate-50 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-800 mb-3">Signatures</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Signature Installateur</label>
+                    <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                      <span className="text-sm text-slate-400">Touchez pour signer</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">Signature Client</label>
+                    <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                      <span className="text-sm text-slate-400">Touchez pour signer</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <label className="block text-xs text-slate-500 mb-1">Date</label>
+                  <input 
+                    type="date"
+                    value={inspectionForm.dateSignature}
+                    onChange={(e) => setInspectionForm({...inspectionForm, dateSignature: e.target.value})}
+                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+              <button 
+                onClick={() => setShowInspectionModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+              >
+                Annuler
+              </button>
+              <div className="flex gap-2">
+                <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
+                  <Icon name="save" size={16}/>
+                  Brouillon
+                </button>
+                <button 
+                  onClick={sauvegarderInspection}
+                  className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg flex items-center gap-2"
+                >
+                  <Icon name="check" size={16}/>
+                  Terminer l'inspection
                 </button>
               </div>
             </div>
           </div>
-        ))}
-      </div>
-    </div>
-  );
+        </div>
+      );
+    };
 
+    // ===== RENDU PRINCIPAL =====
+    return (
+      <div className="space-y-6">
+        <InspectionModal />
+
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Interventions Terrain</h1>
+            <p className="text-slate-500 mt-1">Suivi des interventions et compte-rendus</p>
+          </div>
+          
+          {/* Stats du jour */}
+          <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-slate-800">{statsJour.total}</p>
+              <p className="text-xs text-slate-500">Total</p>
+            </div>
+            <div className="w-px h-10 bg-slate-200"></div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-red-600">{statsJour.installations}</p>
+              <p className="text-xs text-slate-500">Install.</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-blue-600">{statsJour.livraisons}</p>
+              <p className="text-xs text-slate-500">Livr.</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-yellow-600">{statsJour.cueillettes}</p>
+              <p className="text-xs text-slate-500">Cueil.</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">{statsJour.transports}</p>
+              <p className="text-xs text-slate-500">Transp.</p>
+            </div>
+            <div className="w-px h-10 bg-slate-200"></div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-purple-600">{statsJour.heuresTotal}h</p>
+              <p className="text-xs text-slate-500">Estimé</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtres */}
+        <div className="flex flex-wrap items-center gap-4">
+          {/* Onglets période */}
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button 
+              onClick={() => setTerrainTab('aujourdhui')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'aujourdhui' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+            >
+              Aujourd'hui
+            </button>
+            <button 
+              onClick={() => setTerrainTab('semaine')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'semaine' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+            >
+              Cette semaine
+            </button>
+            <button 
+              onClick={() => setTerrainTab('toutes')}
+              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'toutes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+            >
+              Toutes
+            </button>
+          </div>
+
+          {/* Filtre type */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setTerrainFilterType('tous')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${terrainFilterType === 'tous' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200'}`}
+            >
+              Tous
+            </button>
+            <button 
+              onClick={() => setTerrainFilterType('installation')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'installation' ? 'bg-red-500 text-white' : 'bg-white border border-slate-200 text-red-600'}`}
+            >
+              <Icon name="tool" size={14}/>Installation
+            </button>
+            <button 
+              onClick={() => setTerrainFilterType('livraison')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'livraison' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-blue-600'}`}
+            >
+              <Icon name="truck" size={14}/>Livraison
+            </button>
+            <button 
+              onClick={() => setTerrainFilterType('cueillette')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'cueillette' ? 'bg-yellow-500 text-yellow-900' : 'bg-white border border-slate-200 text-yellow-600'}`}
+            >
+              <Icon name="package" size={14}/>Cueillette
+            </button>
+            <button 
+              onClick={() => setTerrainFilterType('transport')}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'transport' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-green-600'}`}
+            >
+              <Icon name="truck" size={14}/>Transport
+            </button>
+          </div>
+        </div>
+
+        {/* Liste des interventions */}
+        {interventions.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+            <Icon name="calendar" size={48} className="mx-auto mb-4 text-slate-300"/>
+            <p className="text-slate-500">Aucune intervention prévue pour cette période</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {interventions.map(intervention => (
+              <div 
+                key={intervention.id}
+                className={`bg-white rounded-2xl border-l-4 ${getTypeBorderColor(intervention.service)} border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden`}
+              >
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Infos principales */}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="font-mono font-bold text-xl text-slate-800">{intervention.num}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeColor(intervention.service)}`}>
+                          {intervention.service}
+                        </span>
+                        {intervention.typeCommande && (
+                          <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">{intervention.typeCommande}</span>
+                        )}
+                        {intervention.inspectionComplete && (
+                          <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs flex items-center gap-1">
+                            <Icon name="check" size={12}/>Inspecté
+                          </span>
+                        )}
+                      </div>
+                      
+                      <p className="text-lg font-semibold text-slate-800">{intervention.client}</p>
+                      <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                        <Icon name="map" size={14}/>
+                        {intervention.adresse}
+                      </p>
+                      
+                      {/* Infos supplémentaires */}
+                      <div className="flex items-center gap-6 mt-4 text-sm">
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <Icon name="calendar" size={16}/>
+                          <span>{intervention.datePrevue}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <Icon name="clock" size={16}/>
+                          <span>{intervention.tempsEstimeInstallation || 1}h estimé</span>
+                        </div>
+                        {intervention.piedsLineaires > 0 && (
+                          <div className="flex items-center gap-2 text-slate-600">
+                            <span className="font-semibold">{intervention.piedsLineaires}</span> pi. lin.
+                          </div>
+                        )}
+                        {intervention.equipe && (
+                          <div className={`px-2 py-1 rounded text-xs font-semibold text-white ${getEquipeCouleur(intervention.equipe)}`}>
+                            {intervention.equipe}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <div className="flex flex-col gap-2">
+                      <button 
+                        onClick={() => ouvrirInspection(intervention)}
+                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl flex items-center gap-2"
+                      >
+                        <Icon name="file" size={18}/>
+                        Inspection
+                      </button>
+                      <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
+                        <Icon name="camera" size={18}/>
+                        Photos
+                      </button>
+                      <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
+                        <Icon name="map" size={18}/>
+                        Navigation
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Barre de progression ou statut */}
+                {intervention.service === 'Installation' && (
+                  <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className={`px-2 py-1 rounded ${intervention.mesure === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        Mesure {intervention.mesure === '√' ? '✓' : '—'}
+                      </span>
+                      <span className={`px-2 py-1 rounded ${intervention.plan === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        Plan {intervention.plan === '√' ? '✓' : '—'}
+                      </span>
+                      <span className={`px-2 py-1 rounded ${intervention.productionTerminee === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                        Production {intervention.productionTerminee === '√' ? '✓' : '—'}
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-500">
+                      Couleur: <strong>{intervention.couleur || '—'}</strong>
+                    </span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
   // === CUEILLETTES / TRANSPORT ===
   const Cueillettes = () => {
     const [cueillettesTab, setCueillettesTab] = useState('liste');
@@ -4829,7 +5411,7 @@ export default function RampesGardexApp() {
       case 'commandes': return <Commandes />;
       case 'production': return <Production />;
       case 'planification': return <Planification />;
-      case 'installations': return <Installations />;
+      case 'Interventions': return <Interventions />;
       case 'cueillettes': return <Cueillettes />;
       case 'inventaire': return <Inventaire />;
       case 'achats': return <Achats />;
