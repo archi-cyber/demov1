@@ -66,6 +66,25 @@ export default function RampesGardexApp() {
     { code: 'B/O', label: 'Achat reçu partiellement (Back/Order)', color: 'bg-amber-100 text-amber-700' },
   ];
 
+  // === ÉTATS PLANIFICATION ===
+  const [planificationMonth, setPlanificationMonth] = useState(new Date(2026, 0, 1));
+  const [selectedPlanificationDate, setSelectedPlanificationDate] = useState(null);
+  const [showPlanifierModal, setShowPlanifierModal] = useState(false);
+  const [showEquipesModal, setShowEquipesModal] = useState(false);
+  const [selectedInstallation, setSelectedInstallation] = useState(null);
+  const [planificationTab, setPlanificationTab] = useState('calendrier');
+  const [planificationFilterEquipe, setPlanificationFilterEquipe] = useState('toutes');
+  const [planificationSearchTerm, setPlanificationSearchTerm] = useState('');
+  
+  // === ÉTATS ÉQUIPES ===
+  const [equipesList, setEquipesList] = useState([
+    { id: 1, nom: 'Équipe A', membres: ['Jean Dupont', 'Marc Tremblay'], couleur: 'bg-blue-500' },
+    { id: 2, nom: 'Équipe B', membres: ['Pierre Lavoie', 'Paul Gagnon'], couleur: 'bg-green-500' },
+    { id: 3, nom: 'Équipe C', membres: ['Luc Martin', 'André Roy'], couleur: 'bg-purple-500' },
+  ]);
+  const [showAddEquipeModal, setShowAddEquipeModal] = useState(false);
+  const [editingEquipe, setEditingEquipe] = useState(null);
+  const [equipeForm, setEquipeForm] = useState({ nom: '', membres: [], couleur: 'bg-blue-500' });
   // Options pour les codes de production
   const optionsProduction = [
     { code: '', label: 'Non défini', color: 'bg-slate-100 text-slate-500' },
@@ -167,7 +186,13 @@ export default function RampesGardexApp() {
     { id: 'rapports', icon: 'chart', label: 'Rapports' },
     { id: 'parametres', icon: 'settings', label: 'Paramètres' },
   ];
-
+// === ÉTAT POUR LE FORMULAIRE D'ÉDITION D'INSTALLATION ===
+  const [editInstallationForm, setEditInstallationForm] = useState({
+    datePrevue: '',
+    equipe: '',
+    tempsEstimeInstallation: 0,
+    commentaire: ''
+  });
   
   const [clientsList, setClientsList] = useState([
     { 
@@ -2916,52 +2941,919 @@ export default function RampesGardexApp() {
   };
 
   // === PLANIFICATION ===
+ // === PLANIFICATION ===
   const Planification = () => {
-    const equipes = ['Équipe A', 'Équipe B', 'Équipe C'];
+    // Constantes
+    const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    const dayNamesShort = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+    const HEURES_PAR_JOUR = 8;
+    const couleursEquipes = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500', 'bg-teal-500', 'bg-red-500', 'bg-yellow-500'];
+
+    // Générer les jours du mois
+    const getDaysInMonth = (date) => {
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDay = firstDay.getDay();
+      
+      const daysArray = [];
+      const prevMonthLastDay = new Date(year, month, 0).getDate();
+      for (let i = startingDay - 1; i >= 0; i--) {
+        daysArray.push({ day: prevMonthLastDay - i, currentMonth: false, date: new Date(year, month - 1, prevMonthLastDay - i) });
+      }
+      for (let i = 1; i <= daysInMonth; i++) {
+        daysArray.push({ day: i, currentMonth: true, date: new Date(year, month, i) });
+      }
+      const remainingDays = 42 - daysArray.length;
+      for (let i = 1; i <= remainingDays; i++) {
+        daysArray.push({ day: i, currentMonth: false, date: new Date(year, month + 1, i) });
+      }
+      return daysArray;
+    };
+
+    const days = getDaysInMonth(planificationMonth);
+
+    const formatDateKey = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    // Installations prêtes (production terminée)
+    const installationsPrêtes = commandesList.filter(cmd => 
+      cmd.productionTerminee === '√' && 
+      cmd.service === 'Installation' &&
+      cmd.statut === 'Active'
+    );
+
+    // Installations planifiées (ont une date et une équipe)
+    const installationsPlanifiees = commandesList.filter(cmd => 
+      cmd.datePrevue && 
+      cmd.equipe && 
+      cmd.service === 'Installation' &&
+      cmd.statut === 'Active'
+    );
+
+    // Installations non planifiées
+    const installationsNonPlanifiees = installationsPrêtes.filter(cmd => !cmd.equipe || !cmd.datePrevue);
+
+    // Calculer le nombre de jours nécessaires pour une installation
+    const calculerJoursNecessaires = (tempsHeures) => {
+      if (!tempsHeures || tempsHeures <= 0) return 1;
+      if (tempsHeures <= 12) return 1; // Jusqu'à 12h = 1 jour (avec notification si > 8h)
+      return Math.ceil(tempsHeures / HEURES_PAR_JOUR);
+    };
+
+    // Vérifier si une installation dépasse la journée normale
+    const depasseJournee = (tempsHeures) => {
+      return tempsHeures > HEURES_PAR_JOUR && tempsHeures <= 12;
+    };
+
+    // Obtenir les installations pour une date donnée
+    const getInstallationsForDate = (date) => {
+      const dateKey = formatDateKey(date);
+      return installationsPlanifiees.filter(cmd => {
+        if (!cmd.datePrevue) return false;
+        const tempsHeures = parseInt(cmd.tempsEstimeInstallation) || 0;
+        const joursNecessaires = calculerJoursNecessaires(tempsHeures);
+        
+        // Si l'installation dure plusieurs jours, vérifier si la date est dans la plage
+        if (joursNecessaires > 1) {
+          const dateDebut = new Date(cmd.datePrevue);
+          for (let i = 0; i < joursNecessaires; i++) {
+            const currentDate = new Date(dateDebut);
+            currentDate.setDate(dateDebut.getDate() + i);
+            // Sauter les weekends
+            while (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+              currentDate.setDate(currentDate.getDate() + 1);
+            }
+            if (formatDateKey(currentDate) === dateKey) {
+              return true;
+            }
+          }
+          return false;
+        }
+        
+        return cmd.datePrevue === dateKey;
+      });
+    };
+
+    // Calculer les totaux pour une date
+    const getTotalsForDate = (date) => {
+      const installations = getInstallationsForDate(date);
+      return {
+        count: installations.length,
+        tempsTotal: installations.reduce((acc, cmd) => acc + (parseInt(cmd.tempsEstimeInstallation) || 0), 0),
+        piedsLineaires: installations.reduce((acc, cmd) => acc + (parseInt(cmd.piedsLineaires) || 0), 0)
+      };
+    };
+
+    // Obtenir la couleur d'une équipe
+    const getEquipeCouleur = (equipeNom) => {
+      const equipe = equipesList.find(e => e.nom === equipeNom);
+      return equipe ? equipe.couleur : 'bg-slate-500';
+    };
+
+    // Assigner une équipe à une installation
+    const assignerEquipe = (cmdId, equipeNom) => {
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, equipe: equipeNom } : cmd
+      ));
+    };
+
+    // Planifier une installation (définir la date)
+    const planifierInstallation = (cmdId, date) => {
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, datePrevue: date } : cmd
+      ));
+    };
+
+    // Modifier une installation
+    const modifierInstallation = (cmdId, updates) => {
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, ...updates } : cmd
+      ));
+      setSelectedInstallation(null);
+    };
+
+    // Marquer installation comme terminée
+    const terminerInstallation = (cmdId) => {
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === cmdId ? { ...cmd, statut: 'Complétée', installationTerminee: true } : cmd
+      ));
+    };
+
+    // Gestion des équipes
+    const ajouterEquipe = () => {
+      if (!equipeForm.nom) return;
+      const newId = Math.max(...equipesList.map(e => e.id), 0) + 1;
+      setEquipesList(prev => [...prev, { id: newId, ...equipeForm }]);
+      setEquipeForm({ nom: '', membres: [], couleur: 'bg-blue-500' });
+      setShowAddEquipeModal(false);
+    };
+
+    const modifierEquipe = () => {
+      if (!editingEquipe || !equipeForm.nom) return;
+      setEquipesList(prev => prev.map(e => e.id === editingEquipe.id ? { ...e, ...equipeForm } : e));
+      setEditingEquipe(null);
+      setEquipeForm({ nom: '', membres: [], couleur: 'bg-blue-500' });
+      setShowAddEquipeModal(false);
+    };
+
+    const supprimerEquipe = (id) => {
+      if (window.confirm('Êtes-vous sûr de vouloir supprimer cette équipe?')) {
+        setEquipesList(prev => prev.filter(e => e.id !== id));
+      }
+    };
+
+    // Stats
+    const statsInstallations = {
+      total: installationsPlanifiees.length,
+      nonPlanifiees: installationsNonPlanifiees.length,
+      tempsTotal: installationsPlanifiees.reduce((acc, cmd) => acc + (parseInt(cmd.tempsEstimeInstallation) || 0), 0),
+      piedsTotal: installationsPlanifiees.reduce((acc, cmd) => acc + (parseInt(cmd.piedsLineaires) || 0), 0)
+    };
+
+    // ===== MODAL DÉTAILS D'UNE DATE =====
+    const DateDetailModal = () => {
+      if (!selectedPlanificationDate) return null;
+      const installations = getInstallationsForDate(selectedPlanificationDate);
+      const totals = getTotalsForDate(selectedPlanificationDate);
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <h2 className="text-xl font-bold">
+                Projet du : {selectedPlanificationDate.getDate()} {monthNames[selectedPlanificationDate.getMonth()]} {selectedPlanificationDate.getFullYear()}
+              </h2>
+              <button onClick={() => setSelectedPlanificationDate(null)} className="p-2 hover:bg-slate-700 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+            
+            <div className="overflow-y-auto max-h-[calc(90vh-250px)] p-4 space-y-4">
+              {installations.length === 0 ? (
+                <div className="text-center py-12 text-slate-500">Aucune installation planifiée pour cette date</div>
+              ) : (
+                installations.map(cmd => {
+                  const tempsHeures = parseInt(cmd.tempsEstimeInstallation) || 0;
+                  const depasse = depasseJournee(tempsHeures);
+                  
+                  return (
+                    <div key={cmd.id} className="border border-slate-200 rounded-xl overflow-hidden">
+                      {/* En-tête avec badges */}
+                      <div className="flex items-center justify-between p-4 bg-slate-50">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono font-bold text-lg">{cmd.num}</span>
+                          {cmd.reprise && <span className="px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded">Reprise</span>}
+                          <span className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded">Installation</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* Dates */}
+                          <span className="text-sm bg-slate-200 px-2 py-1 rounded">{cmd.dateEntree || '—'}</span>
+                          <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">{cmd.datePrevue}</span>
+                          {depasse && (
+                            <span className="text-sm bg-amber-100 text-amber-800 px-2 py-1 rounded flex items-center gap-1">
+                              <Icon name="alert" size={14}/> +{tempsHeures - HEURES_PAR_JOUR}h
+                            </span>
+                          )}
+                          <button onClick={() => setSelectedInstallation(cmd)} className="p-2 hover:bg-slate-200 rounded-lg">
+                            <Icon name="edit" size={20}/>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Contenu */}
+                      <div className="p-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="font-semibold text-lg">{cmd.client}</p>
+                            <p className="text-sm text-slate-500">{cmd.reference}</p>
+                            <p className="text-sm text-slate-600 mt-1">{cmd.adresse}</p>
+                            
+                            {cmd.commentaire && (
+                              <div className="mt-3 p-3 bg-slate-100 rounded-lg border">
+                                <p className="text-sm">{cmd.commentaire}</p>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-500">Mesure:</span>
+                              <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.mesure, 'production')}`}>{cmd.mesure || '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-500">Plan:</span>
+                              <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.plan, 'production')}`}>{cmd.plan || '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-500">Envoyé prod:</span>
+                              <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.envoyeProduction, 'production')}`}>{cmd.envoyeProduction || '—'}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="text-slate-500">Prod. terminée:</span>
+                              <span className={`px-2 py-0.5 rounded font-semibold ${getStatusColor(cmd.productionTerminee, 'production')}`}>{cmd.productionTerminee || '—'}</span>
+                            </div>
+                            
+                            {/* Achats */}
+                            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t">
+                              <div className="text-xs">
+                                <span className="text-slate-500">Verre:</span>
+                                <span className={`ml-1 px-1 rounded ${getStatusColor(cmd.achatVerres, 'achat')}`}>{cmd.achatVerres || '—'}</span>
+                              </div>
+                              <div className="text-xs">
+                                <span className="text-slate-500">Limon:</span>
+                                <span className={`ml-1 px-1 rounded ${getStatusColor(cmd.achatLimons, 'achat')}`}>{cmd.achatLimons || '—'}</span>
+                              </div>
+                              <div className="text-xs">
+                                <span className="text-slate-500">Peinture:</span>
+                                <span className={`ml-1 px-1 rounded ${getStatusColor(cmd.achatPeinture, 'achat')}`}>{cmd.achatPeinture || '—'}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Pied avec infos clés */}
+                        <div className="flex items-center gap-4 mt-4 pt-4 border-t">
+                          <div className={`px-3 py-2 rounded-lg text-white text-sm font-semibold ${getEquipeCouleur(cmd.equipe)}`}>
+                            {cmd.equipe || 'Non assigné'}
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-slate-500">Pieds linéaires:</span>
+                            <span className="font-bold ml-1">{cmd.piedsLineaires || 0}</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-slate-500">Temps:</span>
+                            <span className="font-bold ml-1">{cmd.tempsEstimeInstallation || 0}h</span>
+                          </div>
+                          <div className="text-sm">
+                            <span className="text-slate-500">Couleur:</span>
+                            <span className="font-bold ml-1">{cmd.couleur || '—'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Résumé */}
+            <div className="border-t border-slate-200 p-4 bg-slate-50">
+              <div className="flex items-center justify-between">
+                <button onClick={() => setSelectedPlanificationDate(null)} className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Sortir</button>
+                <div className="flex items-center gap-6">
+                  <div className="bg-white px-4 py-2 rounded-lg border text-center">
+                    <p className="text-xs text-slate-500">Installations</p>
+                    <p className="text-xl font-bold">{installations.length}</p>
+                  </div>
+                  <div className="bg-blue-100 px-4 py-2 rounded-lg text-center">
+                    <p className="text-xs text-blue-600">Temps d'installation</p>
+                    <p className="text-xl font-bold text-blue-700">{totals.tempsTotal} heures</p>
+                  </div>
+                  <div className="bg-emerald-100 px-4 py-2 rounded-lg text-center">
+                    <p className="text-xs text-emerald-600">Pieds linéaires</p>
+                    <p className="text-xl font-bold text-emerald-700">{totals.piedsLineaires} pieds</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ===== MODAL ÉDITER INSTALLATION =====
+   // ===== MODAL ÉDITER INSTALLATION =====
+    const EditInstallationModal = () => {
+      if (!selectedInstallation) return null;
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h2 className="text-xl font-bold">Modifier l'installation {selectedInstallation.num}</h2>
+              <button onClick={() => setSelectedInstallation(null)} className="p-2 hover:bg-slate-100 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Date prévue</label>
+                <input 
+                  type="date" 
+                  value={selectedInstallation.datePrevue || ''}
+                  onChange={(e) => setCommandesList(prev => prev.map(cmd => cmd.id === selectedInstallation.id ? { ...cmd, datePrevue: e.target.value } : cmd))}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Équipe assignée</label>
+                <select 
+                  value={selectedInstallation.equipe || ''}
+                  onChange={(e) => setCommandesList(prev => prev.map(cmd => cmd.id === selectedInstallation.id ? { ...cmd, equipe: e.target.value } : cmd))}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-white"
+                >
+                  <option value="">Sélectionner une équipe</option>
+                  {equipesList.map(eq => <option key={eq.id} value={eq.nom}>{eq.nom}</option>)}
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Temps estimé (heures)</label>
+                <input 
+                  type="number" 
+                  value={selectedInstallation.tempsEstimeInstallation || 0}
+                  onChange={(e) => setCommandesList(prev => prev.map(cmd => cmd.id === selectedInstallation.id ? { ...cmd, tempsEstimeInstallation: parseInt(e.target.value) || 0 } : cmd))}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Commentaire</label>
+                <textarea 
+                  value={selectedInstallation.commentaire || ''}
+                  onChange={(e) => setCommandesList(prev => prev.map(cmd => cmd.id === selectedInstallation.id ? { ...cmd, commentaire: e.target.value } : cmd))}
+                  rows={3}
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl resize-none"
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 border-t border-slate-200 bg-slate-50">
+              <button onClick={() => setSelectedInstallation(null)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">Annuler</button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => { terminerInstallation(selectedInstallation.id); setSelectedInstallation(null); }}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg"
+                >
+                  Marquer terminée
+                </button>
+                <button 
+                  onClick={() => setSelectedInstallation(null)}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg"
+                >
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+    // ===== MODAL PLANIFIER =====
+    const PlanifierModal = () => {
+      if (!showPlanifierModal) return null;
+
+      const filteredInstallations = installationsNonPlanifiees.filter(cmd => {
+        if (planificationSearchTerm) {
+          const search = planificationSearchTerm.toLowerCase();
+          if (!cmd.num.toLowerCase().includes(search) && !cmd.client.toLowerCase().includes(search)) return false;
+        }
+        return true;
+      });
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[95vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <h2 className="text-xl font-bold">Planifier les installations</h2>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-sm text-slate-300">Non planifiées</p>
+                  <p className="text-2xl font-bold">{installationsNonPlanifiees.length}</p>
+                </div>
+                <button onClick={() => setShowPlanifierModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                  <Icon name="x" size={24}/>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-4 border-b border-slate-200 flex gap-4">
+              <input 
+                type="text" 
+                value={planificationSearchTerm}
+                onChange={(e) => setPlanificationSearchTerm(e.target.value)}
+                placeholder="Rechercher # projet ou client..."
+                className="flex-1 px-4 py-2 border border-slate-200 rounded-lg"
+              />
+            </div>
+
+            <div className="flex-1 overflow-auto">
+              {filteredInstallations.length === 0 ? (
+                <div className="p-12 text-center text-slate-500">
+                  <p>Toutes les installations sont planifiées!</p>
+                </div>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-100 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold"># Projet</th>
+                      <th className="px-4 py-3 text-left font-semibold">Client</th>
+                      <th className="px-4 py-3 text-center font-semibold">Temps (h)</th>
+                      <th className="px-4 py-3 text-center font-semibold">Pi. Lin.</th>
+                      <th className="px-4 py-3 text-center font-semibold">Date prévue</th>
+                      <th className="px-4 py-3 text-center font-semibold">Équipe</th>
+                      <th className="px-4 py-3 text-center font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredInstallations.map(cmd => (
+                      <tr key={cmd.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-mono font-bold">{cmd.num}</td>
+                        <td className="px-4 py-3">{cmd.client}</td>
+                        <td className="px-4 py-3 text-center font-bold">{cmd.tempsEstimeInstallation || 0}</td>
+                        <td className="px-4 py-3 text-center">{cmd.piedsLineaires || 0}</td>
+                        <td className="px-4 py-3 text-center">
+                          <input 
+                            type="date" 
+                            value={cmd.datePrevue || ''}
+                            onChange={(e) => planifierInstallation(cmd.id, e.target.value)}
+                            className="px-2 py-1 border border-slate-200 rounded text-sm"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <select 
+                            value={cmd.equipe || ''}
+                            onChange={(e) => assignerEquipe(cmd.id, e.target.value)}
+                            className="px-2 py-1 border border-slate-200 rounded text-sm"
+                          >
+                            <option value="">Sélectionner</option>
+                            {equipesList.map(eq => <option key={eq.id} value={eq.nom}>{eq.nom}</option>)}
+                          </select>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {cmd.datePrevue && cmd.equipe && (
+                            <span className="text-emerald-600 font-semibold">✓ Planifiée</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50">
+              <button onClick={() => setShowPlanifierModal(false)} className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Fermer</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ===== MODAL GESTION DES ÉQUIPES =====
+    const EquipesModal = () => {
+      if (!showEquipesModal) return null;
+
+      return (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-800 text-white">
+              <h2 className="text-xl font-bold">Gestion des équipes</h2>
+              <button onClick={() => setShowEquipesModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 space-y-4">
+              {equipesList.map(equipe => (
+                <div key={equipe.id} className="bg-white border border-slate-200 rounded-xl p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-4 h-4 rounded-full ${equipe.couleur}`}></div>
+                      <h3 className="font-bold text-lg">{equipe.nom}</h3>
+                      <span className="text-sm text-slate-500">
+                        ({installationsPlanifiees.filter(c => c.equipe === equipe.nom).length} installations)
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => {
+                          setEditingEquipe(equipe);
+                          setEquipeForm({ nom: equipe.nom, membres: equipe.membres, couleur: equipe.couleur });
+                          setShowAddEquipeModal(true);
+                        }}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"
+                      >
+                        <Icon name="edit" size={18}/>
+                      </button>
+                      <button onClick={() => supprimerEquipe(equipe.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
+                        <Icon name="x" size={18}/>
+                      </button>
+                    </div>
+                  </div>
+                  {equipe.membres && equipe.membres.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {equipe.membres.map((membre, idx) => (
+                        <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-700 text-sm rounded">{membre}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {/* Formulaire ajout/modification */}
+              {showAddEquipeModal && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                  <h4 className="font-bold mb-3">{editingEquipe ? 'Modifier l\'équipe' : 'Nouvelle équipe'}</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nom de l'équipe</label>
+                      <input 
+                        type="text"
+                        value={equipeForm.nom}
+                        onChange={(e) => setEquipeForm({...equipeForm, nom: e.target.value})}
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg"
+                        placeholder="Ex: Équipe D"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Couleur</label>
+                      <div className="flex gap-2">
+                        {couleursEquipes.map(c => (
+                          <button 
+                            key={c}
+                            onClick={() => setEquipeForm({...equipeForm, couleur: c})}
+                            className={`w-8 h-8 rounded-full ${c} ${equipeForm.couleur === c ? 'ring-2 ring-offset-2 ring-slate-800' : ''}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => { setShowAddEquipeModal(false); setEditingEquipe(null); setEquipeForm({ nom: '', membres: [], couleur: 'bg-blue-500' }); }}
+                        className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+                      >
+                        Annuler
+                      </button>
+                      <button 
+                        onClick={editingEquipe ? modifierEquipe : ajouterEquipe}
+                        className="px-4 py-2 bg-emerald-500 text-white rounded-lg"
+                      >
+                        {editingEquipe ? 'Modifier' : 'Ajouter'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between">
+              <button 
+                onClick={() => { setShowAddEquipeModal(true); setEditingEquipe(null); setEquipeForm({ nom: '', membres: [], couleur: 'bg-blue-500' }); }}
+                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg flex items-center gap-2"
+              >
+                <Icon name="plus" size={18}/>Nouvelle équipe
+              </button>
+              <button onClick={() => setShowEquipesModal(false)} className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl">Fermer</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ===== RENDU PRINCIPAL =====
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Planification</h1>
-          <p className="text-slate-500 mt-1">Planifiez les installations et assignez les équipes</p>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {equipes.map(equipe => (
-            <div key={equipe} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="p-4 bg-slate-50 border-b border-slate-100">
-                <h3 className="font-bold text-slate-800">{equipe}</h3>
-                <p className="text-sm text-slate-500">{commandes.filter(c => c.equipe === equipe && c.statut === 'Active').length} installation(s)</p>
+        <DateDetailModal />
+        <PlanifierModal />
+        <EquipesModal />
+        {selectedInstallation && <EditInstallationModal />}
+
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Planification</h1>
+            <p className="text-slate-500 mt-1">Planifiez les installations et assignez les équipes</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {/* Filtres par type */}
+            <div className="flex items-center gap-1 text-xs bg-white px-2 py-1 rounded-lg border">
+              <span className="px-2 py-1 bg-blue-500 text-white rounded">Livraison</span>
+              <span className="px-2 py-1 bg-yellow-400 text-yellow-900 rounded">Cueillette</span>
+              <span className="px-2 py-1 bg-red-600 text-white rounded">Installation</span>
+              <span className="px-2 py-1 bg-green-500 text-white rounded">Transport</span>
+            </div>
+            
+            {/* Stats rapides */}
+            <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-xl border">
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Planifiées</p>
+                <p className="text-xl font-bold text-slate-800">{statsInstallations.total}</p>
               </div>
-              <div className="p-4 space-y-3">
-                {commandes.filter(c => c.equipe === equipe && c.statut === 'Active').map(cmd => (
-                  <div key={cmd.id} className={`p-3 rounded-xl border-2 ${getActiviteCardBg(cmd.activite)}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="font-mono text-sm font-bold">{cmd.num}</span>
-                      <span className="text-xs opacity-75">{cmd.dateInstallation}</span>
-                    </div>
-                    <p className="text-sm">{cmd.client}</p>
-                    <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
-                  </div>
-                ))}
+              <div className="w-px h-8 bg-slate-200"></div>
+              <div className="text-center">
+                <p className="text-xs text-slate-500">Non planifiées</p>
+                <p className="text-xl font-bold text-amber-600">{statsInstallations.nonPlanifiees}</p>
               </div>
             </div>
-          ))}
+            
+            {/* Boutons */}
+            <button onClick={() => setShowEquipesModal(true)} className="px-4 py-2 border border-slate-300 rounded-xl hover:bg-slate-50 flex items-center gap-2">
+              <Icon name="users" size={18}/>Équipes
+            </button>
+            <button onClick={() => setShowPlanifierModal(true)} className="px-4 py-3 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-xl shadow-lg flex items-center gap-2">
+              <Icon name="plus" size={20}/>Planifier
+            </button>
+          </div>
         </div>
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-          <h3 className="font-bold text-slate-800 mb-4">Commandes non planifiées</h3>
-          {commandes.filter(c => !c.equipe && c.statut === 'Active').map(cmd => (
-            <div key={cmd.id} className={`flex items-center justify-between p-4 rounded-xl border-2 mb-3 ${getActiviteCardBg(cmd.activite)}`}>
-              <div>
-                <p className="font-bold">{cmd.num} <span className="font-normal opacity-90">- {cmd.client}</span></p>
-                <p className="text-sm opacity-75">Date prévue: {cmd.dateInstallation}</p>
-                <p className="text-xs font-semibold mt-1">{cmd.activite}</p>
+
+        {/* Onglets */}
+        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+          <button onClick={() => setPlanificationTab('calendrier')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${planificationTab === 'calendrier' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="calendar" size={18}/>Calendrier
+          </button>
+          <button onClick={() => setPlanificationTab('equipes')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${planificationTab === 'equipes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="users" size={18}/>Par équipe
+          </button>
+          <button onClick={() => setPlanificationTab('liste')} className={`px-5 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${planificationTab === 'liste' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            <Icon name="file" size={18}/>Liste
+          </button>
+        </div>
+
+        {/* ===== CALENDRIER ===== */}
+        {planificationTab === 'calendrier' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            {/* Filtres */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-slate-50">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="optInstall" defaultChecked className="w-4 h-4"/>
+                  <label htmlFor="optInstall" className="text-sm">Option installation</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="optMesure" className="w-4 h-4"/>
+                  <label htmlFor="optMesure" className="text-sm">Option mesure</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="optLivraison" className="w-4 h-4"/>
+                  <label htmlFor="optLivraison" className="text-sm">Option livraison</label>
+                </div>
               </div>
-              <select className="px-4 py-2 border border-slate-200 rounded-lg bg-white text-slate-800">
-                <option>Assigner une équipe</option>
-                {equipes.map(eq => <option key={eq}>{eq}</option>)}
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded">Installations prêtes</span>
+                <select className="px-3 py-2 border border-slate-200 rounded-lg text-sm">
+                  <option value="">Toutes les équipes</option>
+                  {equipesList.map(eq => <option key={eq.id} value={eq.nom}>{eq.nom}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Navigation mois */}
+            <div className="flex items-center justify-between p-4 bg-slate-800 text-white">
+              <button onClick={() => setPlanificationMonth(new Date(planificationMonth.getFullYear(), planificationMonth.getMonth() - 1, 1))} className="p-2 hover:bg-slate-700 rounded-full">
+                <Icon name="left" size={28}/>
+              </button>
+              <h2 className="text-2xl font-bold">{monthNames[planificationMonth.getMonth()]} {planificationMonth.getFullYear()}</h2>
+              <button onClick={() => setPlanificationMonth(new Date(planificationMonth.getFullYear(), planificationMonth.getMonth() + 1, 1))} className="p-2 hover:bg-slate-700 rounded-full">
+                <Icon name="right" size={28}/>
+              </button>
+            </div>
+
+            {/* En-têtes des jours */}
+            <div className="grid grid-cols-7 bg-slate-700 text-white">
+              {dayNamesShort.map(day => (
+                <div key={day} className="p-3 text-center border-r border-slate-600 last:border-r-0">
+                  <p className="font-semibold uppercase text-sm">{day}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Grille des jours */}
+            <div className="grid grid-cols-7">
+              {days.map((dayInfo, idx) => {
+                const totals = getTotalsForDate(dayInfo.date);
+                const installations = getInstallationsForDate(dayInfo.date);
+                const isWeekend = dayInfo.date.getDay() === 0 || dayInfo.date.getDay() === 6;
+                const isToday = formatDateKey(dayInfo.date) === formatDateKey(new Date());
+                
+                return (
+                  <div 
+                    key={idx} 
+                    onClick={() => totals.count > 0 && setSelectedPlanificationDate(dayInfo.date)} 
+                    className={`min-h-[140px] border-r border-b border-slate-200 p-2 transition-colors
+                      ${!dayInfo.currentMonth ? 'bg-slate-100 text-slate-400' : isWeekend ? 'bg-slate-50' : 'bg-white'} 
+                      ${totals.count > 0 ? 'cursor-pointer hover:bg-blue-50' : ''}
+                      ${isToday && dayInfo.currentMonth ? 'ring-2 ring-inset ring-blue-500' : ''}
+                    `}
+                  >
+                    {/* Numéro du jour */}
+                    <div className="flex items-center justify-between mb-1">
+                      <span className={`text-lg font-bold ${!dayInfo.currentMonth ? 'text-slate-300' : isToday ? 'bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center' : ''}`}>
+                        {dayInfo.day}
+                      </span>
+                      {totals.count > 0 && dayInfo.currentMonth && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-xs text-slate-500">{totals.count}</span>
+                          <span className="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                            {totals.tempsTotal}h
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Installations du jour */}
+                    {dayInfo.currentMonth && installations.slice(0, 3).map(cmd => {
+                      const tempsHeures = parseInt(cmd.tempsEstimeInstallation) || 0;
+                      const depasse = depasseJournee(tempsHeures);
+                      
+                      return (
+                        <div key={cmd.id} className={`mb-1 p-1.5 rounded text-xs ${getEquipeCouleur(cmd.equipe)} text-white relative`}>
+                          {depasse && (
+                            <span className="absolute -top-1 -right-1 bg-amber-400 text-amber-900 text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">!</span>
+                          )}
+                          <p className="font-bold truncate">{cmd.num}</p>
+                          <p className="truncate opacity-90 text-[10px]">{cmd.client}</p>
+                          <div className="flex items-center justify-between mt-0.5 text-[10px] opacity-75">
+                            <span>{cmd.tempsEstimeInstallation}h</span>
+                            <span>{cmd.piedsLineaires} pi</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    
+                    {installations.length > 3 && dayInfo.currentMonth && (
+                      <p className="text-xs text-blue-600 font-medium text-center">+{installations.length - 3} autres</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ===== VUE PAR ÉQUIPE ===== */}
+        {planificationTab === 'equipes' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {equipesList.map(equipe => {
+              const installationsEquipe = installationsPlanifiees.filter(c => c.equipe === equipe.nom);
+              const tempsTotal = installationsEquipe.reduce((acc, cmd) => acc + (parseInt(cmd.tempsEstimeInstallation) || 0), 0);
+              
+              return (
+                <div key={equipe.id} className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div className={`p-4 ${equipe.couleur} text-white`}>
+                    <h3 className="font-bold text-lg">{equipe.nom}</h3>
+                    <p className="text-sm opacity-90">{installationsEquipe.length} installation(s) • {tempsTotal}h total</p>
+                  </div>
+                  <div className="p-4 space-y-3 max-h-[400px] overflow-y-auto">
+                    {installationsEquipe.length === 0 ? (
+                      <p className="text-slate-500 text-center py-4">Aucune installation assignée</p>
+                    ) : (
+                      installationsEquipe.map(cmd => (
+                        <div 
+                          key={cmd.id} 
+                          onClick={() => setSelectedInstallation(cmd)}
+                          className="p-3 rounded-xl border border-slate-200 hover:shadow-md cursor-pointer transition-all"
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <span className="font-mono text-sm font-bold">{cmd.num}</span>
+                            <span className="text-xs bg-slate-100 px-2 py-0.5 rounded">{cmd.datePrevue}</span>
+                          </div>
+                          <p className="text-sm font-medium">{cmd.client}</p>
+                          <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                            <span>{cmd.tempsEstimeInstallation}h</span>
+                            <span>{cmd.piedsLineaires} pi.lin.</span>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== LISTE ===== */}
+        {planificationTab === 'liste' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <input 
+                type="text" 
+                placeholder="Rechercher..."
+                className="flex-1 max-w-md px-4 py-2 border border-slate-200 rounded-xl"
+              />
+              <select 
+                value={planificationFilterEquipe}
+                onChange={(e) => setPlanificationFilterEquipe(e.target.value)}
+                className="px-4 py-2 border border-slate-200 rounded-xl"
+              >
+                <option value="toutes">Toutes les équipes</option>
+                {equipesList.map(eq => <option key={eq.id} value={eq.nom}>{eq.nom}</option>)}
               </select>
             </div>
-          ))}
-        </div>
+            
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"># Projet</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Client</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Équipe</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Date prévue</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Temps (h)</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Pi. Lin.</th>
+                  <th className="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {installationsPlanifiees
+                  .filter(cmd => planificationFilterEquipe === 'toutes' || cmd.equipe === planificationFilterEquipe)
+                  .map(cmd => (
+                    <tr key={cmd.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-mono font-bold">{cmd.num}</td>
+                      <td className="px-4 py-3">{cmd.client}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-3 py-1 rounded text-white text-sm font-medium ${getEquipeCouleur(cmd.equipe)}`}>
+                          {cmd.equipe}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">{cmd.datePrevue}</td>
+                      <td className="px-4 py-3 text-center font-bold">{cmd.tempsEstimeInstallation || 0}</td>
+                      <td className="px-4 py-3 text-center">{cmd.piedsLineaires || 0}</td>
+                      <td className="px-4 py-3 text-center">
+                        <button onClick={() => setSelectedInstallation(cmd)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
+                          <Icon name="edit" size={18}/>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Commandes non planifiées */}
+        {installationsNonPlanifiees.length > 0 && (
+          <div className="bg-amber-50 rounded-2xl border border-amber-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-amber-800">Installations non planifiées ({installationsNonPlanifiees.length})</h3>
+              <button onClick={() => setShowPlanifierModal(true)} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium">
+                Planifier maintenant
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {installationsNonPlanifiees.slice(0, 6).map(cmd => (
+                <div key={cmd.id} className="bg-white p-3 rounded-xl border border-amber-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-mono font-bold">{cmd.num}</p>
+                      <p className="text-sm text-slate-600">{cmd.client}</p>
+                    </div>
+                    <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded">{cmd.tempsEstimeInstallation || 0}h</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
