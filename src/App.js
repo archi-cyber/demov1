@@ -143,6 +143,72 @@ export default function RampesGardexApp() {
     { code: 'At. Rep', label: 'Attente réponse représentant', color: 'bg-cyan-100 text-cyan-700' },
   ];
 
+  // === FORMULAIRES SPÉCIFIQUES PAR TYPE ===
+const [showLivraisonModal, setShowLivraisonModal] = useState(false);
+const [showCueilletteModal, setShowCueilletteModal] = useState(false);
+const [showTransportModal, setShowTransportModal] = useState(false);
+
+const [livraisonForm, setLivraisonForm] = useState({
+  heureArrivee: '',
+  heureDepart: '',
+  personneReception: '',
+  telephone: '',
+  // Vérifications livraison
+  materielComplet: null,
+  etatMateriel: null,
+  quantiteConforme: null,
+  emplacementLivraison: '',
+  accessibilite: null,
+  notelivraison: '',
+  // Signature
+  signatureLivreur: null,
+  signatureClient: null,
+  photoPreuve: null,
+  dateSignature: ''
+});
+
+const [cueilletteForm, setCueilletteForm] = useState({
+  heureArrivee: '',
+  heureDepart: '',
+  personneContact: '',
+  telephone: '',
+  // Vérifications cueillette
+  materielIdentifie: null,
+  etatMaterielRecupere: '',
+  quantiteRecuperee: 0,
+  emplacementCueillette: '',
+  difficulteAcces: null,
+  noteCueillette: '',
+  // Matériel récupéré
+  listeMateriels: [],
+  photosAvant: [],
+  photosApres: [],
+  // Signature
+  signatureChauffeur: null,
+  signatureClient: null,
+  dateSignature: ''
+});
+
+const [transportForm, setTransportForm] = useState({
+  heureDepart: '',
+  heureArriveeDestination: '',
+  adresseDepart: '',
+  adresseArrivee: '',
+  // Vérifications transport
+  vehiculeInspecte: null,
+  chargementSecurise: null,
+  documentationComplete: null,
+  kmDepart: '',
+  kmArrivee: '',
+  noteTransport: '',
+  // Équipe transportée
+  membresEquipe: [],
+  materielTransporte: '',
+  // Signature
+  signatureChauffeur: null,
+  dateSignature: ''
+});
+
   // Fonction pour obtenir la couleur d'un code de statut
   const getStatusColor = (code, type = 'achat') => {
     const options = type === 'achat' ? optionsAchat : optionsProduction;
@@ -770,7 +836,56 @@ export default function RampesGardexApp() {
       piedsLineaires: 0,
       tempsEstimeInstallation: 1,
       equipe: 'Équipe B'
-    }
+    },
+    // === EXEMPLES À AJOUTER DANS commandesList ===
+
+// Exemple LIVRAISON
+{
+  id: 'LIV001',
+  num: 'LIV-2026-001',
+  client: 'Jean Tremblay',
+  telephone: '514-555-0101',
+  adresse: '123 Rue des Érables, Montréal',
+  service: 'Livraison',
+  typeCommande: 'Matériel rampe',
+  datePrevue: '2026-01-28',
+  statut: 'Active',
+  equipe: 'Équipe A',
+  tempsEstimeInstallation: 1,
+  formulaireComplete: false
+},
+
+// Exemple CUEILLETTE
+{
+  id: 'CUE001',
+  num: 'CUE-2026-001',
+  client: 'Marie Lavoie',
+  telephone: '514-555-0202',
+  adresse: '456 Boulevard St-Laurent, Montréal',
+  service: 'Cueillette',
+  typeCommande: 'Récupération rampe',
+  datePrevue: '2026-01-28',
+  statut: 'Active',
+  equipe: 'Équipe B',
+  tempsEstimeInstallation: 1,
+  formulaireComplete: false
+},
+
+// Exemple TRANSPORT
+{
+  id: 'TRP001',
+  num: 'TRP-2026-001',
+  client: 'Pierre Gagnon',
+  telephone: '514-555-0303',
+  adresse: '789 Avenue du Parc, Montréal',
+  service: 'Transport',
+  typeCommande: 'Transport équipe',
+  datePrevue: '2026-01-28',
+  statut: 'Active',
+  equipe: 'Équipe C',
+  tempsEstimeInstallation: 2,
+  formulaireComplete: false
+}
 
   ]);
   const [showCommandeModal, setShowCommandeModal] = useState(false);
@@ -4136,602 +4251,1243 @@ export default function RampesGardexApp() {
   };
   // === INSTALLATIONS ===
   // === INTERVENTIONS TERRAIN ===
-  const Interventions = () => {
-    const today = '2026-01-28';
-     const getEquipeCouleur = (equipeNom) => {
-      const equipe = equipesList.find(e => e.nom === equipeNom);
-      return equipe ? equipe.couleur : 'bg-slate-500';
-    };
+ // === INTERVENTIONS TERRAIN ===
+const Interventions = () => {
+  const today = '2026-01-28';
+  
+  const getEquipeCouleur = (equipeNom) => {
+    const equipe = equipesList.find(e => e.nom === equipeNom);
+    return equipe ? equipe.couleur : 'bg-slate-500';
+  };
+  
+  // Filtrer les interventions
+  const getInterventions = () => {
+    let filtered = commandesList.filter(cmd => 
+      cmd.statut === 'Active' && 
+      cmd.equipe && 
+      cmd.datePrevue &&
+      (cmd.service === 'Installation' || cmd.service === 'Livraison' || cmd.service === 'Cueillette' || cmd.service === 'Transport')
+    );
     
-    // Filtrer les interventions
-    const getInterventions = () => {
-      let filtered = commandesList.filter(cmd => 
-        cmd.statut === 'Active' && 
-        cmd.equipe && 
-        cmd.datePrevue &&
-        (cmd.service === 'Installation' || cmd.service === 'Livraison' || cmd.service === 'Cueillette' || cmd.service === 'Transport')
-      );
+    // Filtre par type
+    if (terrainFilterType !== 'tous') {
+      filtered = filtered.filter(cmd => cmd.service.toLowerCase() === terrainFilterType);
+    }
+    
+    // Filtre par période
+    if (terrainTab === 'aujourdhui') {
+      filtered = filtered.filter(cmd => cmd.datePrevue === today);
+    } else if (terrainTab === 'semaine') {
+      const currentDate = new Date(today);
+      const weekStart = new Date(currentDate);
+      weekStart.setDate(currentDate.getDate() - currentDate.getDay());
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6);
       
-      // Filtre par type
-      if (terrainFilterType !== 'tous') {
-        filtered = filtered.filter(cmd => cmd.service.toLowerCase() === terrainFilterType);
-      }
-      
-      // Filtre par période
-      if (terrainTab === 'aujourdhui') {
-        filtered = filtered.filter(cmd => cmd.datePrevue === today);
-      } else if (terrainTab === 'semaine') {
-        const weekStart = new Date(today);
-        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekStart.getDate() + 6);
-        filtered = filtered.filter(cmd => {
-          const cmdDate = new Date(cmd.datePrevue);
-          return cmdDate >= weekStart && cmdDate <= weekEnd;
-        });
-      }
-      
-      return filtered;
-    };
-
-    const interventions = getInterventions();
-
-    // Obtenir l'icône selon le type
-    const getTypeIcon = (service) => {
-      switch(service) {
-        case 'Installation': return 'tool';
-        case 'Livraison': return 'truck';
-        case 'Cueillette': return 'package';
-        case 'Transport': return 'truck';
-        default: return 'file';
-      }
-    };
-
-    // Obtenir la couleur du badge selon le type
-    const getTypeBadgeColor = (service) => {
-      switch(service) {
-        case 'Installation': return 'bg-red-500 text-white';
-        case 'Livraison': return 'bg-blue-500 text-white';
-        case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
-        case 'Transport': return 'bg-green-500 text-white';
-        default: return 'bg-slate-500 text-white';
-      }
-    };
-
-    // Obtenir la couleur de bordure selon le type
-    const getTypeBorderColor = (service) => {
-      switch(service) {
-        case 'Installation': return 'border-l-red-500';
-        case 'Livraison': return 'border-l-blue-500';
-        case 'Cueillette': return 'border-l-yellow-500';
-        case 'Transport': return 'border-l-green-500';
-        default: return 'border-l-slate-500';
-      }
-    };
-
-    // Ouvrir le formulaire d'inspection
-    const ouvrirInspection = (intervention) => {
-      setSelectedIntervention(intervention);
-      setInspectionForm({
-        heureArrivee: '',
-        heureDepart: '',
-        personneRessource: intervention.client || '',
-        telephone: intervention.telephone || '',
-        accessibiliteBalcon: null,
-        balconEncombre: null,
-        niveauBalconConforme: null,
-        backingConforme: null,
-        colonneCapage: null,
-        noteAvant: '',
-        photoAvant: null,
-        travauxNonComplete: false,
-        travauxNonCompleteNote: '',
-        mainsInstallees: null,
-        cacheVisInstallees: null,
-        capsulesPoteaux: null,
-        vuEnsemble: null,
-        photosGlobal: [],
-        noteApres: '',
-        signatureInstallateur: null,
-        signatureClient: null,
-        dateSignature: today
+      filtered = filtered.filter(cmd => {
+        const cmdDate = new Date(cmd.datePrevue);
+        return cmdDate >= weekStart && cmdDate <= weekEnd;
       });
-      setShowInspectionModal(true);
-    };
+    }
+    // Si 'toutes', on garde tout
+    
+    return filtered;
+  };
 
-    // Sauvegarder l'inspection
-    const sauvegarderInspection = () => {
-      if (selectedIntervention) {
-        setCommandesList(prev => prev.map(cmd => 
-          cmd.id === selectedIntervention.id 
-            ? { ...cmd, inspection: inspectionForm, inspectionComplete: true }
-            : cmd
-        ));
-        setShowInspectionModal(false);
-        setSelectedIntervention(null);
+  const interventions = getInterventions();
+
+  // Obtenir la couleur du badge selon le type
+  const getTypeBadgeColor = (service) => {
+    switch(service) {
+      case 'Installation': return 'bg-red-500 text-white';
+      case 'Livraison': return 'bg-blue-500 text-white';
+      case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
+      case 'Transport': return 'bg-green-500 text-white';
+      default: return 'bg-slate-500 text-white';
+    }
+  };
+
+  // Obtenir la couleur de bordure selon le type
+  const getTypeBorderColor = (service) => {
+    switch(service) {
+      case 'Installation': return 'border-l-red-500';
+      case 'Livraison': return 'border-l-blue-500';
+      case 'Cueillette': return 'border-l-yellow-500';
+      case 'Transport': return 'border-l-green-500';
+      default: return 'border-l-slate-500';
+    }
+  };
+
+  // Ouvrir le bon formulaire selon le type
+  const ouvrirFormulaire = (intervention) => {
+    setSelectedIntervention(intervention);
+    
+    switch(intervention.service) {
+      case 'Installation':
+        setInspectionForm({
+          heureArrivee: '',
+          heureDepart: '',
+          personneRessource: intervention.client || '',
+          telephone: intervention.telephone || '',
+          accessibiliteBalcon: null,
+          balconEncombre: null,
+          niveauBalconConforme: null,
+          backingConforme: null,
+          colonneCapage: null,
+          noteAvant: '',
+          photoAvant: null,
+          travauxNonComplete: false,
+          travauxNonCompleteNote: '',
+          mainsInstallees: null,
+          cacheVisInstallees: null,
+          capsulesPoteaux: null,
+          vuEnsemble: null,
+          photosGlobal: [],
+          noteApres: '',
+          signatureInstallateur: null,
+          signatureClient: null,
+          dateSignature: today
+        });
+        setShowInspectionModal(true);
+        break;
+        
+      case 'Livraison':
+        setLivraisonForm({
+          heureArrivee: '',
+          heureDepart: '',
+          personneReception: intervention.client || '',
+          telephone: '',
+          materielComplet: null,
+          etatMateriel: null,
+          quantiteConforme: null,
+          emplacementLivraison: '',
+          accessibilite: null,
+          noteLivraison: '',
+          signatureLivreur: null,
+          signatureClient: null,
+          photoPreuve: null,
+          dateSignature: today
+        });
+        setShowLivraisonModal(true);
+        break;
+        
+      case 'Cueillette':
+        setCueilletteForm({
+          heureArrivee: '',
+          heureDepart: '',
+          personneContact: intervention.client || '',
+          telephone: '',
+          materielIdentifie: null,
+          etatMaterielRecupere: '',
+          quantiteRecuperee: 0,
+          emplacementCueillette: '',
+          difficulteAcces: null,
+          noteCueillette: '',
+          listeMateriels: [],
+          photosAvant: [],
+          photosApres: [],
+          signatureChauffeur: null,
+          signatureClient: null,
+          dateSignature: today
+        });
+        setShowCueilletteModal(true);
+        break;
+        
+      case 'Transport':
+        setTransportForm({
+          heureDepart: '',
+          heureArriveeDestination: '',
+          adresseDepart: intervention.adresse || '',
+          adresseArrivee: '',
+          vehiculeInspecte: null,
+          chargementSecurise: null,
+          documentationComplete: null,
+          kmDepart: '',
+          kmArrivee: '',
+          noteTransport: '',
+          membresEquipe: [],
+          materielTransporte: '',
+          signatureChauffeur: null,
+          dateSignature: today
+        });
+        setShowTransportModal(true);
+        break;
+        
+      default:
+        break;
+    }
+  };
+
+  // Sauvegarder le formulaire
+  const sauvegarderFormulaire = (type) => {
+    if (selectedIntervention) {
+      let formData;
+      switch(type) {
+        case 'installation': formData = inspectionForm; break;
+        case 'livraison': formData = livraisonForm; break;
+        case 'cueillette': formData = cueilletteForm; break;
+        case 'transport': formData = transportForm; break;
+        default: return;
       }
-    };
+      
+      setCommandesList(prev => prev.map(cmd => 
+        cmd.id === selectedIntervention.id 
+          ? { ...cmd, formulaire: formData, formulaireComplete: true, typeFormulaire: type }
+          : cmd
+      ));
+      
+      // Fermer tous les modals
+      setShowInspectionModal(false);
+      setShowLivraisonModal(false);
+      setShowCueilletteModal(false);
+      setShowTransportModal(false);
+      setSelectedIntervention(null);
+    }
+  };
 
-    // Stats du jour
-    const statsJour = {
-      total: interventions.length,
-      installations: interventions.filter(i => i.service === 'Installation').length,
-      livraisons: interventions.filter(i => i.service === 'Livraison').length,
-      cueillettes: interventions.filter(i => i.service === 'Cueillette').length,
-      transports: interventions.filter(i => i.service === 'Transport').length,
-      heuresTotal: interventions.reduce((acc, i) => acc + (parseInt(i.tempsEstimeInstallation) || 1), 0)
-    };
+  // Stats du jour/semaine/total
+  const statsJour = {
+    total: interventions.length,
+    installations: interventions.filter(i => i.service === 'Installation').length,
+    livraisons: interventions.filter(i => i.service === 'Livraison').length,
+    cueillettes: interventions.filter(i => i.service === 'Cueillette').length,
+    transports: interventions.filter(i => i.service === 'Transport').length,
+    heuresTotal: interventions.reduce((acc, i) => acc + (parseInt(i.tempsEstimeInstallation) || 1), 0)
+  };
 
-    // ===== MODAL FORMULAIRE D'INSPECTION =====
-    const InspectionModal = () => {
-      if (!showInspectionModal || !selectedIntervention) return null;
+  // Composant CheckboxGroup réutilisable
+  const CheckboxGroup = ({ label, value, onChange, options = ['fait', 'na', 'oui', 'non'] }) => (
+    <div className="flex items-center justify-between py-2 border-b border-slate-100">
+      <span className="text-sm flex-1">{label}</span>
+      <div className="flex items-center gap-1">
+        {options.includes('fait') && (
+          <button 
+            onClick={() => onChange('fait')}
+            className={`w-10 h-8 rounded text-xs font-semibold ${value === 'fait' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+          >Fait</button>
+        )}
+        {options.includes('na') && (
+          <button 
+            onClick={() => onChange('na')}
+            className={`w-10 h-8 rounded text-xs font-semibold ${value === 'na' ? 'bg-slate-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+          >N/A</button>
+        )}
+        {options.includes('oui') && (
+          <button 
+            onClick={() => onChange('oui')}
+            className={`w-10 h-8 rounded text-xs font-semibold ${value === 'oui' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+          >Oui</button>
+        )}
+        {options.includes('non') && (
+          <button 
+            onClick={() => onChange('non')}
+            className={`w-10 h-8 rounded text-xs font-semibold ${value === 'non' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}
+          >Non</button>
+        )}
+      </div>
+    </div>
+  );
 
-      const CheckboxGroup = ({ label, value, onChange, showPhotoPreuve = false }) => (
-        <div className="flex items-center justify-between py-2 border-b border-slate-100">
-          <span className="text-sm flex-1">{label}</span>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => onChange('fait')}
-              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'fait' ? 'bg-green-500 text-white' : 'bg-slate-100 text-slate-600'}`}
-            >Fait</button>
-            <button 
-              onClick={() => onChange('na')}
-              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'na' ? 'bg-slate-500 text-white' : 'bg-slate-100 text-slate-600'}`}
-            >N/A</button>
-            <button 
-              onClick={() => onChange('oui')}
-              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'oui' ? 'bg-emerald-500 text-white' : 'bg-slate-100 text-slate-600'}`}
-            >Oui</button>
-            <button 
-              onClick={() => onChange('non')}
-              className={`w-10 h-8 rounded text-xs font-semibold ${value === 'non' ? 'bg-red-500 text-white' : 'bg-slate-100 text-slate-600'}`}
-            >Non</button>
-          </div>
-        </div>
-      );
+  // ===== MODAL INSTALLATION (existant) =====
+  const InspectionModal = () => {
+    if (!showInspectionModal || !selectedIntervention) return null;
 
-      return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-slate-200 bg-slate-800 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-bold">Inspection chantier #{selectedIntervention.num}</h2>
-                  <p className="text-sm text-slate-300">{selectedIntervention.client}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm bg-slate-700 px-3 py-1 rounded">Date: {today}</span>
-                  <button onClick={() => setShowInspectionModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
-                    <Icon name="x" size={24}/>
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            {/* Contenu scrollable */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Infos générales */}
-              <div className="bg-slate-50 rounded-xl p-4">
-                <h3 className="font-semibold text-slate-800 mb-3">Informations du projet</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Personne ressource</label>
-                    <input 
-                      type="text"
-                      value={inspectionForm.personneRessource}
-                      onChange={(e) => setInspectionForm({...inspectionForm, personneRessource: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                      placeholder="Nom du contact"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Téléphone</label>
-                    <input 
-                      type="tel"
-                      value={inspectionForm.telephone}
-                      onChange={(e) => setInspectionForm({...inspectionForm, telephone: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                      placeholder="(XXX) XXX-XXXX"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
-                    <input 
-                      type="time"
-                      value={inspectionForm.heureArrivee}
-                      onChange={(e) => setInspectionForm({...inspectionForm, heureArrivee: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
-                    <input 
-                      type="time"
-                      value={inspectionForm.heureDepart}
-                      onChange={(e) => setInspectionForm({...inspectionForm, heureDepart: e.target.value})}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Inspection avant chantier */}
-              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-                <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
-                  <Icon name="alert" size={18}/>
-                  Inspection avant chantier
-                </h3>
-                <div className="space-y-1">
-                  <CheckboxGroup 
-                    label="Accessibilité au balcon (Encombré Oui ou Non) Photo preuve"
-                    value={inspectionForm.accessibiliteBalcon}
-                    onChange={(v) => setInspectionForm({...inspectionForm, accessibiliteBalcon: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Vérifier niveau du balcon en fonction du plan correct Oui ou Non"
-                    value={inspectionForm.niveauBalconConforme}
-                    onChange={(v) => setInspectionForm({...inspectionForm, niveauBalconConforme: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Vérifier si backing conforme Oui ou Non"
-                    value={inspectionForm.backingConforme}
-                    onChange={(v) => setInspectionForm({...inspectionForm, backingConforme: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Si colonne capage fait Oui ou Non"
-                    value={inspectionForm.colonneCapage}
-                    onChange={(v) => setInspectionForm({...inspectionForm, colonneCapage: v})}
-                  />
-                </div>
-                <div className="mt-3">
-                  <label className="block text-xs text-amber-700 mb-1">Note:</label>
-                  <textarea 
-                    value={inspectionForm.noteAvant}
-                    onChange={(e) => setInspectionForm({...inspectionForm, noteAvant: e.target.value})}
-                    className="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm resize-none"
-                    rows={2}
-                    placeholder="Notes avant chantier..."
-                  />
-                </div>
-                <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium">
-                  <Icon name="camera" size={16}/>
-                  Prendre photo (avant)
-                </button>
-              </div>
-
-              {/* Travaux non complété */}
-              <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    checked={inspectionForm.travauxNonComplete}
-                    onChange={(e) => setInspectionForm({...inspectionForm, travauxNonComplete: e.target.checked})}
-                    className="w-5 h-5 rounded"
-                  />
-                  <span className="font-semibold text-red-800">Travaux non complété</span>
-                </label>
-                {inspectionForm.travauxNonComplete && (
-                  <textarea 
-                    value={inspectionForm.travauxNonCompleteNote}
-                    onChange={(e) => setInspectionForm({...inspectionForm, travauxNonCompleteNote: e.target.value})}
-                    className="w-full mt-3 px-3 py-2 border border-red-200 rounded-lg text-sm resize-none"
-                    rows={2}
-                    placeholder="Détails des travaux non complétés..."
-                  />
-                )}
-              </div>
-
-              {/* Inspection fin de chantier */}
-              <div className="bg-green-50 rounded-xl p-4 border border-green-200">
-                <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                  <Icon name="check" size={18}/>
-                  Inspection fin de chantier
-                </h3>
-                <div className="space-y-1">
-                  <CheckboxGroup 
-                    label="Mains installés"
-                    value={inspectionForm.mainsInstallees}
-                    onChange={(v) => setInspectionForm({...inspectionForm, mainsInstallees: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Cache-vis installés"
-                    value={inspectionForm.cacheVisInstallees}
-                    onChange={(v) => setInspectionForm({...inspectionForm, cacheVisInstallees: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Capsules sur les poteaux tous installées"
-                    value={inspectionForm.capsulesPoteaux}
-                    onChange={(v) => setInspectionForm({...inspectionForm, capsulesPoteaux: v})}
-                  />
-                  <CheckboxGroup 
-                    label="Regarder vu d'ensemble (niveau)"
-                    value={inspectionForm.vuEnsemble}
-                    onChange={(v) => setInspectionForm({...inspectionForm, vuEnsemble: v})}
-                  />
-                </div>
-                <div className="mt-3">
-                  <label className="block text-xs text-green-700 mb-1">Note:</label>
-                  <textarea 
-                    value={inspectionForm.noteApres}
-                    onChange={(e) => setInspectionForm({...inspectionForm, noteApres: e.target.value})}
-                    className="w-full px-3 py-2 border border-green-200 rounded-lg text-sm resize-none"
-                    rows={2}
-                    placeholder="Notes fin de chantier..."
-                  />
-                </div>
-                <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium">
-                  <Icon name="camera" size={16}/>
-                  PHOTOS global du projet
-                </button>
-              </div>
-
-              {/* Signatures */}
-              <div className="bg-slate-50 rounded-xl p-4">
-                <h3 className="font-semibold text-slate-800 mb-3">Signatures</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Signature Installateur</label>
-                    <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
-                      <span className="text-sm text-slate-400">Touchez pour signer</span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Signature Client</label>
-                    <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
-                      <span className="text-sm text-slate-400">Touchez pour signer</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-3">
-                  <label className="block text-xs text-slate-500 mb-1">Date</label>
-                  <input 
-                    type="date"
-                    value={inspectionForm.dateSignature}
-                    onChange={(e) => setInspectionForm({...inspectionForm, dateSignature: e.target.value})}
-                    className="px-3 py-2 border border-slate-200 rounded-lg text-sm"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-              <button 
-                onClick={() => setShowInspectionModal(false)}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg"
-              >
-                Annuler
-              </button>
-              <div className="flex gap-2">
-                <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
-                  <Icon name="save" size={16}/>
-                  Brouillon
-                </button>
-                <button 
-                  onClick={sauvegarderInspection}
-                  className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium rounded-lg flex items-center gap-2"
-                >
-                  <Icon name="check" size={16}/>
-                  Terminer l'inspection
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    };
-
-    // ===== RENDU PRINCIPAL =====
     return (
-      <div className="space-y-6">
-        <InspectionModal />
-
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Interventions Terrain</h1>
-            <p className="text-slate-500 mt-1">Suivi des interventions et compte-rendus</p>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-200 bg-red-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="wrench" size={24}/>
+                  Inspection Installation #{selectedIntervention.num}
+                </h2>
+                <p className="text-sm text-red-100">{selectedIntervention.client}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm bg-red-700 px-3 py-1 rounded">Date: {today}</span>
+                <button onClick={() => setShowInspectionModal(false)} className="p-2 hover:bg-red-700 rounded-lg">
+                  <Icon name="x" size={24}/>
+                </button>
+              </div>
+            </div>
           </div>
           
-          {/* Stats du jour */}
-          <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
-            <div className="text-center">
-              <p className="text-2xl font-bold text-slate-800">{statsJour.total}</p>
-              <p className="text-xs text-slate-500">Total</p>
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Infos générales */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Informations du projet</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Personne ressource</label>
+                  <input 
+                    type="text"
+                    value={inspectionForm.personneRessource}
+                    onChange={(e) => setInspectionForm({...inspectionForm, personneRessource: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Téléphone</label>
+                  <input 
+                    type="tel"
+                    value={inspectionForm.telephone}
+                    onChange={(e) => setInspectionForm({...inspectionForm, telephone: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
+                  <input 
+                    type="time"
+                    value={inspectionForm.heureArrivee}
+                    onChange={(e) => setInspectionForm({...inspectionForm, heureArrivee: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
+                  <input 
+                    type="time"
+                    value={inspectionForm.heureDepart}
+                    onChange={(e) => setInspectionForm({...inspectionForm, heureDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
             </div>
-            <div className="w-px h-10 bg-slate-200"></div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-red-600">{statsJour.installations}</p>
-              <p className="text-xs text-slate-500">Install.</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-blue-600">{statsJour.livraisons}</p>
-              <p className="text-xs text-slate-500">Livr.</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-yellow-600">{statsJour.cueillettes}</p>
-              <p className="text-xs text-slate-500">Cueil.</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-green-600">{statsJour.transports}</p>
-              <p className="text-xs text-slate-500">Transp.</p>
-            </div>
-            <div className="w-px h-10 bg-slate-200"></div>
-            <div className="text-center">
-              <p className="text-2xl font-bold text-purple-600">{statsJour.heuresTotal}h</p>
-              <p className="text-xs text-slate-500">Estimé</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Filtres */}
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Onglets période */}
-          <div className="flex bg-slate-100 p-1 rounded-xl">
-            <button 
-              onClick={() => setTerrainTab('aujourdhui')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'aujourdhui' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
-            >
-              Aujourd'hui
-            </button>
-            <button 
-              onClick={() => setTerrainTab('semaine')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'semaine' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
-            >
-              Cette semaine
-            </button>
-            <button 
-              onClick={() => setTerrainTab('toutes')}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'toutes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
-            >
-              Toutes
-            </button>
-          </div>
+            {/* Inspection avant chantier */}
+            <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+              <h3 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                <Icon name="alert" size={18}/>
+                Inspection avant chantier
+              </h3>
+              <div className="space-y-1">
+                <CheckboxGroup 
+                  label="Accessibilité au balcon (Encombré)"
+                  value={inspectionForm.accessibiliteBalcon}
+                  onChange={(v) => setInspectionForm({...inspectionForm, accessibiliteBalcon: v})}
+                />
+                <CheckboxGroup 
+                  label="Niveau du balcon conforme au plan"
+                  value={inspectionForm.niveauBalconConforme}
+                  onChange={(v) => setInspectionForm({...inspectionForm, niveauBalconConforme: v})}
+                />
+                <CheckboxGroup 
+                  label="Backing conforme"
+                  value={inspectionForm.backingConforme}
+                  onChange={(v) => setInspectionForm({...inspectionForm, backingConforme: v})}
+                />
+                <CheckboxGroup 
+                  label="Colonne capage fait"
+                  value={inspectionForm.colonneCapage}
+                  onChange={(v) => setInspectionForm({...inspectionForm, colonneCapage: v})}
+                />
+              </div>
+              <div className="mt-3">
+                <textarea 
+                  value={inspectionForm.noteAvant}
+                  onChange={(e) => setInspectionForm({...inspectionForm, noteAvant: e.target.value})}
+                  className="w-full px-3 py-2 border border-amber-200 rounded-lg text-sm resize-none"
+                  rows={2}
+                  placeholder="Notes avant chantier..."
+                />
+              </div>
+              <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium">
+                <Icon name="camera" size={16}/>Prendre photo (avant)
+              </button>
+            </div>
 
-          {/* Filtre type */}
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setTerrainFilterType('tous')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${terrainFilterType === 'tous' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200'}`}
-            >
-              Tous
-            </button>
-            <button 
-              onClick={() => setTerrainFilterType('installation')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'installation' ? 'bg-red-500 text-white' : 'bg-white border border-slate-200 text-red-600'}`}
-            >
-              <Icon name="tool" size={14}/>Installation
-            </button>
-            <button 
-              onClick={() => setTerrainFilterType('livraison')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'livraison' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-blue-600'}`}
-            >
-              <Icon name="truck" size={14}/>Livraison
-            </button>
-            <button 
-              onClick={() => setTerrainFilterType('cueillette')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'cueillette' ? 'bg-yellow-500 text-yellow-900' : 'bg-white border border-slate-200 text-yellow-600'}`}
-            >
-              <Icon name="package" size={14}/>Cueillette
-            </button>
-            <button 
-              onClick={() => setTerrainFilterType('transport')}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'transport' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-green-600'}`}
-            >
-              <Icon name="truck" size={14}/>Transport
-            </button>
-          </div>
-        </div>
+            {/* Travaux non complété */}
+            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input 
+                  type="checkbox"
+                  checked={inspectionForm.travauxNonComplete}
+                  onChange={(e) => setInspectionForm({...inspectionForm, travauxNonComplete: e.target.checked})}
+                  className="w-5 h-5 rounded"
+                />
+                <span className="font-semibold text-red-800">Travaux non complété</span>
+              </label>
+              {inspectionForm.travauxNonComplete && (
+                <textarea 
+                  value={inspectionForm.travauxNonCompleteNote}
+                  onChange={(e) => setInspectionForm({...inspectionForm, travauxNonCompleteNote: e.target.value})}
+                  className="w-full mt-3 px-3 py-2 border border-red-200 rounded-lg text-sm resize-none"
+                  rows={2}
+                  placeholder="Détails des travaux non complétés..."
+                />
+              )}
+            </div>
 
-        {/* Liste des interventions */}
-        {interventions.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-            <Icon name="calendar" size={48} className="mx-auto mb-4 text-slate-300"/>
-            <p className="text-slate-500">Aucune intervention prévue pour cette période</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {interventions.map(intervention => (
-              <div 
-                key={intervention.id}
-                className={`bg-white rounded-2xl border-l-4 ${getTypeBorderColor(intervention.service)} border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden`}
-              >
-                <div className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Infos principales */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="font-mono font-bold text-xl text-slate-800">{intervention.num}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeColor(intervention.service)}`}>
-                          {intervention.service}
-                        </span>
-                        {intervention.typeCommande && (
-                          <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">{intervention.typeCommande}</span>
-                        )}
-                        {intervention.inspectionComplete && (
-                          <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs flex items-center gap-1">
-                            <Icon name="check" size={12}/>Inspecté
-                          </span>
-                        )}
-                      </div>
-                      
-                      <p className="text-lg font-semibold text-slate-800">{intervention.client}</p>
-                      <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
-                        <Icon name="map" size={14}/>
-                        {intervention.adresse}
-                      </p>
-                      
-                      {/* Infos supplémentaires */}
-                      <div className="flex items-center gap-6 mt-4 text-sm">
-                        <div className="flex items-center gap-2 text-slate-600">
-                          <Icon name="calendar" size={16}/>
-                          <span>{intervention.datePrevue}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-slate-600">
-                          <Icon name="clock" size={16}/>
-                          <span>{intervention.tempsEstimeInstallation || 1}h estimé</span>
-                        </div>
-                        {intervention.piedsLineaires > 0 && (
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <span className="font-semibold">{intervention.piedsLineaires}</span> pi. lin.
-                          </div>
-                        )}
-                        {intervention.equipe && (
-                          <div className={`px-2 py-1 rounded text-xs font-semibold text-white ${getEquipeCouleur(intervention.equipe)}`}>
-                            {intervention.equipe}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Actions */}
-                    <div className="flex flex-col gap-2">
-                      <button 
-                        onClick={() => ouvrirInspection(intervention)}
-                        className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl flex items-center gap-2"
-                      >
-                        <Icon name="file" size={18}/>
-                        Inspection
-                      </button>
-                      <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
-                        <Icon name="camera" size={18}/>
-                        Photos
-                      </button>
-                      <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
-                        <Icon name="map" size={18}/>
-                        Navigation
-                      </button>
-                    </div>
+            {/* Inspection fin de chantier */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                <Icon name="check" size={18}/>
+                Inspection fin de chantier
+              </h3>
+              <div className="space-y-1">
+                <CheckboxGroup 
+                  label="Mains installées"
+                  value={inspectionForm.mainsInstallees}
+                  onChange={(v) => setInspectionForm({...inspectionForm, mainsInstallees: v})}
+                />
+                <CheckboxGroup 
+                  label="Cache-vis installés"
+                  value={inspectionForm.cacheVisInstallees}
+                  onChange={(v) => setInspectionForm({...inspectionForm, cacheVisInstallees: v})}
+                />
+                <CheckboxGroup 
+                  label="Capsules sur les poteaux installées"
+                  value={inspectionForm.capsulesPoteaux}
+                  onChange={(v) => setInspectionForm({...inspectionForm, capsulesPoteaux: v})}
+                />
+                <CheckboxGroup 
+                  label="Vue d'ensemble (niveau)"
+                  value={inspectionForm.vuEnsemble}
+                  onChange={(v) => setInspectionForm({...inspectionForm, vuEnsemble: v})}
+                />
+              </div>
+              <div className="mt-3">
+                <textarea 
+                  value={inspectionForm.noteApres}
+                  onChange={(e) => setInspectionForm({...inspectionForm, noteApres: e.target.value})}
+                  className="w-full px-3 py-2 border border-green-200 rounded-lg text-sm resize-none"
+                  rows={2}
+                  placeholder="Notes fin de chantier..."
+                />
+              </div>
+              <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium">
+                <Icon name="camera" size={16}/>PHOTOS global du projet
+              </button>
+            </div>
+
+            {/* Signatures */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Signatures</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Installateur</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
                   </div>
                 </div>
-                
-                {/* Barre de progression ou statut */}
-                {intervention.service === 'Installation' && (
-                  <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs">
-                      <span className={`px-2 py-1 rounded ${intervention.mesure === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                        Mesure {intervention.mesure === '√' ? '✓' : '—'}
-                      </span>
-                      <span className={`px-2 py-1 rounded ${intervention.plan === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                        Plan {intervention.plan === '√' ? '✓' : '—'}
-                      </span>
-                      <span className={`px-2 py-1 rounded ${intervention.productionTerminee === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                        Production {intervention.productionTerminee === '√' ? '✓' : '—'}
-                      </span>
-                    </div>
-                    <span className="text-xs text-slate-500">
-                      Couleur: <strong>{intervention.couleur || '—'}</strong>
-                    </span>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Client</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
                   </div>
-                )}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        )}
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <button onClick={() => setShowInspectionModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+              Annuler
+            </button>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
+                <Icon name="save" size={16}/>Brouillon
+              </button>
+              <button 
+                onClick={() => sauvegarderFormulaire('installation')}
+                className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg flex items-center gap-2"
+              >
+                <Icon name="check" size={16}/>Terminer
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
+
+  // ===== MODAL LIVRAISON =====
+  const LivraisonModal = () => {
+    if (!showLivraisonModal || !selectedIntervention) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-200 bg-blue-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="truck" size={24}/>
+                  Bon de Livraison #{selectedIntervention.num}
+                </h2>
+                <p className="text-sm text-blue-100">{selectedIntervention.client}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm bg-blue-700 px-3 py-1 rounded">Date: {today}</span>
+                <button onClick={() => setShowLivraisonModal(false)} className="p-2 hover:bg-blue-700 rounded-lg">
+                  <Icon name="x" size={24}/>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Infos générales */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Informations de livraison</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Personne qui reçoit</label>
+                  <input 
+                    type="text"
+                    value={livraisonForm.personneReception}
+                    onChange={(e) => setLivraisonForm({...livraisonForm, personneReception: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Téléphone</label>
+                  <input 
+                    type="tel"
+                    value={livraisonForm.telephone}
+                    onChange={(e) => setLivraisonForm({...livraisonForm, telephone: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
+                  <input 
+                    type="time"
+                    value={livraisonForm.heureArrivee}
+                    onChange={(e) => setLivraisonForm({...livraisonForm, heureArrivee: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
+                  <input 
+                    type="time"
+                    value={livraisonForm.heureDepart}
+                    onChange={(e) => setLivraisonForm({...livraisonForm, heureDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Vérification matériel */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <Icon name="package" size={18}/>
+                Vérification du matériel
+              </h3>
+              <div className="space-y-1">
+                <CheckboxGroup 
+                  label="Matériel complet selon bon de commande"
+                  value={livraisonForm.materielComplet}
+                  onChange={(v) => setLivraisonForm({...livraisonForm, materielComplet: v})}
+                  options={['oui', 'non']}
+                />
+                <CheckboxGroup 
+                  label="État du matériel (sans dommage)"
+                  value={livraisonForm.etatMateriel}
+                  onChange={(v) => setLivraisonForm({...livraisonForm, etatMateriel: v})}
+                  options={['oui', 'non']}
+                />
+                <CheckboxGroup 
+                  label="Quantité conforme"
+                  value={livraisonForm.quantiteConforme}
+                  onChange={(v) => setLivraisonForm({...livraisonForm, quantiteConforme: v})}
+                  options={['oui', 'non']}
+                />
+                <CheckboxGroup 
+                  label="Accessibilité du lieu de livraison"
+                  value={livraisonForm.accessibilite}
+                  onChange={(v) => setLivraisonForm({...livraisonForm, accessibilite: v})}
+                  options={['oui', 'non']}
+                />
+              </div>
+            </div>
+
+            {/* Emplacement */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Détails de la livraison</h3>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Emplacement de dépose</label>
+                <input 
+                  type="text"
+                  value={livraisonForm.emplacementLivraison}
+                  onChange={(e) => setLivraisonForm({...livraisonForm, emplacementLivraison: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  placeholder="Ex: Garage, entrée principale, côté maison..."
+                />
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-slate-500 mb-1">Notes / Remarques</label>
+                <textarea 
+                  value={livraisonForm.noteLivraison}
+                  onChange={(e) => setLivraisonForm({...livraisonForm, noteLivraison: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
+                  rows={3}
+                  placeholder="Notes sur la livraison..."
+                />
+              </div>
+              <button className="mt-3 flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium">
+                <Icon name="camera" size={16}/>Photo preuve de livraison
+              </button>
+            </div>
+
+            {/* Signatures */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Signatures</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Livreur</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Client</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <button onClick={() => setShowLivraisonModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+              Annuler
+            </button>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
+                <Icon name="save" size={16}/>Brouillon
+              </button>
+              <button 
+                onClick={() => sauvegarderFormulaire('livraison')}
+                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center gap-2"
+              >
+                <Icon name="check" size={16}/>Confirmer livraison
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== MODAL CUEILLETTE =====
+  const CueilletteModal = () => {
+    if (!showCueilletteModal || !selectedIntervention) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-200 bg-yellow-500 text-yellow-900">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="package" size={24}/>
+                  Bon de Cueillette #{selectedIntervention.num}
+                </h2>
+                <p className="text-sm text-yellow-800">{selectedIntervention.client}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm bg-yellow-600 text-white px-3 py-1 rounded">Date: {today}</span>
+                <button onClick={() => setShowCueilletteModal(false)} className="p-2 hover:bg-yellow-600 hover:text-white rounded-lg">
+                  <Icon name="x" size={24}/>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Infos générales */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Informations de cueillette</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Personne contact</label>
+                  <input 
+                    type="text"
+                    value={cueilletteForm.personneContact}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, personneContact: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Téléphone</label>
+                  <input 
+                    type="tel"
+                    value={cueilletteForm.telephone}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, telephone: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
+                  <input 
+                    type="time"
+                    value={cueilletteForm.heureArrivee}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, heureArrivee: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
+                  <input 
+                    type="time"
+                    value={cueilletteForm.heureDepart}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, heureDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Vérification matériel à récupérer */}
+            <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+              <h3 className="font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                <Icon name="package" size={18}/>
+                Matériel à récupérer
+              </h3>
+              <div className="space-y-1">
+                <CheckboxGroup 
+                  label="Matériel correctement identifié"
+                  value={cueilletteForm.materielIdentifie}
+                  onChange={(v) => setCueilletteForm({...cueilletteForm, materielIdentifie: v})}
+                  options={['oui', 'non']}
+                />
+                <CheckboxGroup 
+                  label="Difficulté d'accès"
+                  value={cueilletteForm.difficulteAcces}
+                  onChange={(v) => setCueilletteForm({...cueilletteForm, difficulteAcces: v})}
+                  options={['oui', 'non']}
+                />
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Quantité récupérée</label>
+                  <input 
+                    type="number"
+                    value={cueilletteForm.quantiteRecuperee}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, quantiteRecuperee: parseInt(e.target.value) || 0})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Emplacement</label>
+                  <input 
+                    type="text"
+                    value={cueilletteForm.emplacementCueillette}
+                    onChange={(e) => setCueilletteForm({...cueilletteForm, emplacementCueillette: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    placeholder="Où se trouve le matériel"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* État du matériel */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">État du matériel récupéré</h3>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Description de l'état</label>
+                <select 
+                  value={cueilletteForm.etatMaterielRecupere}
+                  onChange={(e) => setCueilletteForm({...cueilletteForm, etatMaterielRecupere: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm bg-white"
+                >
+                  <option value="">Sélectionner l'état</option>
+                  <option value="excellent">Excellent - Comme neuf</option>
+                  <option value="bon">Bon - Usure normale</option>
+                  <option value="acceptable">Acceptable - Quelques dommages mineurs</option>
+                  <option value="mauvais">Mauvais - Dommages importants</option>
+                  <option value="inutilisable">Inutilisable - À jeter</option>
+                </select>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-slate-500 mb-1">Notes / Remarques</label>
+                <textarea 
+                  value={cueilletteForm.noteCueillette}
+                  onChange={(e) => setCueilletteForm({...cueilletteForm, noteCueillette: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
+                  rows={3}
+                  placeholder="Détails sur le matériel récupéré..."
+                />
+              </div>
+              <div className="flex gap-2 mt-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-yellow-900 rounded-lg text-sm font-medium">
+                  <Icon name="camera" size={16}/>Photo AVANT
+                </button>
+                <button className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-yellow-900 rounded-lg text-sm font-medium">
+                  <Icon name="camera" size={16}/>Photo APRÈS
+                </button>
+              </div>
+            </div>
+
+            {/* Signatures */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Signatures</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Chauffeur</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Signature Client</label>
+                  <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                    <span className="text-sm text-slate-400">Touchez pour signer</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <button onClick={() => setShowCueilletteModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+              Annuler
+            </button>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
+                <Icon name="save" size={16}/>Brouillon
+              </button>
+              <button 
+                onClick={() => sauvegarderFormulaire('cueillette')}
+                className="px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-yellow-900 font-medium rounded-lg flex items-center gap-2"
+              >
+                <Icon name="check" size={16}/>Confirmer cueillette
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== MODAL TRANSPORT =====
+  const TransportModal = () => {
+    if (!showTransportModal || !selectedIntervention) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+          <div className="p-4 border-b border-slate-200 bg-green-600 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Icon name="truck" size={24}/>
+                  Feuille de Transport #{selectedIntervention.num}
+                </h2>
+                <p className="text-sm text-green-100">{selectedIntervention.client}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm bg-green-700 px-3 py-1 rounded">Date: {today}</span>
+                <button onClick={() => setShowTransportModal(false)} className="p-2 hover:bg-green-700 rounded-lg">
+                  <Icon name="x" size={24}/>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Trajet */}
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <h3 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                <Icon name="map" size={18}/>
+                Informations du trajet
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs text-slate-500 mb-1">Adresse de départ</label>
+                  <input 
+                    type="text"
+                    value={transportForm.adresseDepart}
+                    onChange={(e) => setTransportForm({...transportForm, adresseDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-slate-500 mb-1">Adresse d'arrivée</label>
+                  <input 
+                    type="text"
+                    value={transportForm.adresseArrivee}
+                    onChange={(e) => setTransportForm({...transportForm, adresseArrivee: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure départ</label>
+                  <input 
+                    type="time"
+                    value={transportForm.heureDepart}
+                    onChange={(e) => setTransportForm({...transportForm, heureDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">Heure arrivée</label>
+                  <input 
+                    type="time"
+                    value={transportForm.heureArriveeDestination}
+                    onChange={(e) => setTransportForm({...transportForm, heureArriveeDestination: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Kilométrage */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Kilométrage</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">KM au départ</label>
+                  <input 
+                    type="number"
+                    value={transportForm.kmDepart}
+                    onChange={(e) => setTransportForm({...transportForm, kmDepart: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    placeholder="Ex: 45230"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500 mb-1">KM à l'arrivée</label>
+                  <input 
+                    type="number"
+                    value={transportForm.kmArrivee}
+                    onChange={(e) => setTransportForm({...transportForm, kmArrivee: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                    placeholder="Ex: 45280"
+                  />
+                </div>
+              </div>
+              {transportForm.kmDepart && transportForm.kmArrivee && (
+                <div className="mt-3 p-3 bg-green-100 rounded-lg">
+                  <span className="text-sm text-green-800">
+                    Distance parcourue: <strong>{parseInt(transportForm.kmArrivee) - parseInt(transportForm.kmDepart)} km</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Vérifications */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Vérifications</h3>
+              <div className="space-y-1">
+                <CheckboxGroup 
+                  label="Véhicule inspecté (état général)"
+                  value={transportForm.vehiculeInspecte}
+                  onChange={(v) => setTransportForm({...transportForm, vehiculeInspecte: v})}
+                  options={['oui', 'non']}
+                />
+                <CheckboxGroup 
+                  label="Chargement sécurisé"
+                  value={transportForm.chargementSecurise}
+                  onChange={(v) => setTransportForm({...transportForm, chargementSecurise: v})}
+                  options={['oui', 'non', 'na']}
+                />
+                <CheckboxGroup 
+                  label="Documentation complète"
+                  value={transportForm.documentationComplete}
+                  onChange={(v) => setTransportForm({...transportForm, documentationComplete: v})}
+                  options={['oui', 'non']}
+                />
+              </div>
+            </div>
+
+            {/* Contenu du transport */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Contenu du transport</h3>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Membres de l'équipe transportés</label>
+                <input 
+                  type="text"
+                  value={transportForm.membresEquipe.join(', ')}
+                  onChange={(e) => setTransportForm({...transportForm, membresEquipe: e.target.value.split(', ')})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm"
+                  placeholder="Noms séparés par des virgules"
+                />
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-slate-500 mb-1">Matériel transporté</label>
+                <textarea 
+                  value={transportForm.materielTransporte}
+                  onChange={(e) => setTransportForm({...transportForm, materielTransporte: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
+                  rows={2}
+                  placeholder="Liste du matériel..."
+                />
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-slate-500 mb-1">Notes</label>
+                <textarea 
+                  value={transportForm.noteTransport}
+                  onChange={(e) => setTransportForm({...transportForm, noteTransport: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm resize-none"
+                  rows={2}
+                  placeholder="Remarques sur le trajet..."
+                />
+              </div>
+            </div>
+
+            {/* Signature */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Signature</h3>
+              <div>
+                <label className="block text-xs text-slate-500 mb-1">Signature Chauffeur</label>
+                <div className="h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-white cursor-pointer hover:border-slate-400">
+                  <span className="text-sm text-slate-400">Touchez pour signer</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <button onClick={() => setShowTransportModal(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+              Annuler
+            </button>
+            <div className="flex gap-2">
+              <button className="px-4 py-2 border border-slate-300 rounded-lg flex items-center gap-2">
+                <Icon name="save" size={16}/>Brouillon
+              </button>
+              <button 
+                onClick={() => sauvegarderFormulaire('transport')}
+                className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg flex items-center gap-2"
+              >
+                <Icon name="check" size={16}/>Terminer transport
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== RENDU PRINCIPAL =====
+  return (
+    <div className="space-y-6">
+      {/* Modals */}
+      <InspectionModal />
+      <LivraisonModal />
+      <CueilletteModal />
+      <TransportModal />
+
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-800">Interventions Terrain</h1>
+          <p className="text-slate-500 mt-1">Suivi des interventions et compte-rendus</p>
+        </div>
+        
+        {/* Stats */}
+        <div className="flex items-center gap-4 bg-white px-6 py-3 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-slate-800">{statsJour.total}</p>
+            <p className="text-xs text-slate-500">Total</p>
+          </div>
+          <div className="w-px h-10 bg-slate-200"></div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-red-600">{statsJour.installations}</p>
+            <p className="text-xs text-slate-500">Install.</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-blue-600">{statsJour.livraisons}</p>
+            <p className="text-xs text-slate-500">Livr.</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-yellow-600">{statsJour.cueillettes}</p>
+            <p className="text-xs text-slate-500">Cueil.</p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-green-600">{statsJour.transports}</p>
+            <p className="text-xs text-slate-500">Transp.</p>
+          </div>
+          <div className="w-px h-10 bg-slate-200"></div>
+          <div className="text-center">
+            <p className="text-2xl font-bold text-purple-600">{statsJour.heuresTotal}h</p>
+            <p className="text-xs text-slate-500">Estimé</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filtres */}
+      <div className="flex flex-wrap items-center gap-4">
+        {/* Onglets période */}
+        <div className="flex bg-slate-100 p-1 rounded-xl">
+          <button 
+            onClick={() => setTerrainTab('aujourdhui')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'aujourdhui' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+          >
+            Aujourd'hui
+          </button>
+          <button 
+            onClick={() => setTerrainTab('semaine')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'semaine' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+          >
+            Cette semaine
+          </button>
+          <button 
+            onClick={() => setTerrainTab('toutes')}
+            className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${terrainTab === 'toutes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}
+          >
+            Toutes
+          </button>
+        </div>
+
+        {/* Filtre type */}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setTerrainFilterType('tous')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium ${terrainFilterType === 'tous' ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200'}`}
+          >
+            Tous
+          </button>
+          <button 
+            onClick={() => setTerrainFilterType('installation')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'installation' ? 'bg-red-500 text-white' : 'bg-white border border-slate-200 text-red-600'}`}
+          >
+            <Icon name="wrench" size={14}/>Installation
+          </button>
+          <button 
+            onClick={() => setTerrainFilterType('livraison')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'livraison' ? 'bg-blue-500 text-white' : 'bg-white border border-slate-200 text-blue-600'}`}
+          >
+            <Icon name="truck" size={14}/>Livraison
+          </button>
+          <button 
+            onClick={() => setTerrainFilterType('cueillette')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'cueillette' ? 'bg-yellow-500 text-yellow-900' : 'bg-white border border-slate-200 text-yellow-600'}`}
+          >
+            <Icon name="package" size={14}/>Cueillette
+          </button>
+          <button 
+            onClick={() => setTerrainFilterType('transport')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1 ${terrainFilterType === 'transport' ? 'bg-green-500 text-white' : 'bg-white border border-slate-200 text-green-600'}`}
+          >
+            <Icon name="truck" size={14}/>Transport
+          </button>
+        </div>
+      </div>
+
+      {/* Liste des interventions */}
+      {interventions.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <Icon name="calendar" size={48} className="mx-auto mb-4 text-slate-300"/>
+          <p className="text-slate-500">Aucune intervention prévue pour cette période</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {interventions.map(intervention => (
+            <div 
+              key={intervention.id}
+              className={`bg-white rounded-2xl border-l-4 ${getTypeBorderColor(intervention.service)} border border-slate-200 shadow-sm hover:shadow-md transition-all overflow-hidden`}
+            >
+              <div className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  {/* Infos principales */}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-mono font-bold text-xl text-slate-800">{intervention.num}</span>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getTypeBadgeColor(intervention.service)}`}>
+                        {intervention.service}
+                      </span>
+                      {intervention.typeCommande && (
+                        <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">{intervention.typeCommande}</span>
+                      )}
+                      {intervention.formulaireComplete && (
+                        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs flex items-center gap-1">
+                          <Icon name="check" size={12}/>Formulaire complété
+                        </span>
+                      )}
+                    </div>
+                    
+                    <p className="text-lg font-semibold text-slate-800">{intervention.client}</p>
+                    <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
+                      <Icon name="map" size={14}/>
+                      {intervention.adresse}
+                    </p>
+                    
+                    {/* Infos supplémentaires */}
+                    <div className="flex items-center gap-6 mt-4 text-sm">
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <Icon name="calendar" size={16}/>
+                        <span>{intervention.datePrevue}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <Icon name="clock" size={16}/>
+                        <span>{intervention.tempsEstimeInstallation || 1}h estimé</span>
+                      </div>
+                      {intervention.piedsLineaires > 0 && (
+                        <div className="flex items-center gap-2 text-slate-600">
+                          <span className="font-semibold">{intervention.piedsLineaires}</span> pi. lin.
+                        </div>
+                      )}
+                      {intervention.equipe && (
+                        <div className={`px-2 py-1 rounded text-xs font-semibold text-white ${getEquipeCouleur(intervention.equipe)}`}>
+                          {intervention.equipe}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2">
+                    <button 
+                      onClick={() => ouvrirFormulaire(intervention)}
+                      className={`px-4 py-2.5 text-white font-medium rounded-xl flex items-center gap-2 ${
+                        intervention.service === 'Installation' ? 'bg-red-600 hover:bg-red-700' :
+                        intervention.service === 'Livraison' ? 'bg-blue-600 hover:bg-blue-700' :
+                        intervention.service === 'Cueillette' ? 'bg-yellow-500 hover:bg-yellow-600 text-yellow-900' :
+                        'bg-green-600 hover:bg-green-700'
+                      }`}
+                    >
+                      <Icon name="file" size={18}/>
+                      {intervention.service === 'Installation' ? 'Inspection' : 
+                       intervention.service === 'Livraison' ? 'Bon livraison' :
+                       intervention.service === 'Cueillette' ? 'Bon cueillette' :
+                       'Feuille transport'}
+                    </button>
+                    <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
+                      <Icon name="camera" size={18}/>
+                      Photos
+                    </button>
+                    <button className="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 rounded-xl flex items-center gap-2 text-slate-700">
+                      <Icon name="map" size={18}/>
+                      Navigation
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Barre de statut pour installations */}
+              {intervention.service === 'Installation' && (
+                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className={`px-2 py-1 rounded ${intervention.mesure === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                      Mesure {intervention.mesure === '√' ? '✓' : '—'}
+                    </span>
+                    <span className={`px-2 py-1 rounded ${intervention.plan === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                      Plan {intervention.plan === '√' ? '✓' : '—'}
+                    </span>
+                    <span className={`px-2 py-1 rounded ${intervention.productionTerminee === '√' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                      Production {intervention.productionTerminee === '√' ? '✓' : '—'}
+                    </span>
+                  </div>
+                  <span className="text-xs text-slate-500">
+                    Couleur: <strong>{intervention.couleur || '—'}</strong>
+                  </span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
   // === CUEILLETTES / TRANSPORT ===
   const Cueillettes = () => {
     const [cueillettesTab, setCueillettesTab] = useState('liste');
