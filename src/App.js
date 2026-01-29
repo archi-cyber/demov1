@@ -217,7 +217,7 @@ export default function RampesGardexApp() {
     { id: 'production', icon: 'factory', label: 'Production' },
     { id: 'planification', icon: 'calendar', label: 'Planification' },
     { id: 'interventions', icon: 'wrench', label: 'Interventions' },
-    { id: 'cueillettes', icon: 'truck', label: 'Cueillettes /Transport/livraison' },
+    { id: 'cueillettes', icon: 'truck', label: 'Cueillette/Transport' },
     { id: 'inventaire', icon: 'package', label: 'Inventaire' },
     { id: 'achats', icon: 'cart', label: 'Achats' },
     { id: 'rentabilite', icon: 'trend', label: 'Rentabilité' },
@@ -5411,7 +5411,7 @@ export default function RampesGardexApp() {
       case 'commandes': return <Commandes />;
       case 'production': return <Production />;
       case 'planification': return <Planification />;
-      case 'Interventions': return <Interventions />;
+      case 'interventions': return <Interventions />;
       case 'cueillettes': return <Cueillettes />;
       case 'inventaire': return <Inventaire />;
       case 'achats': return <Achats />;
@@ -5471,7 +5471,7 @@ export default function RampesGardexApp() {
                 Cueillette
               </div>
               <div className="px-3 py-1.5 bg-red-600 text-white rounded font-bold text-sm border-2 border-red-700">
-                Installation
+                Intervention
               </div>
               <div className="px-3 py-1.5 bg-green-500 text-white rounded font-bold text-sm border-2 border-green-600">
                 Transport
