@@ -217,7 +217,7 @@ export default function RampesGardexApp() {
     { id: 'production', icon: 'factory', label: 'Production' },
     { id: 'planification', icon: 'calendar', label: 'Planification' },
     { id: 'interventions', icon: 'wrench', label: 'Interventions' },
-    { id: 'cueillettes', icon: 'truck', label: 'Cueillette/Transport' },
+    { id: 'cueillettes', icon: 'truck', label: 'Cueillettes /Transport' },
     { id: 'inventaire', icon: 'package', label: 'Inventaire' },
     { id: 'achats', icon: 'cart', label: 'Achats' },
     { id: 'rentabilite', icon: 'trend', label: 'Rentabilité' },
