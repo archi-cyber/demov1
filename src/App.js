@@ -75,6 +75,8 @@ export default function RampesGardexApp() {
   const [planificationTab, setPlanificationTab] = useState('calendrier');
   const [planificationFilterEquipe, setPlanificationFilterEquipe] = useState('toutes');
   const [planificationSearchTerm, setPlanificationSearchTerm] = useState('');
+  
+ 
 
   // === ÉTATS TERRAIN/INTERVENTIONS ===
   const [terrainTab, setTerrainTab] = useState('aujourdhui'); // aujourdhui, semaine, toutes
@@ -7800,46 +7802,216 @@ const Rentabilite = () => {
       </div>
     </div>
   );
+  
 
   // === NON-CONFORMITÉS ===
-  const NonConformites = () => (
+
+
+const ncTypeColors = {
+  Commande: "border-l-blue-500",
+  Livraison: "border-l-amber-500",
+  Cueillette: "border-l-purple-500",
+  Transport: "border-l-orange-500"
+};
+
+const NonConformites = () => {
+  const [nonConformites, setNonConformites] = useState([]);
+  const [showNCForm, setShowNCForm] = useState(false);
+  const [selectedNC, setSelectedNC] = useState(null);
+
+  const [newNC, setNewNC] = useState({
+    commande: "",
+    typeCommande: "Standard",
+    typeNC: "Commande",
+    titre: "",
+    description: "",
+    date: "",
+    departement: "Production",
+    gravite: "Mineure",
+    responsable: "",
+    cout: ""
+  });
+
+  return (
     <div className="space-y-6">
+
+      {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Non-conformités</h1>
           <p className="text-slate-500 mt-1">Suivi des erreurs internes</p>
         </div>
-        <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
-          <Icon name="plus" size={20}/>Signaler NC
+        <button
+          onClick={() => setShowNCForm(true)}
+          className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg"
+        >
+          + Signaler NC
         </button>
       </div>
+
+      {/* DASHBOARD PAR DÉPARTEMENT (INCHANGÉ) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {['Ventes', 'Production', 'Installation', 'Logistique'].map(dep => (
+        {["Ventes", "Production", "Installation", "Logistique"].map(dep => (
           <div key={dep} className="bg-white p-4 rounded-xl border border-slate-100">
             <p className="text-sm text-slate-500">{dep}</p>
-            <p className="text-2xl font-bold text-slate-800 mt-1">{nonConformites.filter(nc => nc.departement === dep).length}</p>
+            <p className="text-2xl font-bold text-slate-800 mt-1">
+              {nonConformites.filter(nc => nc.departement === dep).length}
+            </p>
           </div>
         ))}
       </div>
+
+      {/* TABLEAU DES NON-CONFORMITÉS */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
         {nonConformites.map(nc => (
-          <div key={nc.id} className="p-4 hover:bg-slate-50">
+          <div
+            key={nc.id}
+            onClick={() => setSelectedNC(nc)}
+            className={`p-4 hover:bg-slate-50 cursor-pointer border-l-4 ${ncTypeColors[nc.typeNC]}`}
+          >
             <div className="flex justify-between items-start">
               <div>
                 <div className="flex items-center gap-3">
-                  <span className="font-mono font-medium text-slate-800">{nc.commande}</span>
-                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${nc.statut === 'Ouvert' ? 'bg-red-100 text-red-800' : 'bg-emerald-100 text-emerald-800'}`}>{nc.statut}</span>
+                  <span className="font-mono font-medium text-slate-800">
+                    {nc.commande}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                    nc.statut === "Ouvert"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-emerald-100 text-emerald-800"
+                  }`}>
+                    {nc.statut}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {nc.typeNC}
+                  </span>
                 </div>
-                <p className="text-slate-600 mt-2">{nc.description}</p>
-                <p className="text-sm text-slate-500 mt-1">Département: {nc.departement}</p>
+                <p className="font-semibold text-slate-700 mt-1">
+                  {nc.titre}
+                </p>
+                <p className="text-sm text-slate-500 mt-1">
+                  Département : {nc.departement} • Gravité : {nc.gravite}
+                </p>
               </div>
               <span className="text-sm text-slate-500">{nc.date}</span>
             </div>
           </div>
         ))}
       </div>
+
+      {/* MODAL AJOUT NC */}
+      {showNCForm && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-3xl space-y-4">
+            <h2 className="text-xl font-bold">Signaler une non-conformité</h2>
+
+            <div className="grid grid-cols-2 gap-4">
+              <input className="input" placeholder="Numéro de commande"
+                onChange={e => setNewNC({...newNC, commande: e.target.value})} />
+
+              <select className="input"
+                onChange={e => setNewNC({...newNC, typeCommande: e.target.value})}>
+                <option>Standard</option>
+                <option>Commercial</option>
+                <option>Multi-phase</option>
+                <option>Multi-plan</option>
+              </select>
+
+              <select className="input"
+                onChange={e => setNewNC({...newNC, typeNC: e.target.value})}>
+                <option>Commande</option>
+                <option>Livraison</option>
+                <option>Cueillette</option>
+                <option>Transport</option>
+              </select>
+
+              <select className="input"
+                onChange={e => setNewNC({...newNC, departement: e.target.value})}>
+                <option>Ventes</option>
+                <option>Production</option>
+                <option>Installation</option>
+                <option>Logistique</option>
+              </select>
+
+              <input type="date" className="input"
+                onChange={e => setNewNC({...newNC, date: e.target.value})} />
+
+              <select className="input"
+                onChange={e => setNewNC({...newNC, gravite: e.target.value})}>
+                <option>Mineure</option>
+                <option>Majeure</option>
+                <option>Critique</option>
+              </select>
+
+              <input className="input" placeholder="Responsable"
+                onChange={e => setNewNC({...newNC, responsable: e.target.value})} />
+
+              <input className="input" placeholder="Coût estimé ($)"
+                onChange={e => setNewNC({...newNC, cout: e.target.value})} />
+            </div>
+
+            <input className="input" placeholder="Titre de la non-conformité"
+              onChange={e => setNewNC({...newNC, titre: e.target.value})} />
+
+            <textarea className="input" rows={3} placeholder="Description détaillée"
+              onChange={e => setNewNC({...newNC, description: e.target.value})} />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                onClick={() => setShowNCForm(false)}
+                className="px-4 py-2 border rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  setNonConformites(prev => [
+                    ...prev,
+                    { id: Date.now(), statut: "Ouvert", ...newNC }
+                  ]);
+                  setShowNCForm(false);
+                }}
+                className="px-4 py-2 bg-amber-500 text-white rounded-lg"
+              >
+                Enregistrer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DÉTAIL NC */}
+      {selectedNC && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-lg space-y-3">
+            <h2 className="text-xl font-bold">{selectedNC.titre}</h2>
+            <p>{selectedNC.description}</p>
+            <p className="text-sm text-slate-500">
+              Commande : {selectedNC.commande} ({selectedNC.typeCommande})
+            </p>
+            <p className="text-sm text-slate-500">
+              Département : {selectedNC.departement} • {selectedNC.typeNC}
+            </p>
+            <p className="text-sm text-slate-500">
+              Gravité : {selectedNC.gravite} • Coût : {selectedNC.cout} $
+            </p>
+            <button
+              onClick={() => setSelectedNC(null)}
+              className="mt-4 px-4 py-2 border rounded-lg"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
+};
+
+
+
+
 
   // === MULTI-LOGEMENTS ===
   const MultiLogements = () => (
