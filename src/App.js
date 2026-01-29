@@ -5752,45 +5752,625 @@ const Interventions = () => {
   };
 
   // === INVENTAIRE ===
-  const Inventaire = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Inventaire</h1>
-          <p className="text-slate-500 mt-1">Gestion des stocks et fournisseurs</p>
+// === INVENTAIRE COMPLET ===
+const Inventaire = () => {
+  // États pour les vues
+  const [vueActive, setVueActive] = useState('liste'); // liste, entrees-sorties, transactions, pieces, fournisseurs, unites
+  
+  // États pour les modals
+  const [showPiecesModal, setShowPiecesModal] = useState(false);
+  const [showFournisseursModal, setShowFournisseursModal] = useState(false);
+  const [showUnitesModal, setShowUnitesModal] = useState(false);
+  const [showAjouterPieceModal, setShowAjouterPieceModal] = useState(false);
+  const [showAjouterFournisseurModal, setShowAjouterFournisseurModal] = useState(false);
+  
+  // États pour les filtres
+  const [recherche, setRecherche] = useState('');
+  const [filtreCategorie, setFiltreCategorie] = useState('');
+  const [filtreFournisseur, setFiltreFournisseur] = useState('');
+  const [filtrePointCommande, setFiltrePointCommande] = useState(false);
+  const [recherchePiece, setRecherchePiece] = useState('');
+  const [rechercheTransaction, setRechercheTransaction] = useState('');
+  const [dateTransaction, setDateTransaction] = useState('');
+  
+  // État pour les transactions
+  const [transaction, setTransaction] = useState({
+    codePiece: '',
+    type: 'Entrée',
+    quantite: 0
+  });
+  
+  // État pour nouvelle pièce
+  const [nouvellePiece, setNouvellePiece] = useState({
+    code: '',
+    description: '',
+    couleur: '',
+    categorie: '',
+    fournisseur: '',
+    uniteInventaire: '',
+    pointCommande: 0,
+    aPeinturer: false
+  });
+  
+  // État pour nouveau fournisseur
+  const [nouveauFournisseur, setNouveauFournisseur] = useState({
+    nom: '',
+    adresse: '',
+    codePostal: '',
+    ville: '',
+    province: '',
+    pays: 'Canada',
+    telephone: '',
+    fax: '',
+    contact: '',
+    email: ''
+  });
+  
+  // État pour nouvelle unité
+  const [nouvelleUnite, setNouvelleUnite] = useState({
+    unite: '',
+    quantiteParUnite: 1,
+    description: ''
+  });
+  
+  // Données des pièces en inventaire
+  const [piecesInventaire, setPiecesInventaire] = useState([
+    { id: 1, code: 'VI001044', description: 'Douille allongée (vendu en boîte de 10)', couleur: '', categorie: 'Vis', fournisseur: 'Les Attaches Viscan', uniteInventaire: 'Unité', inventaireTotal: 78, partiPeinture: 0, pointCommande: 25, achatFait: false },
+    { id: 2, code: 'Polytubing 12"', description: 'Polytubing 12" Clair', couleur: '', categorie: 'Vis', fournisseur: 'Les Emballages E.B. Ltee', uniteInventaire: 'Rouleau', inventaireTotal: 2, partiPeinture: 0, pointCommande: 1, achatFait: false },
+    { id: 3, code: '9741068', description: 'Courroie plastique 12mm x 9900\' blanc', couleur: '', categorie: 'Emballage', fournisseur: 'Les Emballages Carrousel', uniteInventaire: 'Rouleau', inventaireTotal: 2, partiPeinture: 0, pointCommande: 1, achatFait: false },
+    { id: 4, code: 'Ruban clair 48mm', description: 'Ruban clair 48mm x 132mm (48rlx/boîte)', couleur: '', categorie: 'Emballage', fournisseur: 'Les Emballages Carrousel', uniteInventaire: 'Rouleau', inventaireTotal: 19, partiPeinture: 0, pointCommande: 10, achatFait: false },
+    { id: 5, code: 'VS30-1415V', description: 'Vis autopercente #14 x 1 1/2"', couleur: '', categorie: 'Vis', fournisseur: 'Les Attaches Viscan', uniteInventaire: 'Boîte de 1000', inventaireTotal: 1, partiPeinture: 0, pointCommande: 1, achatFait: false },
+    { id: 6, code: 'VS27.1423', description: 'Vis #14 x 3"', couleur: '', categorie: 'Vis', fournisseur: 'Les Attaches Viscan', uniteInventaire: 'Boîte de 500', inventaireTotal: 8, partiPeinture: 0, pointCommande: 4, achatFait: false },
+    { id: 7, code: '5545903', description: 'Pellicule plastique 3" x 1000\' (18rlx/boîte)', couleur: '', categorie: 'Emballage', fournisseur: 'Les Emballages Carrousel', uniteInventaire: 'Rouleau', inventaireTotal: 6, partiPeinture: 0, pointCommande: 9, achatFait: false },
+    { id: 8, code: 'Bec de cane', description: 'Bec de cane', couleur: '', categorie: 'Vis', fournisseur: 'RICHELIEU', uniteInventaire: 'Unité', inventaireTotal: 2, partiPeinture: 0, pointCommande: 5, achatFait: false },
+    { id: 9, code: 'VS20.1015CA.V+', description: 'Vis #10 x 1 1/2"', couleur: '', categorie: 'Vis', fournisseur: 'Les Attaches Viscan', uniteInventaire: 'Boîte de 2000', inventaireTotal: 3, partiPeinture: 0, pointCommande: 0, achatFait: false },
+    { id: 10, code: 'VS26.1831', description: 'Tire fond HEX SS18,8 1/4 x 5"', couleur: '', categorie: 'Vis', fournisseur: 'Les Attaches Viscan', uniteInventaire: 'Boîte de 250', inventaireTotal: 5, partiPeinture: 0, pointCommande: 0, achatFait: false },
+    { id: 11, code: 'OUT-0037', description: 'Spatule de démanchage', couleur: '', categorie: 'Autre', fournisseur: 'Rembourrage d\'auto Daigle inc.', uniteInventaire: 'Unité', inventaireTotal: 0, partiPeinture: 0, pointCommande: 0, achatFait: false },
+    { id: 12, code: 'SSGC411XX16S', description: 'Attache vision bas (Stainless)', couleur: '', categorie: 'Vision', fournisseur: 'Euro Architectural Components', uniteInventaire: 'Unité', inventaireTotal: 12, partiPeinture: 0, pointCommande: 0, achatFait: false },
+    { id: 13, code: '01-004-BOUT-AR', description: 'Embout de main classique Argile', couleur: 'Argile', categorie: 'Embout', fournisseur: 'Fonderie Fondalco', uniteInventaire: 'Unité', inventaireTotal: 28, partiPeinture: 0, pointCommande: 10, achatFait: false, aPeinturer: true },
+    { id: 14, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', couleur: 'Blanc', categorie: 'Embout', fournisseur: 'Fonderie Fondalco', uniteInventaire: 'Unité', inventaireTotal: 42, partiPeinture: 0, pointCommande: 20, achatFait: false, aPeinturer: true },
+    { id: 15, code: '01-004-BOUT-BR', description: 'Embout de main classique Brun commercial', couleur: 'Brun commercial', categorie: 'Embout', fournisseur: 'Fonderie Fondalco', uniteInventaire: 'Unité', inventaireTotal: 23, partiPeinture: 0, pointCommande: 10, achatFait: false, aPeinturer: true },
+    { id: 16, code: '01-004-BOUT-CH', description: 'Embout de main classique Charbon', couleur: 'Charbon', categorie: 'Embout', fournisseur: 'Fonderie Fondalco', uniteInventaire: 'Unité', inventaireTotal: 19, partiPeinture: 0, pointCommande: 10, achatFait: false, aPeinturer: true },
+    { id: 17, code: 'BGARD-175VDCNP', description: 'Base 1 3/4" Non peinte', couleur: '', categorie: 'Base', fournisseur: 'Interne', uniteInventaire: 'Unité', inventaireTotal: 561, partiPeinture: 0, pointCommande: 50, achatFait: false },
+  ]);
+  
+  // Données des transactions
+  const [transactionsInventaire, setTransactionsInventaire] = useState([
+    { id: 1, code: '01-004-BOUT-AR', description: 'Embout de main classique Argile', quantite: 28, type: 'Mise à jour', piecePeinte: false, dateTransaction: '2024-09-19' },
+    { id: 2, code: '01-004-BOUT-AR', description: 'Embout de main classique Argile', quantite: 30, type: 'Mise à jour', piecePeinte: false, dateTransaction: '2024-05-21' },
+    { id: 3, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 2, type: 'Sortie', piecePeinte: false, dateTransaction: '2026-01-26' },
+    { id: 4, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 44, type: 'Mise à jour', piecePeinte: false, dateTransaction: '2025-12-08' },
+    { id: 5, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 4, type: 'Sortie', piecePeinte: false, dateTransaction: '2025-12-03' },
+    { id: 6, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 6, type: 'Sortie', piecePeinte: false, dateTransaction: '2025-03-31' },
+    { id: 7, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 2, type: 'Sortie', piecePeinte: false, dateTransaction: '2025-02-10' },
+    { id: 8, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 58, type: 'Entrée', piecePeinte: false, dateTransaction: '2024-12-10' },
+    { id: 9, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 0, type: 'Mise à jour', piecePeinte: false, dateTransaction: '2024-08-30' },
+    { id: 10, code: '01-004-BOUT-BL', description: 'Embout de main classique Blanc', quantite: 2, type: 'Sortie', piecePeinte: false, dateTransaction: '2024-07-17' },
+  ]);
+  
+  // Données des fournisseurs
+  const [fournisseursList, setFournisseursList] = useState([
+    { id: 1, nom: 'Acier Picard', adresse: '3000 rue de l\'Etchemin Lévis', codePostal: 'G6W 7X6', ville: 'Lévis', province: 'QC', pays: 'Canada', telephone: '418-834-8300', fax: '', contact: '', email: '' },
+    { id: 2, nom: 'Aiguisage Rousseau', adresse: '1005, av. Bergeron', codePostal: 'G0S 1Z0', ville: 'St-Agapit', province: 'QC', pays: 'Canada', telephone: '418-888-5646', fax: '418-888-4084', contact: '', email: 'info@aiguisage-rousseau.com' },
+    { id: 3, nom: 'Aimé Champagne', adresse: '2186, Route Lagueux', codePostal: 'G7A 1A7', ville: 'Lévis', province: 'Québec', pays: 'Canada', telephone: '418-831-9960', fax: '418-831-9358', contact: '', email: '' },
+    { id: 4, nom: 'Aluminium PS', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: 'Pierre Denis', email: 'pdenis@psaluminium.com' },
+    { id: 5, nom: 'Boulet Lemelin', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: '', email: '' },
+    { id: 6, nom: 'Les Attaches Viscan', adresse: '123 Rue Industrielle', codePostal: 'G1K 2L3', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-1234', fax: '', contact: 'Marc Simard', email: 'info@viscan.com' },
+    { id: 7, nom: 'Les Emballages Carrousel', adresse: '456 Boul. Commerce', codePostal: 'G2J 4R5', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-5678', fax: '', contact: '', email: 'ventes@carrousel.com' },
+    { id: 8, nom: 'RICHELIEU', adresse: '7900 Henri-Bourassa', codePostal: 'H1E 1P4', ville: 'Montréal', province: 'QC', pays: 'Canada', telephone: '514-555-9999', fax: '', contact: '', email: '' },
+    { id: 9, nom: 'Fonderie Fondalco', adresse: '890 Rue Métallurgie', codePostal: 'G3A 2B1', ville: 'Trois-Rivières', province: 'QC', pays: 'Canada', telephone: '819-555-3333', fax: '', contact: 'Jean Laforge', email: 'commandes@fondalco.com' },
+    { id: 10, nom: 'Euro Architectural Components', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: '', email: '' },
+  ]);
+  
+  // Données des unités
+  const [unitesList, setUnitesList] = useState([
+    { id: 1, unite: 'Unité', quantiteParUnite: 1, description: 'Unité' },
+    { id: 2, unite: 'Boîte', quantiteParUnite: 1000, description: 'Boîte de 1000' },
+    { id: 3, unite: 'Boîte', quantiteParUnite: 100, description: 'Boîte de 100' },
+    { id: 4, unite: 'Boîte', quantiteParUnite: 500, description: 'Boîte de 500' },
+    { id: 5, unite: 'Paquet', quantiteParUnite: 100, description: 'Paquet de 100' },
+    { id: 6, unite: 'Lg 17.48', quantiteParUnite: 1, description: 'Longueur de 17.48 pieds' },
+    { id: 7, unite: 'Rouleau', quantiteParUnite: 1, description: 'Rouleau' },
+    { id: 8, unite: 'Boîte', quantiteParUnite: 2000, description: 'Boîte de 2000' },
+    { id: 9, unite: 'Boîte', quantiteParUnite: 250, description: 'Boîte de 250' },
+  ]);
+  
+  // Catégories disponibles
+  const categories = ['Vis', 'Emballage', 'Embout', 'Base', 'Vision', 'Autre'];
+  
+  // Pièce sélectionnée pour transaction
+  const [pieceSelectionnee, setPieceSelectionnee] = useState(null);
+  
+  // Formater la date
+  const formaterDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  
+  // Filtrer les pièces
+  const piecesFiltrees = piecesInventaire.filter(piece => {
+    const matchRecherche = !recherche || 
+      piece.code.toLowerCase().includes(recherche.toLowerCase()) ||
+      piece.description.toLowerCase().includes(recherche.toLowerCase());
+    const matchCategorie = !filtreCategorie || piece.categorie === filtreCategorie;
+    const matchFournisseur = !filtreFournisseur || piece.fournisseur === filtreFournisseur;
+    const matchPointCommande = !filtrePointCommande || (piece.inventaireTotal <= piece.pointCommande && piece.pointCommande > 0);
+    return matchRecherche && matchCategorie && matchFournisseur && matchPointCommande;
+  });
+  
+  // Filtrer les transactions
+  const transactionsFiltrees = transactionsInventaire.filter(trans => {
+    const matchRecherche = !rechercheTransaction || 
+      trans.code.toLowerCase().includes(rechercheTransaction.toLowerCase()) ||
+      trans.description.toLowerCase().includes(rechercheTransaction.toLowerCase());
+    const matchDate = !dateTransaction || trans.dateTransaction >= dateTransaction;
+    return matchRecherche && matchDate;
+  }).sort((a, b) => new Date(b.dateTransaction) - new Date(a.dateTransaction));
+  
+  // Couleur de fond selon le niveau de stock
+  const getCouleurStock = (inventaire, pointCommande) => {
+    if (pointCommande === 0) return 'bg-white';
+    if (inventaire <= 0) return 'bg-red-100';
+    if (inventaire <= pointCommande) return 'bg-yellow-100';
+    return 'bg-green-100';
+  };
+  
+  // Couleur du texte point commande
+  const getCouleurPointCommande = (inventaire, pointCommande) => {
+    if (pointCommande === 0) return 'text-slate-600';
+    if (inventaire <= pointCommande) return 'text-red-600 font-bold';
+    return 'text-green-600';
+  };
+  
+  // Enregistrer une transaction
+  const enregistrerTransaction = () => {
+    if (!pieceSelectionnee || transaction.quantite <= 0) {
+      alert('Veuillez sélectionner une pièce et entrer une quantité valide');
+      return;
+    }
+    
+    const nouvelleTransaction = {
+      id: transactionsInventaire.length + 1,
+      code: pieceSelectionnee.code,
+      description: pieceSelectionnee.description,
+      quantite: transaction.quantite,
+      type: transaction.type,
+      piecePeinte: false,
+      dateTransaction: new Date().toISOString().split('T')[0]
+    };
+    
+    setTransactionsInventaire([nouvelleTransaction, ...transactionsInventaire]);
+    
+    // Mettre à jour l'inventaire
+    setPiecesInventaire(piecesInventaire.map(p => {
+      if (p.id === pieceSelectionnee.id) {
+        let nouvelInventaire = p.inventaireTotal;
+        if (transaction.type === 'Entrée') {
+          nouvelInventaire += transaction.quantite;
+        } else if (transaction.type === 'Sortie' || transaction.type === 'Sortie-Peinture') {
+          nouvelInventaire -= transaction.quantite;
+        } else if (transaction.type === 'Mise à jour') {
+          nouvelInventaire = transaction.quantite;
+        }
+        
+        // Vérifier si point de commande atteint et envoyer email
+        if (nouvelInventaire <= p.pointCommande && p.pointCommande > 0 && !p.achatFait) {
+          envoyerAlerteMail(p, nouvelInventaire);
+        }
+        
+        return { ...p, inventaireTotal: Math.max(0, nouvelInventaire) };
+      }
+      return p;
+    }));
+    
+    setTransaction({ codePiece: '', type: 'Entrée', quantite: 0 });
+    setPieceSelectionnee(null);
+  };
+  
+  // Simuler l'envoi d'email d'alerte
+  const envoyerAlerteMail = (piece, quantiteActuelle) => {
+    console.log(`📧 ALERTE EMAIL: La pièce ${piece.code} (${piece.description}) a atteint son point de commande!`);
+    console.log(`   Quantité actuelle: ${quantiteActuelle}, Point de commande: ${piece.pointCommande}`);
+    console.log(`   Fournisseur: ${piece.fournisseur}`);
+    // TODO: Implémenter l'envoi réel d'email via une API backend
+    alert(`📧 Alerte envoyée!\n\nLa pièce "${piece.description}" a atteint son point de commande.\nQuantité: ${quantiteActuelle} / Point commande: ${piece.pointCommande}\nFournisseur: ${piece.fournisseur}`);
+  };
+  
+  // Ajouter une pièce
+  const ajouterPiece = () => {
+    if (!nouvellePiece.code || !nouvellePiece.description) {
+      alert('Veuillez remplir le code et la description');
+      return;
+    }
+    
+    const piece = {
+      id: piecesInventaire.length + 1,
+      ...nouvellePiece,
+      inventaireTotal: 0,
+      partiPeinture: 0,
+      achatFait: false
+    };
+    
+    setPiecesInventaire([...piecesInventaire, piece]);
+    setNouvellePiece({
+      code: '',
+      description: '',
+      couleur: '',
+      categorie: '',
+      fournisseur: '',
+      uniteInventaire: '',
+      pointCommande: 0,
+      aPeinturer: false
+    });
+    setShowAjouterPieceModal(false);
+  };
+  
+  // Ajouter un fournisseur
+  const ajouterFournisseur = () => {
+    if (!nouveauFournisseur.nom) {
+      alert('Veuillez entrer le nom du fournisseur');
+      return;
+    }
+    
+    const fournisseur = {
+      id: fournisseursList.length + 1,
+      ...nouveauFournisseur
+    };
+    
+    setFournisseursList([...fournisseursList, fournisseur]);
+    setNouveauFournisseur({
+      nom: '',
+      adresse: '',
+      codePostal: '',
+      ville: '',
+      province: '',
+      pays: 'Canada',
+      telephone: '',
+      fax: '',
+      contact: '',
+      email: ''
+    });
+    setShowAjouterFournisseurModal(false);
+  };
+  
+  // Ajouter une unité
+  const ajouterUnite = () => {
+    if (!nouvelleUnite.unite) {
+      alert('Veuillez entrer le nom de l\'unité');
+      return;
+    }
+    
+    const unite = {
+      id: unitesList.length + 1,
+      ...nouvelleUnite
+    };
+    
+    setUnitesList([...unitesList, unite]);
+    setNouvelleUnite({
+      unite: '',
+      quantiteParUnite: 1,
+      description: ''
+    });
+  };
+  
+  // Supprimer une pièce
+  const supprimerPiece = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette pièce ?')) {
+      setPiecesInventaire(piecesInventaire.filter(p => p.id !== id));
+    }
+  };
+  
+  // Supprimer un fournisseur
+  const supprimerFournisseur = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+      setFournisseursList(fournisseursList.filter(f => f.id !== id));
+    }
+  };
+  
+  // Supprimer une unité
+  const supprimerUnite = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette unité ?')) {
+      setUnitesList(unitesList.filter(u => u.id !== id));
+    }
+  };
+
+  // === VUE LISTE DES PIÈCES EN INVENTAIRE ===
+  const VueListeInventaire = () => (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-center text-slate-800 underline">Liste des pièces en inventaire</h2>
+      
+      {/* Filtres */}
+      <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-end gap-4">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-sm text-slate-600 mb-1">Recherche par code ou description</label>
+          <input 
+            type="text"
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg"
+            placeholder="Rechercher..."
+          />
         </div>
-        <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
-          <Icon name="plus" size={20}/>Ajouter produit
-        </button>
+        
+        <div className="flex items-center gap-2">
+          <input 
+            type="checkbox"
+            checked={filtrePointCommande}
+            onChange={(e) => setFiltrePointCommande(e.target.checked)}
+            className="w-5 h-5"
+          />
+          <label className="text-sm text-slate-600">Point commande atteint</label>
+        </div>
+        
+        <div>
+          <label className="block text-sm text-slate-600 mb-1">Catégorie</label>
+          <select 
+            value={filtreCategorie}
+            onChange={(e) => setFiltreCategorie(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg min-w-[150px]"
+          >
+            <option value="">Catégories</option>
+            {categories.map(cat => (
+              <option key={cat} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-sm text-slate-600 mb-1">Fournisseur</label>
+          <select 
+            value={filtreFournisseur}
+            onChange={(e) => setFiltreFournisseur(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg min-w-[150px]"
+          >
+            <option value="">Fournisseurs</option>
+            {fournisseursList.map(f => (
+              <option key={f.id} value={f.nom}>{f.nom}</option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Produit</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Quantité</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Seuil</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fournisseur</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
+      
+      {/* Tableau */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-sky-100">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-slate-700 underline">Code</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-700 underline">Description</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Couleur</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Catégorie</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Fournisseur</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Unité inventaire</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Inv. total</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Parti peinture</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Point commande</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Achat fait</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {piecesFiltrees.map((piece, index) => (
+                <tr key={piece.id} className={`hover:bg-slate-50 ${index % 2 === 0 ? 'bg-sky-50' : 'bg-white'}`}>
+                  <td className="px-4 py-3 font-medium text-slate-800">{piece.code}</td>
+                  <td className="px-4 py-3 text-slate-600">{piece.description}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{piece.couleur || '-'}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{piece.categorie}</td>
+                  <td className="px-4 py-3 text-center text-slate-600 text-xs">{piece.fournisseur}</td>
+                  <td className="px-4 py-3 text-center text-slate-600">{piece.uniteInventaire}</td>
+                  <td className={`px-4 py-3 text-center font-bold ${getCouleurStock(piece.inventaireTotal, piece.pointCommande)}`}>
+                    {piece.inventaireTotal}
+                  </td>
+                  <td className="px-4 py-3 text-center text-slate-600">{piece.partiPeinture || ''}</td>
+                  <td className={`px-4 py-3 text-center ${getCouleurPointCommande(piece.inventaireTotal, piece.pointCommande)} ${getCouleurStock(piece.inventaireTotal, piece.pointCommande)}`}>
+                    {piece.pointCommande > 0 ? piece.pointCommande : ''}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <input 
+                      type="checkbox"
+                      checked={piece.achatFait}
+                      onChange={(e) => {
+                        setPiecesInventaire(piecesInventaire.map(p => 
+                          p.id === piece.id ? { ...p, achatFait: e.target.checked } : p
+                        ));
+                      }}
+                      className="w-4 h-4"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+  
+  // === VUE ENTRÉES / SORTIES ===
+  const VueEntreesSorties = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-center text-slate-800 underline">Entrée / Sortie d'inventaire</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recherche pièce */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">Recherche de pièce par code ou description</label>
+          <input 
+            type="text"
+            value={recherchePiece}
+            onChange={(e) => setRecherchePiece(e.target.value)}
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+            placeholder="Rechercher une pièce..."
+          />
+        </div>
+        
+        {/* Inventaire actuel */}
+        {pieceSelectionnee && (
+          <div className="bg-white rounded-xl border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold text-slate-700 mb-2 underline">Inventaire actuel de la pièce</h3>
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="bg-slate-100 p-2 rounded">
+                <p className="text-xs text-slate-500">Total</p>
+                <p className="text-xl font-bold">{pieceSelectionnee.inventaireTotal}</p>
+              </div>
+              <div className="bg-slate-100 p-2 rounded">
+                <p className="text-xs text-slate-500">Magasin</p>
+                <p className="text-xl font-bold">{pieceSelectionnee.inventaireTotal}</p>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Formulaire de transaction */}
+      <div className="bg-green-100 rounded-xl p-6 border border-green-300">
+        <h3 className="text-xl font-bold text-center text-slate-800 mb-6">Ajouter une transaction</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Code de la pièce</label>
+            <select 
+              value={pieceSelectionnee?.id || ''}
+              onChange={(e) => {
+                const piece = piecesInventaire.find(p => p.id === parseInt(e.target.value));
+                setPieceSelectionnee(piece || null);
+              }}
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white"
+            >
+              <option value="">Sélectionner...</option>
+              {piecesInventaire
+                .filter(p => !recherchePiece || p.code.toLowerCase().includes(recherchePiece.toLowerCase()) || p.description.toLowerCase().includes(recherchePiece.toLowerCase()))
+                .map(piece => (
+                  <option key={piece.id} value={piece.id}>{piece.code}</option>
+                ))
+              }
+            </select>
+            {pieceSelectionnee && (
+              <div className="mt-2 p-2 bg-white rounded border text-sm">
+                <p className="font-medium">{pieceSelectionnee.description}</p>
+                <p className="text-slate-500">{pieceSelectionnee.uniteInventaire}</p>
+              </div>
+            )}
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Transaction</label>
+            <select 
+              value={transaction.type}
+              onChange={(e) => setTransaction({...transaction, type: e.target.value})}
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white"
+            >
+              <option value="Entrée">Entrée</option>
+              <option value="Sortie">Sortie</option>
+              <option value="Sortie-Peinture">Sortie-Peinture</option>
+              <option value="Mise à jour">Mise à jour</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 mb-2">Qté Magasin</label>
+            <input 
+              type="number"
+              value={transaction.quantite}
+              onChange={(e) => setTransaction({...transaction, quantite: parseInt(e.target.value) || 0})}
+              className="w-full px-4 py-3 border border-slate-300 rounded-lg"
+              min="0"
+            />
+          </div>
+          
+          <button 
+            onClick={enregistrerTransaction}
+            className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+          >
+            Enregistrer {transaction.type}
+          </button>
+        </div>
+      </div>
+      
+      {/* Section réception commande */}
+      <div className="bg-red-100 rounded-xl p-6 border border-red-300">
+        <h3 className="text-xl font-bold text-center text-slate-800 mb-4 underline">Réceptionner une commande</h3>
+        
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b-2 border-slate-300">
+              <th className="px-4 py-2 text-left font-semibold underline">Code</th>
+              <th className="px-4 py-2 text-left font-semibold underline">Description</th>
+              <th className="px-4 py-2 text-center font-semibold underline">Qté</th>
+              <th className="px-4 py-2 text-center font-semibold underline"># Ordre</th>
+              <th className="px-4 py-2 text-center font-semibold underline">Date de départ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Les commandes en attente apparaîtraient ici */}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+  
+  // === VUE TRANSACTIONS ===
+  const VueTransactions = () => (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-center text-slate-800 underline">Transaction d'inventaire</h2>
+      
+      {/* Filtres */}
+      <div className="flex flex-wrap items-center gap-4 justify-center">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-600">Recherche de pièce:</label>
+          <input 
+            type="text"
+            value={rechercheTransaction}
+            onChange={(e) => setRechercheTransaction(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg w-48"
+            placeholder="Code ou description"
+          />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-slate-600">Date de transaction:</label>
+          <input 
+            type="date"
+            value={dateTransaction}
+            onChange={(e) => setDateTransaction(e.target.value)}
+            className="px-4 py-2 border border-slate-300 rounded-lg"
+          />
+          <button 
+            onClick={() => setDateTransaction('')}
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm"
+          >
+            Enlever la date
+          </button>
+        </div>
+      </div>
+      
+      {/* Tableau */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-100">
+            <tr className="border-b-2 border-blue-400">
+              <th className="px-4 py-3 text-left font-semibold text-slate-700 underline">Code</th>
+              <th className="px-4 py-3 text-left font-semibold text-slate-700 underline">Description</th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Qté</th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Type</th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Pièce peinte</th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Date transaction</th>
+              <th className="px-4 py-3 text-center font-semibold text-slate-700 underline">Réception peinture</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {inventaire.map(item => (
-              <tr key={item.id} className={`hover:bg-slate-50 ${item.quantite <= item.seuil ? 'bg-red-50' : ''}`}>
-                <td className="px-6 py-4">
-                  <p className="font-medium text-slate-800">{item.produit}</p>
-                  <p className="text-sm text-slate-500">{item.unite}</p>
-                </td>
-                <td className="px-6 py-4">
-                  <span className={`text-lg font-bold ${item.quantite <= item.seuil ? 'text-red-600' : 'text-slate-800'}`}>{item.quantite}</span>
-                </td>
-                <td className="px-6 py-4 text-slate-600">{item.seuil}</td>
-                <td className="px-6 py-4 text-slate-600">{item.fournisseur}</td>
-                <td className="px-6 py-4">
-                  {item.quantite <= item.seuil ? (
-                    <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">Réapprovisionner</span>
-                  ) : (
-                    <span className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">OK</span>
+            {transactionsFiltrees.map((trans, index) => (
+              <tr key={trans.id} className={index % 2 === 0 ? 'bg-sky-50' : 'bg-white'}>
+                <td className="px-4 py-3 font-medium">{trans.code}</td>
+                <td className="px-4 py-3 text-slate-600">{trans.description}</td>
+                <td className="px-4 py-3 text-center font-bold">{trans.quantite}</td>
+                <td className="px-4 py-3 text-center">{trans.type}</td>
+                <td className="px-4 py-3 text-center">{trans.piecePeinte ? 'Oui' : ''}</td>
+                <td className="px-4 py-3 text-center">{formaterDate(trans.dateTransaction)}</td>
+                <td className="px-4 py-3 text-center">
+                  {trans.type === 'Sortie-Peinture' && (
+                    <button className="text-blue-600 hover:underline text-sm">Réceptionner</button>
                   )}
                 </td>
               </tr>
@@ -5800,7 +6380,596 @@ const Interventions = () => {
       </div>
     </div>
   );
+  
+  // === MODAL PIÈCES ===
+  const PiecesModal = () => {
+    if (!showPiecesModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-400 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-center text-slate-800 underline mb-4">Pièces</h2>
+            
+            <div className="flex items-center gap-4 mb-4">
+              <label className="text-slate-700">Recherche par code:</label>
+              <input 
+                type="text"
+                className="px-4 py-2 border rounded-lg flex-1 max-w-md"
+                placeholder="Rechercher..."
+              />
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-6">
+            <table className="w-full text-sm bg-white rounded-lg overflow-hidden">
+              <thead className="bg-sky-100 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-semibold underline">Code<br/>À peinturer<br/>Pièce à peinturer</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold underline">Description<br/>Couleur<br/>Catégorie</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold underline">Fournisseur<br/>Unité inventaire<br/>Prix</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold">Lieu #1<br/>Stock #1</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold">Lieu #2<br/>Stock #2</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold underline">Inventaire total<br/>Transit peinture<br/>Point de commande</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold">Date dernière<br/>transaction</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {piecesInventaire.filter(p => p.aPeinturer).map(piece => (
+                  <tr key={piece.id} className="hover:bg-slate-50">
+                    <td className="px-3 py-2">
+                      <p className="font-medium">{piece.code}</p>
+                      {piece.aPeinturer && (
+                        <>
+                          <div className="flex items-center gap-1 text-xs">
+                            <input type="checkbox" checked readOnly className="w-3 h-3"/>
+                            <span>À peinturer</span>
+                          </div>
+                          <p className="text-xs text-slate-500">{piece.code.replace(/-[A-Z]+$/, '-NP')}</p>
+                        </>
+                      )}
+                    </td>
+                    <td className="px-3 py-2">
+                      <p>{piece.description}</p>
+                      <p className="text-xs text-slate-500">{piece.couleur}</p>
+                      <p className="text-xs text-slate-500">{piece.categorie}</p>
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs">
+                      <p>{piece.fournisseur}</p>
+                      <p>{piece.uniteInventaire}</p>
+                    </td>
+                    <td className="px-3 py-2 text-center bg-sky-100">
+                      <p className="text-xs text-slate-500">Magasin</p>
+                      <p className="font-bold">{piece.inventaireTotal}</p>
+                    </td>
+                    <td className="px-3 py-2 text-center"></td>
+                    <td className={`px-3 py-2 text-center font-bold ${getCouleurStock(piece.inventaireTotal, piece.pointCommande)}`}>
+                      {piece.inventaireTotal}
+                      <p className="text-xs font-normal">{piece.pointCommande}</p>
+                    </td>
+                    <td className="px-3 py-2 text-center text-xs"></td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-col gap-1">
+                        <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button>
+                        <button 
+                          onClick={() => supprimerPiece(piece.id)}
+                          className="px-3 py-1 bg-blue-500 text-white text-xs rounded"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="p-4 flex justify-center gap-4">
+            <button 
+              onClick={() => setShowPiecesModal(false)}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Quitter
+            </button>
+            <button 
+              onClick={() => {
+                setShowPiecesModal(false);
+                setShowAjouterPieceModal(true);
+              }}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Ajouter une pièce
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // === MODAL FOURNISSEURS ===
+  const FournisseursModal = () => {
+    if (!showFournisseursModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-400 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-center text-slate-800 underline mb-4">Fournisseurs</h2>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-6">
+            <table className="w-full text-sm bg-white rounded-lg overflow-hidden">
+              <thead className="bg-sky-100 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left font-semibold underline">Fournisseur</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Adresse</th>
+                  <th className="px-3 py-2 text-center font-semibold"># Fax</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Contact</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Code Postal</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Ville</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Province</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Pays</th>
+                  <th className="px-3 py-2 text-center font-semibold underline"># Téléphone</th>
+                  <th className="px-3 py-2 text-center font-semibold underline">Email du contact</th>
+                  <th className="px-3 py-2 text-center font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {fournisseursList.map((fournisseur, index) => (
+                  <tr key={fournisseur.id} className={index % 2 === 0 ? 'bg-sky-50' : 'bg-white'}>
+                    <td className="px-3 py-2 font-bold">{fournisseur.nom}</td>
+                    <td className="px-3 py-2 text-center text-xs">{fournisseur.adresse}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.fax}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.contact}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.codePostal}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.ville}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.province}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.pays}</td>
+                    <td className="px-3 py-2 text-center">{fournisseur.telephone}</td>
+                    <td className="px-3 py-2 text-center text-xs">{fournisseur.email}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex flex-col gap-1">
+                        <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button>
+                        <button 
+                          onClick={() => supprimerFournisseur(fournisseur.id)}
+                          className="px-3 py-1 bg-blue-500 text-white text-xs rounded"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="p-4 flex justify-center gap-4">
+            <button 
+              onClick={() => {
+                setShowFournisseursModal(false);
+                setShowAjouterFournisseurModal(true);
+              }}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Ajouter un fournisseur
+            </button>
+            <button 
+              onClick={() => setShowFournisseursModal(false)}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Quitter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // === MODAL UNITÉS ===
+  const UnitesModal = () => {
+    if (!showUnitesModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-400 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-center text-slate-800 underline mb-4">Unités</h2>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto px-6">
+            <table className="w-full text-sm bg-white rounded-lg overflow-hidden mb-6">
+              <thead className="bg-sky-100 sticky top-0">
+                <tr>
+                  <th className="px-4 py-2 text-left font-semibold underline">Unité</th>
+                  <th className="px-4 py-2 text-center font-semibold underline">Qté par unité</th>
+                  <th className="px-4 py-2 text-center font-semibold underline">Description</th>
+                  <th className="px-4 py-2 text-center font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {unitesList.map(unite => (
+                  <tr key={unite.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-2">{unite.unite}</td>
+                    <td className="px-4 py-2 text-center">{unite.quantiteParUnite}</td>
+                    <td className="px-4 py-2 text-center">{unite.description}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex justify-center gap-2">
+                        <button className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button>
+                        <button 
+                          onClick={() => supprimerUnite(unite.id)}
+                          className="px-3 py-1 bg-blue-500 text-white text-xs rounded"
+                        >
+                          Supprimer
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            {/* Ajouter une unité */}
+            <div className="bg-white rounded-lg p-4 mb-4">
+              <h3 className="text-xl font-bold text-center text-slate-800 underline mb-4">Ajouter une unité d'inventaire</h3>
+              <div className="grid grid-cols-4 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1 underline">Unité</label>
+                  <input 
+                    type="text"
+                    value={nouvelleUnite.unite}
+                    onChange={(e) => setNouvelleUnite({...nouvelleUnite, unite: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1 underline">Quantité par unité</label>
+                  <input 
+                    type="number"
+                    value={nouvelleUnite.quantiteParUnite}
+                    onChange={(e) => setNouvelleUnite({...nouvelleUnite, quantiteParUnite: parseInt(e.target.value) || 1})}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-1 underline">Description</label>
+                  <input 
+                    type="text"
+                    value={nouvelleUnite.description}
+                    onChange={(e) => setNouvelleUnite({...nouvelleUnite, description: e.target.value})}
+                    className="w-full px-3 py-2 border rounded-lg"
+                  />
+                </div>
+                <button 
+                  onClick={ajouterUnite}
+                  className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+                >
+                  Ajouter
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 flex justify-center">
+            <button 
+              onClick={() => setShowUnitesModal(false)}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Sortir
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // === MODAL AJOUTER PIÈCE ===
+  const AjouterPieceModal = () => {
+    if (!showAjouterPieceModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
+          <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">Ajouter une pièce</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Code *</label>
+              <input 
+                type="text"
+                value={nouvellePiece.code}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, code: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Description *</label>
+              <input 
+                type="text"
+                value={nouvellePiece.description}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, description: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Couleur</label>
+              <input 
+                type="text"
+                value={nouvellePiece.couleur}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, couleur: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Catégorie</label>
+              <select 
+                value={nouvellePiece.categorie}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, categorie: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Sélectionner...</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Fournisseur</label>
+              <select 
+                value={nouvellePiece.fournisseur}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, fournisseur: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Sélectionner...</option>
+                {fournisseursList.map(f => (
+                  <option key={f.id} value={f.nom}>{f.nom}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Unité inventaire</label>
+              <select 
+                value={nouvellePiece.uniteInventaire}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, uniteInventaire: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              >
+                <option value="">Sélectionner...</option>
+                {unitesList.map(u => (
+                  <option key={u.id} value={u.description}>{u.description}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Point de commande</label>
+              <input 
+                type="number"
+                value={nouvellePiece.pointCommande}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, pointCommande: parseInt(e.target.value) || 0})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="flex items-center gap-2 pt-6">
+              <input 
+                type="checkbox"
+                checked={nouvellePiece.aPeinturer}
+                onChange={(e) => setNouvellePiece({...nouvellePiece, aPeinturer: e.target.checked})}
+                className="w-5 h-5"
+              />
+              <label className="text-sm text-slate-700">À peinturer</label>
+            </div>
+          </div>
+          
+          <div className="flex justify-center gap-4 mt-6">
+            <button 
+              onClick={() => setShowAjouterPieceModal(false)}
+              className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={ajouterPiece}
+              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // === MODAL AJOUTER FOURNISSEUR ===
+  const AjouterFournisseurModal = () => {
+    if (!showAjouterFournisseurModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6">
+          <h2 className="text-2xl font-bold text-center text-slate-800 mb-6">Ajouter un fournisseur</h2>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Nom du fournisseur *</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.nom}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, nom: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div className="col-span-2">
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Adresse</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.adresse}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, adresse: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Ville</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.ville}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, ville: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Province</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.province}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, province: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Code Postal</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.codePostal}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, codePostal: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Pays</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.pays}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, pays: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Téléphone</label>
+              <input 
+                type="tel"
+                value={nouveauFournisseur.telephone}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, telephone: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Fax</label>
+              <input 
+                type="tel"
+                value={nouveauFournisseur.fax}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, fax: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Contact</label>
+              <input 
+                type="text"
+                value={nouveauFournisseur.contact}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, contact: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+              <input 
+                type="email"
+                value={nouveauFournisseur.email}
+                onChange={(e) => setNouveauFournisseur({...nouveauFournisseur, email: e.target.value})}
+                className="w-full px-3 py-2 border rounded-lg"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-center gap-4 mt-6">
+            <button 
+              onClick={() => setShowAjouterFournisseurModal(false)}
+              className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={ajouterFournisseur}
+              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
+  // === RENDU PRINCIPAL ===
+  return (
+    <div className="space-y-6">
+      {/* Modals */}
+      <PiecesModal />
+      <FournisseursModal />
+      <UnitesModal />
+      <AjouterPieceModal />
+      <AjouterFournisseurModal />
+
+      {/* Header avec navigation */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg">
+            <Icon name="chevron-left" size={28}/>
+          </button>
+          
+          {/* Boutons de navigation principale */}
+          <div className="flex gap-2">
+            <button 
+              onClick={() => setVueActive('entrees-sorties')}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm ${vueActive === 'entrees-sorties' ? 'bg-blue-500 text-white' : 'bg-blue-400 text-white hover:bg-blue-500'}`}
+            >
+              Entrées / Sorties
+            </button>
+            <button 
+              onClick={() => setVueActive('transactions')}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm ${vueActive === 'transactions' ? 'bg-blue-500 text-white' : 'bg-blue-400 text-white hover:bg-blue-500'}`}
+            >
+              Afficher les transactions
+            </button>
+          </div>
+          
+          <h1 className="text-2xl font-bold text-white ml-4">Inventaire</h1>
+        </div>
+        
+        {/* Boutons de droite */}
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowPiecesModal(true)}
+            className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+          >
+            Pièces
+          </button>
+          <button 
+            onClick={() => setShowFournisseursModal(true)}
+            className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+          >
+            Fournisseurs
+          </button>
+          <button 
+            onClick={() => setShowUnitesModal(true)}
+            className="px-5 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg"
+          >
+            Unités
+          </button>
+        </div>
+      </div>
+
+      {/* Contenu selon la vue active */}
+      {vueActive === 'liste' && <VueListeInventaire />}
+      {vueActive === 'entrees-sorties' && <VueEntreesSorties />}
+      {vueActive === 'transactions' && <VueTransactions />}
+      
+      {/* Vue par défaut - Liste */}
+      {vueActive !== 'entrees-sorties' && vueActive !== 'transactions' && <VueListeInventaire />}
+    </div>
+  );
+};
   // === ACHATS ===
   const Achats = () => {
     const [achatsTab, setAchatsTab] = useState('commandes');
