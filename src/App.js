@@ -5934,49 +5934,615 @@ const Interventions = () => {
   };
 
   // === RENTABILITÉ ===
-  const Rentabilite = () => (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-slate-800">Rentabilité</h1>
-        <p className="text-slate-500 mt-1">Analyse de rentabilité des projets</p>
+// === RENTABILITÉ DES INSTALLATIONS ===
+const Rentabilite = () => {
+  // États pour les modals
+  const [showEntreeHeuresModal, setShowEntreeHeuresModal] = useState(false);
+  const [showModificationHeuresModal, setShowModificationHeuresModal] = useState(false);
+  const [showCoutInstallationModal, setShowCoutInstallationModal] = useState(false);
+  
+  // État pour le coût d'installation (modifiable par directeur seulement)
+  const [coutHoraireInstallation, setCoutHoraireInstallation] = useState(160);
+  
+  // États pour les filtres
+  const [filtreProjet, setFiltreProjet] = useState('');
+  const [filtreClient, setFiltreClient] = useState('');
+  const [filtreDateDebut, setFiltreDateDebut] = useState('');
+  const [filtreDateFin, setFiltreDateFin] = useState('');
+  const [filtreAnnee, setFiltreAnnee] = useState('2026');
+  
+  // État pour l'entrée d'heures
+  const [entreeHeures, setEntreeHeures] = useState({
+    numProjet: '',
+    nombreHeures: '',
+    dateInstallation: new Date().toISOString().split('T')[0]
+  });
+  
+  // État pour la modification
+  const [projetEnEdition, setProjetEnEdition] = useState(null);
+  const [rechercheModification, setRechercheModification] = useState('');
+  
+  // Données des heures d'installation (simulées - à connecter à votre base de données)
+  const [heuresInstallation, setHeuresInstallation] = useState([
+    { id: 1, numProjet: '210725-1', client: 'Martine Perron / Mario Denis', venteInstallation: 877, heuresReelles: 2.75, dateDebut: '2022-04-13', dateFin: '2022-04-13' },
+    { id: 2, numProjet: '220258', client: 'Brigitte Duchesneau', venteInstallation: 350, heuresReelles: 0.5, dateDebut: '2022-05-24', dateFin: '2022-05-24' },
+    { id: 3, numProjet: '220255', client: 'Marie-Hélène Labreux', venteInstallation: 559.25, heuresReelles: 2, dateDebut: '2022-06-07', dateFin: '2022-06-07' },
+    { id: 4, numProjet: '220425', client: 'André Morency', venteInstallation: 350, heuresReelles: 0.75, dateDebut: '2022-06-29', dateFin: '2022-06-29' },
+    { id: 5, numProjet: '220256', client: 'Daniel Boucher', venteInstallation: 586.63, heuresReelles: 2.25, dateDebut: '2022-11-09', dateFin: '2022-11-09' },
+    { id: 6, numProjet: '230125', client: 'SG Habitation', venteInstallation: 286.75, heuresReelles: 1.25, dateDebut: '2023-03-28', dateFin: '2023-03-28' },
+    { id: 7, numProjet: '250961', client: 'Pierre Gagnon', venteInstallation: 450, heuresReelles: 2, dateDebut: '2026-01-14', dateFin: '2026-01-14' },
+    { id: 8, numProjet: '251130', client: 'Jean Tremblay', venteInstallation: 720, heuresReelles: 4, dateDebut: '2026-01-14', dateFin: '2026-01-14' },
+    { id: 9, numProjet: '251299', client: 'Marie Lavoie', venteInstallation: 980, heuresReelles: 5.5, dateDebut: '2026-01-15', dateFin: '2026-01-15' },
+    { id: 10, numProjet: '251226', client: 'François Dubois', venteInstallation: 1250, heuresReelles: 7, dateDebut: '2026-01-19', dateFin: '2026-01-19' },
+    { id: 11, numProjet: '251230', client: 'Sylvie Martin', venteInstallation: 560, heuresReelles: 3, dateDebut: '2026-01-22', dateFin: '2026-01-22' },
+  ]);
+
+  // Vérifier si l'utilisateur est directeur (à adapter selon votre système d'authentification)
+  // Utilise la variable 'user' de votre app ou true par défaut
+  const estDirecteur = true; // TODO: Remplacer par votre système d'authentification (ex: user?.role === 'Directeur')
+
+  // Calcul de la rentabilité
+  const calculerRentabilite = (venteInstallation, heuresReelles) => {
+    const coutInstallation = heuresReelles * coutHoraireInstallation;
+    if (venteInstallation === 0) return 0;
+    return ((venteInstallation - coutInstallation) / venteInstallation) * 100;
+  };
+
+  // Calcul du coût d'installation
+  const calculerCoutInstallation = (heuresReelles) => {
+    return heuresReelles * coutHoraireInstallation;
+  };
+
+  // Filtrer les données
+  const donneesFiltrees = heuresInstallation.filter(item => {
+    const matchProjet = !filtreProjet || item.numProjet.toLowerCase().includes(filtreProjet.toLowerCase());
+    const matchClient = !filtreClient || item.client.toLowerCase().includes(filtreClient.toLowerCase());
+    const matchDateDebut = !filtreDateDebut || item.dateDebut >= filtreDateDebut;
+    const matchDateFin = !filtreDateFin || item.dateFin <= filtreDateFin;
+    return matchProjet && matchClient && matchDateDebut && matchDateFin;
+  });
+
+  // Statistiques
+  const stats = {
+    nombreInstallations: donneesFiltrees.length,
+    rentabiliteSup20: donneesFiltrees.filter(item => calculerRentabilite(item.venteInstallation, item.heuresReelles) > 20).length,
+    moyenneRentabilite: donneesFiltrees.length > 0 
+      ? donneesFiltrees.reduce((acc, item) => acc + calculerRentabilite(item.venteInstallation, item.heuresReelles), 0) / donneesFiltrees.length 
+      : 0
+  };
+
+  // Couleur de rentabilité
+  const getCouleurRentabilite = (rentabilite) => {
+    if (rentabilite >= 50) return 'bg-emerald-500 text-white';
+    if (rentabilite >= 30) return 'bg-green-500 text-white';
+    if (rentabilite >= 20) return 'bg-lime-500 text-white';
+    if (rentabilite >= 10) return 'bg-yellow-500 text-yellow-900';
+    if (rentabilite >= 0) return 'bg-orange-500 text-white';
+    return 'bg-red-500 text-white';
+  };
+
+  // Formater la date en français
+  const formaterDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  // Enregistrer une nouvelle entrée d'heures
+  const enregistrerHeures = () => {
+    if (!entreeHeures.numProjet || !entreeHeures.nombreHeures) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+    
+    // Chercher si le projet existe dans commandesList
+    const projetExistant = commandesList.find(c => c.num === entreeHeures.numProjet);
+    
+    const nouvelleEntree = {
+      id: heuresInstallation.length + 1,
+      numProjet: entreeHeures.numProjet,
+      client: projetExistant?.client || 'Client inconnu',
+      venteInstallation: projetExistant?.prixVente || 0,
+      heuresReelles: parseFloat(entreeHeures.nombreHeures),
+      dateDebut: entreeHeures.dateInstallation,
+      dateFin: entreeHeures.dateInstallation
+    };
+    
+    setHeuresInstallation([...heuresInstallation, nouvelleEntree]);
+    setEntreeHeures({ numProjet: '', nombreHeures: '', dateInstallation: new Date().toISOString().split('T')[0] });
+    setShowEntreeHeuresModal(false);
+  };
+
+  // Supprimer une entrée
+  const supprimerEntree = (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
+      setHeuresInstallation(heuresInstallation.filter(h => h.id !== id));
+    }
+  };
+
+  // Sauvegarder la modification
+  const sauvegarderModification = (id, nouvellesHeures, nouvelleDate) => {
+    setHeuresInstallation(heuresInstallation.map(h => 
+      h.id === id ? { ...h, heuresReelles: parseFloat(nouvellesHeures), dateDebut: nouvelleDate, dateFin: nouvelleDate } : h
+    ));
+    setProjetEnEdition(null);
+  };
+
+  // Filtrer pour modification par année
+  const donneesModification = heuresInstallation.filter(item => {
+    const annee = item.dateDebut.split('-')[0];
+    const matchAnnee = annee === filtreAnnee;
+    const matchRecherche = !rechercheModification || item.numProjet.includes(rechercheModification);
+    return matchAnnee && matchRecherche;
+  });
+
+  // === MODAL ENTRÉE D'HEURES ===
+  const EntreeHeuresModal = () => {
+    if (!showEntreeHeuresModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-600 rounded-2xl shadow-2xl w-full max-w-lg p-8">
+          <h2 className="text-2xl font-bold text-white text-center mb-8 underline">
+            Entrée d'heures d'installation
+          </h2>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <label className="text-white text-lg w-48"># Projet:</label>
+              <input 
+                type="text"
+                value={entreeHeures.numProjet}
+                onChange={(e) => setEntreeHeures({...entreeHeures, numProjet: e.target.value})}
+                className="flex-1 px-4 py-3 rounded-lg text-lg"
+                placeholder="Ex: 251299"
+              />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <label className="text-white text-lg w-48">Nombre d'heures:</label>
+              <input 
+                type="number"
+                step="0.25"
+                value={entreeHeures.nombreHeures}
+                onChange={(e) => setEntreeHeures({...entreeHeures, nombreHeures: e.target.value})}
+                className="flex-1 px-4 py-3 rounded-lg text-lg"
+                placeholder="Ex: 2.5"
+              />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <label className="text-white text-lg w-48">Date d'installation:</label>
+              <input 
+                type="date"
+                value={entreeHeures.dateInstallation}
+                onChange={(e) => setEntreeHeures({...entreeHeures, dateInstallation: e.target.value})}
+                className="flex-1 px-4 py-3 rounded-lg text-lg"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-center gap-6 mt-10">
+            <button 
+              onClick={() => setShowEntreeHeuresModal(false)}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full text-lg"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={enregistrerHeures}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full text-lg"
+            >
+              Enregistrer
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <table className="w-full">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Projet</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Heures prévues</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Heures réelles</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Taux installation</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Rentabilité</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {commandes.filter(c => c.statut === 'Complétée').map(cmd => {
-              const rentabilite = cmd.heuresReelles ? ((cmd.heuresEstimees - cmd.heuresReelles) / cmd.heuresEstimees * 100) : 0;
-              return (
-                <tr key={cmd.id} className={`hover:bg-slate-50 ${rentabilite > 20 ? 'bg-emerald-50' : ''}`}>
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-slate-800">{cmd.num}</p>
-                    <p className="text-sm text-slate-500">{cmd.client}</p>
-                  </td>
-                  <td className="px-6 py-4 text-slate-800 font-medium">{cmd.heuresEstimees}h</td>
-                  <td className="px-6 py-4 text-slate-800 font-medium">{cmd.heuresReelles || '-'}h</td>
-                  <td className="px-6 py-4 text-slate-800 font-medium">85%</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${rentabilite > 20 ? 'bg-emerald-100 text-emerald-800' : rentabilite > 0 ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>
-                      {rentabilite > 0 ? '+' : ''}{rentabilite.toFixed(0)}%
-                    </span>
-                  </td>
+    );
+  };
+
+  // === MODAL MODIFICATION DES HEURES ===
+  const ModificationHeuresModal = () => {
+    if (!showModificationHeuresModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-100 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6 border-b">
+            <h2 className="text-2xl font-bold text-blue-600 text-center underline">
+              Modification des heures d'installation
+            </h2>
+            
+            <div className="flex items-center justify-center gap-8 mt-6">
+              <div className="flex items-center gap-3">
+                <label className="text-slate-700">Rechercher un # de projet:</label>
+                <input 
+                  type="text"
+                  value={rechercheModification}
+                  onChange={(e) => setRechercheModification(e.target.value)}
+                  className="px-4 py-2 border-2 border-blue-400 rounded-lg w-40"
+                  placeholder="# projet"
+                />
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <label className="text-slate-700">Année d'installation:</label>
+                <select 
+                  value={filtreAnnee}
+                  onChange={(e) => setFiltreAnnee(e.target.value)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg"
+                >
+                  <option value="2026">2026</option>
+                  <option value="2025">2025</option>
+                  <option value="2024">2024</option>
+                  <option value="2023">2023</option>
+                  <option value="2022">2022</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto">
+            <table className="w-full">
+              <thead className="bg-white sticky top-0">
+                <tr className="border-b-2 border-blue-400">
+                  <th className="px-6 py-4 text-blue-600 font-semibold"># Projet</th>
+                  <th className="px-6 py-4 text-blue-600 font-semibold">Nombre d'heures</th>
+                  <th className="px-6 py-4 text-blue-600 font-semibold">Date de l'installation</th>
+                  <th className="px-6 py-4 text-blue-600 font-semibold">Actions</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {donneesModification.map(item => (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 text-center font-medium">{item.numProjet}</td>
+                    <td className="px-6 py-4 text-center">
+                      {projetEnEdition === item.id ? (
+                        <input 
+                          type="number"
+                          step="0.25"
+                          defaultValue={item.heuresReelles}
+                          id={`heures-${item.id}`}
+                          className="w-20 px-2 py-1 border rounded text-center"
+                        />
+                      ) : (
+                        item.heuresReelles
+                      )}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {projetEnEdition === item.id ? (
+                        <input 
+                          type="date"
+                          defaultValue={item.dateDebut}
+                          id={`date-${item.id}`}
+                          className="px-2 py-1 border rounded"
+                        />
+                      ) : (
+                        formaterDate(item.dateDebut)
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-2">
+                        {projetEnEdition === item.id ? (
+                          <>
+                            <button 
+                              onClick={() => {
+                                const heures = document.getElementById(`heures-${item.id}`).value;
+                                const date = document.getElementById(`date-${item.id}`).value;
+                                sauvegarderModification(item.id, heures, date);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded"
+                              title="Sauvegarder"
+                            >
+                              <Icon name="save" size={20}/>
+                            </button>
+                            <button 
+                              onClick={() => setProjetEnEdition(null)}
+                              className="p-2 text-slate-600 hover:bg-slate-100 rounded"
+                              title="Annuler"
+                            >
+                              <Icon name="x" size={20}/>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={() => setProjetEnEdition(item.id)}
+                              className="p-2 text-blue-600 hover:bg-blue-100 rounded"
+                              title="Modifier"
+                            >
+                              <Icon name="edit" size={20}/>
+                            </button>
+                            <button 
+                              onClick={() => supprimerEntree(item.id)}
+                              className="p-2 text-red-600 hover:bg-red-100 rounded"
+                              title="Supprimer"
+                            >
+                              <Icon name="trash" size={20}/>
+                            </button>
+                          </>
+                        )}
+                        <button className="p-2 text-slate-400 hover:bg-slate-100 rounded">
+                          <Icon name="chevron-right" size={20}/>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="p-4 border-t flex justify-center">
+            <button 
+              onClick={() => setShowModificationHeuresModal(false)}
+              className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full text-lg"
+            >
+              Sortir
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // === MODAL COÛT D'INSTALLATION ===
+  const CoutInstallationModal = () => {
+    if (!showCoutInstallationModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-600 rounded-2xl shadow-2xl w-full max-w-md p-8">
+          <h2 className="text-xl font-bold text-white text-center mb-6 underline">
+            Modification du coût d'installation
+          </h2>
+          
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <label className="text-white text-xl">Coût d'installation:</label>
+            <input 
+              type="number"
+              defaultValue={coutHoraireInstallation}
+              id="nouveau-cout-installation"
+              className="w-24 px-4 py-2 rounded-lg text-xl text-center"
+              disabled={!estDirecteur}
+            />
+            <span className="text-white text-xl">$/h</span>
+          </div>
+          
+          {!estDirecteur && (
+            <p className="text-yellow-300 text-center text-sm mb-4">
+              ⚠️ Seul le directeur peut modifier ce paramètre
+            </p>
+          )}
+          
+          <div className="flex justify-center gap-4">
+            <button 
+              onClick={() => setShowCoutInstallationModal(false)}
+              className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full"
+            >
+              Annuler
+            </button>
+            {estDirecteur && (
+              <button 
+                onClick={() => {
+                  const nouveauCout = parseFloat(document.getElementById('nouveau-cout-installation').value);
+                  if (nouveauCout > 0) {
+                    setCoutHoraireInstallation(nouveauCout);
+                  }
+                  setShowCoutInstallationModal(false);
+                }}
+                className="px-8 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-full"
+              >
+                Modifier
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // === RENDU PRINCIPAL ===
+  return (
+    <div className="space-y-6">
+      {/* Modals */}
+      <EntreeHeuresModal />
+      <ModificationHeuresModal />
+      <CoutInstallationModal />
+
+      {/* Header avec logo et boutons */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg">
+            <Icon name="chevron-left" size={28}/>
+          </button>
+          <h1 className="text-2xl font-bold text-white">Rentabilité des installations</h1>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => setShowEntreeHeuresModal(true)}
+            className="flex flex-col items-center p-3 hover:bg-slate-700 rounded-lg text-white"
+          >
+            <Icon name="check-square" size={24}/>
+            <span className="text-xs mt-1">Entrée d'heures</span>
+          </button>
+          <button 
+            onClick={() => setShowModificationHeuresModal(true)}
+            className="flex flex-col items-center p-3 hover:bg-slate-700 rounded-lg text-white"
+          >
+            <Icon name="edit" size={24}/>
+            <span className="text-xs mt-1">Modifier des entrées</span>
+          </button>
+          <button 
+            onClick={() => setShowCoutInstallationModal(true)}
+            className="flex flex-col items-center p-3 hover:bg-slate-700 rounded-lg text-white"
+          >
+            <Icon name="file" size={24}/>
+            <span className="text-xs mt-1">Coût d'installation</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Filtres et Statistiques */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="flex flex-wrap items-end gap-6">
+          {/* Filtres */}
+          <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1"># Projet</label>
+              <input 
+                type="text"
+                value={filtreProjet}
+                onChange={(e) => setFiltreProjet(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Rechercher..."
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Client</label>
+              <input 
+                type="text"
+                value={filtreClient}
+                onChange={(e) => setFiltreClient(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                placeholder="Rechercher..."
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Date début</label>
+              <input 
+                type="date"
+                value={filtreDateDebut}
+                onChange={(e) => setFiltreDateDebut(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Date fin</label>
+              <input 
+                type="date"
+                value={filtreDateFin}
+                onChange={(e) => setFiltreDateFin(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+              />
+            </div>
+          </div>
+          
+          {/* Statistiques */}
+          <div className="flex items-center gap-6 bg-slate-50 px-6 py-4 rounded-xl">
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Nombre d'installation:</p>
+              <p className="text-2xl font-bold text-slate-800">{stats.nombreInstallations}</p>
+            </div>
+            <div className="w-px h-12 bg-slate-300"></div>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">% de Rentabilité &gt; 20%:</p>
+              <p className="text-2xl font-bold text-slate-800">{stats.rentabiliteSup20}</p>
+            </div>
+            <div className="w-px h-12 bg-slate-300"></div>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Moyenne en %:</p>
+              <p className="text-2xl font-bold text-slate-800">{stats.moyenneRentabilite.toFixed(2)}</p>
+            </div>
+            <div className="w-px h-12 bg-slate-300"></div>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Coût horaire:</p>
+              <p className="text-2xl font-bold text-blue-600">{coutHoraireInstallation}$</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tableau de rentabilité */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-800 text-white">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold"># Projet</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold">Client</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold">Vente Installation $</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold">Date début<br/>Date fin</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold">Nombre d'heures</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold">Coût installation</th>
+                <th className="px-6 py-4 text-center text-sm font-semibold">Rentabilité %</th>
+                <th className="px-4 py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {donneesFiltrees.map(item => {
+                const coutInstallation = calculerCoutInstallation(item.heuresReelles);
+                const rentabilite = calculerRentabilite(item.venteInstallation, item.heuresReelles);
+                
+                return (
+                  <tr key={item.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 font-medium text-slate-800">{item.numProjet}</td>
+                    <td className="px-6 py-4 text-slate-600">{item.client}</td>
+                    <td className="px-6 py-4 text-center font-medium">{item.venteInstallation.toLocaleString('fr-CA', { minimumFractionDigits: 2 })}</td>
+                    <td className="px-6 py-4 text-center text-sm">
+                      <div>{formaterDate(item.dateDebut)}</div>
+                      <div>{formaterDate(item.dateFin)}</div>
+                    </td>
+                    <td className="px-6 py-4 text-center font-bold text-lg">{item.heuresReelles.toString().replace('.', ',')}</td>
+                    <td className="px-6 py-4 text-center font-medium">{coutInstallation.toLocaleString('fr-CA', { minimumFractionDigits: 1 })}</td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-block min-w-[80px] px-4 py-2 rounded-lg font-bold text-lg ${getCouleurRentabilite(rentabilite)}`}>
+                        {rentabilite.toFixed(2).replace('.', ',')}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg">
+                        <Icon name="chevron-right" size={24}/>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        
+        {donneesFiltrees.length === 0 && (
+          <div className="p-12 text-center">
+            <Icon name="search" size={48} className="mx-auto mb-4 text-slate-300"/>
+            <p className="text-slate-500">Aucune installation trouvée avec ces filtres</p>
+          </div>
+        )}
+      </div>
+
+      {/* Légende des couleurs */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+        <p className="text-sm font-semibold text-slate-600 mb-3">Légende de rentabilité:</p>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-emerald-500"></span>
+            <span className="text-sm text-slate-600">≥ 50% Excellent</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-green-500"></span>
+            <span className="text-sm text-slate-600">≥ 30% Très bon</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-lime-500"></span>
+            <span className="text-sm text-slate-600">≥ 20% Bon</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-yellow-500"></span>
+            <span className="text-sm text-slate-600">≥ 10% Acceptable</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-orange-500"></span>
+            <span className="text-sm text-slate-600">≥ 0% Faible</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded bg-red-500"></span>
+            <span className="text-sm text-slate-600">&lt; 0% Perte</span>
+          </div>
+        </div>
       </div>
     </div>
   );
-
+};
   // === ATTENTES ===
   const Attentes = () => (
     <div className="space-y-6">
