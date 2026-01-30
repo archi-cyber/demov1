@@ -7715,53 +7715,757 @@ const Rentabilite = () => {
   );
 };
   // === ATTENTES ===
-  const Attentes = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Attentes</h1>
-          <p className="text-slate-500 mt-1">Suivi des attentes clients et représentants</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Icon name="mail" size={16}/>Courriel automatique chaque lundi
-        </div>
-      </div>
-      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
-        <button onClick={() => setAttenteTab('clients')} className={`px-5 py-2.5 rounded-lg font-medium ${attenteTab === 'clients' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-          Attentes clients ({attentes.clients.length})
-        </button>
-        <button onClick={() => setAttenteTab('representants')} className={`px-5 py-2.5 rounded-lg font-medium ${attenteTab === 'representants' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-          Attentes représentants ({attentes.representants.length})
-        </button>
-      </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden divide-y divide-slate-100">
-        {attenteTab === 'clients' && attentes.clients.map(item => (
-          <div key={item.id} className="p-4 hover:bg-slate-50">
-            <div className="flex justify-between items-start">
+  // === ATTENTES ===
+const Attentes = () => {
+  // États pour les filtres
+  const [filtreRepresentant, setFiltreRepresentant] = useState('');
+  const [showRepresentantDropdown, setShowRepresentantDropdown] = useState(false);
+  const [selectedRepresentants, setSelectedRepresentants] = useState([]);
+  
+  // État pour le détail d'une commande
+  const [commandeDetaillee, setCommandeDetaillee] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  
+  // État pour l'envoi automatique
+  const [envoiAutoLundi, setEnvoiAutoLundi] = useState(true);
+  const [showConfirmEnvoi, setShowConfirmEnvoi] = useState(false);
+  
+  // Liste des représentants avec leurs emails
+  const representantsList = [
+    { id: 1, initiales: 'D.D', nom: 'Daniel Doré', email: 'd.dore@rampesgardex.com' },
+    { id: 2, initiales: 'M.B', nom: 'Martin Boiteau', email: 'martin.boiteau@rampesgardex.com' },
+    { id: 3, initiales: 'G.D.', nom: 'Guy Drolet', email: 'guy.drolet@rampesgardex.com' },
+    { id: 4, initiales: 'Y.G', nom: 'Yves Gosselin', email: 'yves.gosselin@rampesgardex.com' },
+  ];
+  
+  // Données des commandes en attente (enrichies avec plus de détails)
+  const [commandesEnAttente, setCommandesEnAttente] = useState([
+    { 
+      id: 1, 
+      numProjet: '241088', 
+      representant: 'D.D', 
+      client: 'Les Projets Meraki', 
+      dateEntree: '2024-12-02',
+      datePrevue: '2026-04-26',
+      service: 'Installation',
+      mesure: '√',
+      plan: '√',
+      envoyeProduction: '√',
+      productionTerminee: '√',
+      termine: 'At.C',
+      dateDernierEnvoi: '2026-01-21',
+      attenteEnvoyee: true,
+      notes: 'Attente confirmation de la pente avant de commander les verres (04 déc.)\n3-1/2" de pente sur frâme lors des mesures / Mettre en attente pour le printemps 31-01.',
+      typeAttente: 'client',
+      details: {
+        adresse: '123 Rue des Érables, Québec',
+        telephone: '418-555-1234',
+        piedsLineaires: 45,
+        couleur: 'Noir',
+        modele: 'Classique'
+      }
+    },
+    { 
+      id: 2, 
+      numProjet: '250062-3', 
+      representant: 'D.D', 
+      client: 'Drolet construction', 
+      dateEntree: '2025-02-07',
+      datePrevue: '2026-04-26',
+      service: 'Installation',
+      mesure: '√',
+      plan: 'N/A',
+      envoyeProduction: 'N/A',
+      productionTerminee: 'N/A',
+      termine: 'At.C',
+      dateDernierEnvoi: '2026-01-21',
+      attenteEnvoyee: true,
+      notes: 'mesuré 2/09 attente couleur\ndossier remis a Daniel\ndossier remis a dan pour approbation grandeur de fibres vet couleur',
+      typeAttente: 'client',
+      details: {
+        adresse: '456 Boul. Industriel, Lévis',
+        telephone: '418-555-5678',
+        piedsLineaires: 120,
+        couleur: 'En attente',
+        modele: 'Commercial'
+      }
+    },
+    { 
+      id: 3, 
+      numProjet: '250100', 
+      representant: 'D.D', 
+      client: 'Const. Couture & Tanguay', 
+      dateEntree: '2025-03-13',
+      datePrevue: '2026-04-26',
+      service: 'Installation',
+      mesure: 'At.C',
+      plan: '',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      dateDernierEnvoi: '2026-01-21',
+      attenteEnvoyee: false,
+      notes: '',
+      typeAttente: 'client',
+      details: {
+        adresse: '789 Rue Principale, Beauport',
+        telephone: '418-555-9012',
+        piedsLineaires: 85,
+        couleur: 'Blanc',
+        modele: 'Moderne'
+      }
+    },
+    { 
+      id: 4, 
+      numProjet: '250101', 
+      representant: 'G.D.', 
+      client: 'Jean-Guy Pelletier', 
+      dateEntree: '2025-03-14',
+      datePrevue: '2026-04-26',
+      service: 'Installation',
+      mesure: 'At.C',
+      plan: '',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      dateDernierEnvoi: '2025-12-15',
+      attenteEnvoyee: false,
+      notes: 'Aviser Guy pour les mesures',
+      typeAttente: 'representant',
+      details: {
+        adresse: '321 Chemin du Lac, Lac-Beauport',
+        telephone: '418-555-3456',
+        piedsLineaires: 35,
+        couleur: 'Gris',
+        modele: 'Classique'
+      }
+    },
+    { 
+      id: 5, 
+      numProjet: '250187', 
+      representant: 'D.D', 
+      client: 'Dalcon', 
+      dateEntree: '2025-04-16',
+      datePrevue: '2026-04-26',
+      service: 'Installation',
+      mesure: 'At.C',
+      plan: '',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      dateDernierEnvoi: '2026-01-30',
+      attenteEnvoyee: true,
+      notes: 'Prévue automne 2025',
+      typeAttente: 'client',
+      details: {
+        adresse: '555 Ave Commerciale, Ste-Foy',
+        telephone: '418-555-7890',
+        piedsLineaires: 200,
+        couleur: 'Noir',
+        modele: 'Commercial'
+      }
+    },
+    { 
+      id: 6, 
+      numProjet: '250205', 
+      representant: 'M.B', 
+      client: 'Construction ABC', 
+      dateEntree: '2025-05-01',
+      datePrevue: '2026-05-15',
+      service: 'Installation',
+      mesure: '√',
+      plan: 'At.C',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      dateDernierEnvoi: '',
+      attenteEnvoyee: false,
+      notes: 'En attente approbation du plan par le client',
+      typeAttente: 'client',
+      details: {
+        adresse: '999 Rue du Commerce, Charlesbourg',
+        telephone: '418-555-1111',
+        piedsLineaires: 60,
+        couleur: 'Brun',
+        modele: 'Rustique'
+      }
+    },
+    { 
+      id: 7, 
+      numProjet: '250220', 
+      representant: 'Y.G', 
+      client: 'Résidences du Fleuve', 
+      dateEntree: '2025-05-10',
+      datePrevue: '2026-06-01',
+      service: 'Installation',
+      mesure: 'At.C',
+      plan: '',
+      envoyeProduction: '',
+      productionTerminee: '',
+      termine: '',
+      dateDernierEnvoi: '2026-01-15',
+      attenteEnvoyee: true,
+      notes: 'Attente confirmation budget du client',
+      typeAttente: 'representant',
+      details: {
+        adresse: '777 Boul. du Fleuve, Lévis',
+        telephone: '418-555-2222',
+        piedsLineaires: 150,
+        couleur: 'Charbon',
+        modele: 'Luxe'
+      }
+    },
+  ]);
+
+  // Statistiques
+  const stats = {
+    commandesEnAttentes: commandesEnAttente.length,
+    commandesTotales: 184, // À connecter à votre vraie donnée
+  };
+
+  // Filtrer les commandes
+  const commandesFiltrees = commandesEnAttente.filter(cmd => {
+    if (selectedRepresentants.length === 0) return true;
+    return selectedRepresentants.includes(cmd.representant);
+  });
+
+  // Compter les attentes par représentant
+  const getAttentesParRepresentant = (initiales) => {
+    return commandesEnAttente.filter(cmd => cmd.representant === initiales).length;
+  };
+
+  // Sélectionner/désélectionner un représentant
+  const toggleRepresentant = (initiales) => {
+    if (selectedRepresentants.includes(initiales)) {
+      setSelectedRepresentants(selectedRepresentants.filter(r => r !== initiales));
+    } else {
+      setSelectedRepresentants([...selectedRepresentants, initiales]);
+    }
+  };
+
+  // Retirer un représentant du filtre
+  const retirerRepresentant = (initiales) => {
+    setSelectedRepresentants(selectedRepresentants.filter(r => r !== initiales));
+  };
+
+  // Obtenir la couleur du statut
+  const getStatutCouleur = (valeur) => {
+    if (valeur === '√') return 'text-slate-800';
+    if (valeur === 'N/A') return 'text-slate-500';
+    if (valeur === 'At.C') return 'bg-sky-200 text-sky-800 px-2 py-1 rounded';
+    return 'text-slate-400';
+  };
+
+  // Obtenir la couleur du badge service
+  const getServiceCouleur = (service) => {
+    switch(service) {
+      case 'Installation': return 'bg-red-500 text-white';
+      case 'Livraison': return 'bg-blue-500 text-white';
+      case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
+      default: return 'bg-slate-500 text-white';
+    }
+  };
+
+  // Envoyer les attentes à un représentant par email
+  const envoyerAttentesRepresentant = (representant) => {
+    const rep = representantsList.find(r => r.initiales === representant || r.initiales === representant);
+    if (!rep) {
+      alert('Représentant non trouvé');
+      return;
+    }
+
+    const attentesRep = commandesEnAttente.filter(cmd => cmd.representant === representant);
+    
+    if (attentesRep.length === 0) {
+      alert(`Aucune attente pour ${rep.nom}`);
+      return;
+    }
+
+    // Construire le contenu de l'email
+    let contenuEmail = `Bonjour ${rep.nom},\n\nVoici la liste de vos commandes en attente:\n\n`;
+    
+    attentesRep.forEach(cmd => {
+      contenuEmail += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+      contenuEmail += `📋 Projet #${cmd.numProjet}\n`;
+      contenuEmail += `👤 Client: ${cmd.client}\n`;
+      contenuEmail += `📍 Adresse: ${cmd.details.adresse}\n`;
+      contenuEmail += `📞 Téléphone: ${cmd.details.telephone}\n`;
+      contenuEmail += `📅 Date d'entrée: ${cmd.dateEntree}\n`;
+      contenuEmail += `📅 Date prévue: ${cmd.datePrevue}\n`;
+      contenuEmail += `🔧 Service: ${cmd.service}\n`;
+      contenuEmail += `📏 Pieds linéaires: ${cmd.details.piedsLineaires}\n`;
+      contenuEmail += `🎨 Couleur: ${cmd.details.couleur}\n`;
+      contenuEmail += `📝 Notes: ${cmd.notes || 'Aucune'}\n\n`;
+    });
+    
+    contenuEmail += `\nMerci de faire le suivi de ces dossiers.\n\nCordialement,\nRampes Gardex`;
+
+    console.log(`📧 EMAIL ENVOYÉ À: ${rep.email}`);
+    console.log(contenuEmail);
+
+    // Mettre à jour le statut d'envoi
+    setCommandesEnAttente(commandesEnAttente.map(cmd => 
+      cmd.representant === representant 
+        ? { ...cmd, attenteEnvoyee: true, dateDernierEnvoi: new Date().toISOString().split('T')[0] }
+        : cmd
+    ));
+
+    alert(`✅ Email envoyé à ${rep.nom} (${rep.email})\n\n${attentesRep.length} commande(s) en attente incluse(s).`);
+  };
+
+  // Envoyer toutes les attentes à tous les représentants
+  const envoyerToutesAttentes = () => {
+    const representantsAvecAttentes = [...new Set(commandesEnAttente.map(cmd => cmd.representant))];
+    
+    representantsAvecAttentes.forEach(rep => {
+      envoyerAttentesRepresentant(rep);
+    });
+
+    alert(`✅ Emails envoyés à ${representantsAvecAttentes.length} représentant(s)`);
+    setShowConfirmEnvoi(false);
+  };
+
+  // Simuler l'envoi automatique du lundi
+  const verifierEnvoiAutomatique = () => {
+    const aujourdhui = new Date();
+    if (aujourdhui.getDay() === 1 && envoiAutoLundi) { // 1 = Lundi
+      console.log('📅 C\'est lundi! Envoi automatique des attentes...');
+      envoyerToutesAttentes();
+    }
+  };
+
+  // Ouvrir le détail d'une commande
+  const ouvrirDetail = (commande) => {
+    setCommandeDetaillee(commande);
+    setShowDetailModal(true);
+  };
+
+  // Modal de détail de commande
+  const DetailCommandeModal = () => {
+    if (!showDetailModal || !commandeDetaillee) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6 border-b border-slate-200 bg-slate-800 text-white">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="font-semibold text-slate-800">{item.client}</p>
-                <p className="text-slate-600 mt-1">{item.raison}</p>
-                <p className="text-sm text-slate-500 mt-2">Représentant: {item.representant}</p>
+                <h2 className="text-2xl font-bold">Détail Commande #{commandeDetaillee.numProjet}</h2>
+                <p className="text-slate-300">{commandeDetaillee.client}</p>
               </div>
-              <span className="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">Depuis {item.depuis}</span>
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 hover:bg-slate-700 rounded-lg"
+              >
+                <Icon name="x" size={24}/>
+              </button>
             </div>
           </div>
-        ))}
-        {attenteTab === 'representants' && attentes.representants.map(item => (
-          <div key={item.id} className="p-4 hover:bg-slate-50">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="font-semibold text-slate-800">{item.representant}</p>
-                <p className="text-slate-600 mt-1">{item.raison}</p>
-                <p className="text-sm text-slate-500 mt-2">Commande: {item.commande}</p>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Informations générales */}
+            <div className="grid grid-cols-2 gap-6">
+              <div className="bg-slate-50 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Icon name="user" size={18}/>
+                  Informations client
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <p><span className="text-slate-500">Client:</span> <strong>{commandeDetaillee.client}</strong></p>
+                  <p><span className="text-slate-500">Adresse:</span> {commandeDetaillee.details.adresse}</p>
+                  <p><span className="text-slate-500">Téléphone:</span> {commandeDetaillee.details.telephone}</p>
+                  <p><span className="text-slate-500">Représentant:</span> <strong>{commandeDetaillee.representant}</strong></p>
+                </div>
               </div>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Depuis {item.depuis}</span>
+
+              <div className="bg-slate-50 rounded-xl p-4">
+                <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <Icon name="calendar" size={18}/>
+                  Dates
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <p><span className="text-slate-500">Date d'entrée:</span> <strong>{commandeDetaillee.dateEntree}</strong></p>
+                  <p><span className="text-slate-500">Date prévue:</span> <strong>{commandeDetaillee.datePrevue}</strong></p>
+                  <p><span className="text-slate-500">Dernier envoi:</span> {commandeDetaillee.dateDernierEnvoi || 'Jamais'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Détails techniques */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <Icon name="tool" size={18}/>
+                Détails techniques
+              </h3>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <p><span className="text-slate-500">Service:</span> <span className={`px-2 py-1 rounded ${getServiceCouleur(commandeDetaillee.service)}`}>{commandeDetaillee.service}</span></p>
+                <p><span className="text-slate-500">Pieds linéaires:</span> <strong>{commandeDetaillee.details.piedsLineaires}</strong></p>
+                <p><span className="text-slate-500">Modèle:</span> <strong>{commandeDetaillee.details.modele}</strong></p>
+                <p><span className="text-slate-500">Couleur:</span> <strong>{commandeDetaillee.details.couleur}</strong></p>
+              </div>
+            </div>
+
+            {/* Statut de progression */}
+            <div className="bg-slate-50 rounded-xl p-4">
+              <h3 className="font-semibold text-slate-800 mb-3">Progression</h3>
+              <div className="grid grid-cols-5 gap-2 text-center text-sm">
+                <div className={`p-3 rounded-lg ${commandeDetaillee.mesure === '√' ? 'bg-green-100 text-green-800' : commandeDetaillee.mesure === 'At.C' ? 'bg-sky-100 text-sky-800' : 'bg-slate-100'}`}>
+                  <p className="font-semibold">Mesure</p>
+                  <p className="text-lg">{commandeDetaillee.mesure || '-'}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${commandeDetaillee.plan === '√' ? 'bg-green-100 text-green-800' : commandeDetaillee.plan === 'N/A' ? 'bg-slate-200' : 'bg-slate-100'}`}>
+                  <p className="font-semibold">Plan</p>
+                  <p className="text-lg">{commandeDetaillee.plan || '-'}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${commandeDetaillee.envoyeProduction === '√' ? 'bg-green-100 text-green-800' : commandeDetaillee.envoyeProduction === 'N/A' ? 'bg-slate-200' : 'bg-slate-100'}`}>
+                  <p className="font-semibold">Envoyé Prod.</p>
+                  <p className="text-lg">{commandeDetaillee.envoyeProduction || '-'}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${commandeDetaillee.productionTerminee === '√' ? 'bg-green-100 text-green-800' : commandeDetaillee.productionTerminee === 'N/A' ? 'bg-slate-200' : 'bg-slate-100'}`}>
+                  <p className="font-semibold">Prod. Terminée</p>
+                  <p className="text-lg">{commandeDetaillee.productionTerminee || '-'}</p>
+                </div>
+                <div className={`p-3 rounded-lg ${commandeDetaillee.termine === '√' ? 'bg-green-100 text-green-800' : commandeDetaillee.termine === 'At.C' ? 'bg-sky-100 text-sky-800' : 'bg-slate-100'}`}>
+                  <p className="font-semibold">Terminé</p>
+                  <p className="text-lg">{commandeDetaillee.termine || '-'}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notes */}
+            {commandeDetaillee.notes && (
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2">
+                  <Icon name="file" size={18}/>
+                  Notes
+                </h3>
+                <p className="text-sm text-slate-700 whitespace-pre-line">{commandeDetaillee.notes}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${commandeDetaillee.attenteEnvoyee ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
+                {commandeDetaillee.attenteEnvoyee ? '✓ Envoyée' : '⏳ Non envoyée'}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  envoyerAttentesRepresentant(commandeDetaillee.representant);
+                  setShowDetailModal(false);
+                }}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2"
+              >
+                <Icon name="mail" size={16}/>
+                Envoyer au représentant
+              </button>
+              <button 
+                onClick={() => setShowDetailModal(false)}
+                className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100"
+              >
+                Fermer
+              </button>
             </div>
           </div>
-        ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Modal de confirmation d'envoi
+  const ConfirmEnvoiModal = () => {
+    if (!showConfirmEnvoi) return null;
+
+    const representantsAvecAttentes = [...new Set(
+      (selectedRepresentants.length > 0 ? commandesFiltrees : commandesEnAttente)
+        .map(cmd => cmd.representant)
+    )];
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <h2 className="text-xl font-bold text-slate-800 mb-4">Confirmer l'envoi</h2>
+          
+          <p className="text-slate-600 mb-4">
+            Vous allez envoyer les attentes à {representantsAvecAttentes.length} représentant(s):
+          </p>
+          
+          <ul className="bg-slate-50 rounded-lg p-4 mb-6 space-y-2">
+            {representantsAvecAttentes.map(rep => {
+              const repInfo = representantsList.find(r => r.initiales === rep);
+              const nbAttentes = (selectedRepresentants.length > 0 ? commandesFiltrees : commandesEnAttente)
+                .filter(cmd => cmd.representant === rep).length;
+              return (
+                <li key={rep} className="flex justify-between items-center text-sm">
+                  <span><strong>{repInfo?.nom || rep}</strong> ({repInfo?.email})</span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded">{nbAttentes} attente(s)</span>
+                </li>
+              );
+            })}
+          </ul>
+          
+          <div className="flex justify-end gap-3">
+            <button 
+              onClick={() => setShowConfirmEnvoi(false)}
+              className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50"
+            >
+              Annuler
+            </button>
+            <button 
+              onClick={() => {
+                if (selectedRepresentants.length > 0) {
+                  selectedRepresentants.forEach(rep => envoyerAttentesRepresentant(rep));
+                  alert(`✅ Emails envoyés à ${selectedRepresentants.length} représentant(s)`);
+                } else {
+                  envoyerToutesAttentes();
+                }
+                setShowConfirmEnvoi(false);
+              }}
+              className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg flex items-center gap-2"
+            >
+              <Icon name="mail" size={16}/>
+              Confirmer l'envoi
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // === RENDU PRINCIPAL ===
+  return (
+    <div className="space-y-4">
+      {/* Modals */}
+      <DetailCommandeModal />
+      <ConfirmEnvoiModal />
+
+      {/* Header */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg">
+            <Icon name="chevron-left" size={28}/>
+          </button>
+          <h1 className="text-3xl font-bold text-white">ATTENTES</h1>
+        </div>
+        
+        {/* Statistiques */}
+        <div className="flex items-center gap-4 text-white text-sm">
+          <div className="text-right">
+            <p className="text-slate-400">Commandes en attentes</p>
+            <p className="text-2xl font-bold text-blue-400">{commandesFiltrees.length}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-slate-400">Commandes totales</p>
+            <p className="text-2xl font-bold">{stats.commandesTotales}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Barre de filtres et actions */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Filtre par représentant */}
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            {/* Tags des représentants sélectionnés */}
+            {selectedRepresentants.map(rep => (
+              <span key={rep} className="flex items-center gap-1 bg-slate-200 px-3 py-1 rounded-lg text-sm">
+                {rep}
+                <button onClick={() => retirerRepresentant(rep)} className="hover:text-red-600">
+                  <Icon name="x" size={14}/>
+                </button>
+              </span>
+            ))}
+            
+            {/* Dropdown de sélection */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowRepresentantDropdown(!showRepresentantDropdown)}
+                className="flex items-center gap-2 px-4 py-2 border border-slate-300 rounded-lg bg-white hover:bg-slate-50"
+              >
+                <span className="text-sm text-slate-600">Rechercher des représentants</span>
+                <Icon name="chevron-down" size={16}/>
+              </button>
+              
+              {showRepresentantDropdown && (
+                <div className="absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-20 min-w-[280px]">
+                  {representantsList.map(rep => (
+                    <button
+                      key={rep.id}
+                      onClick={() => {
+                        toggleRepresentant(rep.initiales);
+                        setShowRepresentantDropdown(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left hover:bg-slate-50 flex items-center justify-between ${
+                        selectedRepresentants.includes(rep.initiales) ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <div>
+                        <p className="font-semibold">{rep.initiales}</p>
+                        <p className="text-sm text-slate-500">{rep.email}</p>
+                      </div>
+                      <span className="text-xs bg-slate-100 px-2 py-1 rounded">
+                        {getAttentesParRepresentant(rep.initiales)} attente(s)
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Bouton d'envoi et options */}
+        <div className="flex items-center gap-4">
+          {/* Option envoi automatique */}
+          <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <input 
+              type="checkbox"
+              checked={envoiAutoLundi}
+              onChange={(e) => setEnvoiAutoLundi(e.target.checked)}
+              className="w-4 h-4 rounded"
+            />
+            <Icon name="mail" size={14}/>
+            Envoi auto. chaque lundi
+          </label>
+          
+          {/* Bouton d'envoi */}
+          <button 
+            onClick={() => setShowConfirmEnvoi(true)}
+            className="px-6 py-3 bg-teal-500 hover:bg-teal-600 text-white font-semibold rounded-lg flex items-center gap-2 shadow-lg"
+          >
+            <Icon name="mail" size={18}/>
+            Envoie des attentes client aux représentants
+          </button>
+        </div>
+      </div>
+
+      {/* Tableau des attentes */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-100">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold text-slate-700"># Projet</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-700">Rep</th>
+                <th className="px-4 py-3 text-left font-semibold text-slate-700">Client</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Date d'entrée<br/>Date prévue</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Service</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Mesure</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Plan</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Envoyé en<br/>Production</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Production<br/>terminée</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Terminé</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Date du<br/>dernier envoi</th>
+                <th className="px-4 py-3 text-center font-semibold text-slate-700">Statut</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {commandesFiltrees.map(cmd => (
+                <tr 
+                  key={cmd.id} 
+                  className="hover:bg-slate-50 cursor-pointer"
+                  onClick={() => ouvrirDetail(cmd)}
+                >
+                  <td className="px-4 py-3 font-bold text-slate-800">{cmd.numProjet}</td>
+                  <td className="px-4 py-3 font-semibold">{cmd.representant}</td>
+                  <td className="px-4 py-3">
+                    <div>
+                      <p className="font-medium">{cmd.client}</p>
+                      {cmd.notes && (
+                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">{cmd.notes.split('\n')[0]}</p>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="inline-block border border-slate-300 rounded overflow-hidden">
+                      <div className="px-3 py-1 bg-white font-medium">{cmd.dateEntree}</div>
+                      <div className="px-3 py-1 bg-slate-50 text-slate-600">{cmd.datePrevue}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-3 py-1 rounded text-xs font-bold ${getServiceCouleur(cmd.service)}`}>
+                      {cmd.service}
+                    </span>
+                  </td>
+                  <td className={`px-4 py-3 text-center font-semibold ${getStatutCouleur(cmd.mesure)}`}>
+                    {cmd.mesure || '-'}
+                  </td>
+                  <td className={`px-4 py-3 text-center font-semibold ${getStatutCouleur(cmd.plan)}`}>
+                    {cmd.plan || '-'}
+                  </td>
+                  <td className={`px-4 py-3 text-center font-semibold ${getStatutCouleur(cmd.envoyeProduction)}`}>
+                    {cmd.envoyeProduction || '-'}
+                  </td>
+                  <td className={`px-4 py-3 text-center font-semibold ${getStatutCouleur(cmd.productionTerminee)}`}>
+                    {cmd.productionTerminee || '-'}
+                  </td>
+                  <td className={`px-4 py-3 text-center font-semibold ${getStatutCouleur(cmd.termine)}`}>
+                    {cmd.termine || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-center text-slate-600">
+                    {cmd.dateDernierEnvoi || '-'}
+                  </td>
+                  <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        if (!cmd.attenteEnvoyee) {
+                          envoyerAttentesRepresentant(cmd.representant);
+                        }
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                        cmd.attenteEnvoyee 
+                          ? 'bg-green-100 text-green-800 cursor-default' 
+                          : 'bg-orange-400 text-white hover:bg-orange-500 cursor-pointer'
+                      }`}
+                    >
+                      {cmd.attenteEnvoyee ? '✓ Envoyée' : 'Envoyer'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {commandesFiltrees.length === 0 && (
+          <div className="p-12 text-center">
+            <Icon name="inbox" size={48} className="mx-auto mb-4 text-slate-300"/>
+            <p className="text-slate-500">Aucune commande en attente pour ce(s) représentant(s)</p>
+          </div>
+        )}
+      </div>
+
+      {/* Légende */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <p className="text-sm font-semibold text-slate-600 mb-3">Légende:</p>
+        <div className="flex flex-wrap items-center gap-6 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="font-bold">√</span>
+            <span className="text-slate-600">Complété</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-sky-200 text-sky-800 px-2 py-0.5 rounded text-xs font-bold">At.C</span>
+            <span className="text-slate-600">Attente Client</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-500 font-semibold">N/A</span>
+            <span className="text-slate-600">Non applicable</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded text-xs font-bold">✓ Envoyée</span>
+            <span className="text-slate-600">Attente envoyée par email</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="bg-orange-400 text-white px-2 py-0.5 rounded text-xs font-bold">Envoyer</span>
+            <span className="text-slate-600">Attente non envoyée</span>
+          </div>
+        </div>
       </div>
     </div>
   );
+};
 
   // === DÉLAIS ===
   const Delais = () => (
