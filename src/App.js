@@ -6973,44 +6973,51 @@ const Inventaire = () => {
 };
 
   // === ACHATS ===
-  // === ACHATS & DÉLAIS ===
+ // === ACHATS & DÉLAIS (MISE À JOUR) ===
 const Achats = () => {
   const [achatsTab, setAchatsTab] = useState('achats');
+  
+  // === TYPES D'ACHATS (depuis la création de commande) ===
+  const typesAchats = ['Verre', 'Peinture', 'Fibre', 'Limon', 'Colonne', 'Attache', 'Plancher aluminium'];
   
   // === ÉTATS ACHATS ===
   const [filtreClient, setFiltreClient] = useState('');
   const [filtreStatutAchat, setFiltreStatutAchat] = useState('');
   const [filtreTypeCommande, setFiltreTypeCommande] = useState('');
+  const [filtreTypeAchat, setFiltreTypeAchat] = useState('');
   const [rechercheAchat, setRechercheAchat] = useState('');
   const [showAjouterAchatModal, setShowAjouterAchatModal] = useState(false);
   const [showModifierAchatModal, setShowModifierAchatModal] = useState(false);
+  const [showDetailAchatModal, setShowDetailAchatModal] = useState(false);
   const [achatEnEdition, setAchatEnEdition] = useState(null);
+  const [achatSelectionne, setAchatSelectionne] = useState(null);
+  const [showConfirmLivraison, setShowConfirmLivraison] = useState(false);
+  const [achatAValider, setAchatAValider] = useState(null);
   
   const [achatsData, setAchatsData] = useState([
-    { id: 1, numCommande: '250100', client: 'Const. Couture & Tanguay', typeCommande: 'Installation', fournisseur: 'Les Attaches Viscan', article: 'Vis autopercente #14 x 1 1/2"', quantite: 5, unite: 'Boîte de 1000', dateCommande: '2026-01-15', dateLivraisonPrevue: '2026-02-01', montant: 450, statut: 'Livrée', notes: '' },
-    { id: 2, numCommande: '250062-3', client: 'Drolet construction', typeCommande: 'Installation', fournisseur: 'Fonderie Fondalco', article: 'Embout de main classique Blanc', quantite: 20, unite: 'Unité', dateCommande: '2026-01-18', dateLivraisonPrevue: '2026-02-10', montant: 850, statut: 'En transit', notes: 'Attente couleur confirmée' },
-    { id: 3, numCommande: '250187', client: 'Dalcon', typeCommande: 'Installation', fournisseur: 'Euro Architectural Components', article: 'Attache vision bas (Stainless)', quantite: 50, unite: 'Unité', dateCommande: '2026-01-20', dateLivraisonPrevue: '2026-02-15', montant: 2200, statut: 'En attente', notes: 'Commande confirmée' },
-    { id: 4, numCommande: '250205', client: 'Construction ABC', typeCommande: 'Livraison', fournisseur: 'Les Emballages Carrousel', article: 'Pellicule plastique 3" x 1000\'', quantite: 10, unite: 'Rouleau', dateCommande: '2026-01-22', dateLivraisonPrevue: '2026-01-29', montant: 380, statut: 'Livrée', notes: '' },
-    { id: 5, numCommande: '250220', client: 'Résidences du Fleuve', typeCommande: 'Installation', fournisseur: 'Acier Picard', article: 'Aluminium 6063-T5', quantite: 200, unite: 'Pieds', dateCommande: '2026-02-01', dateLivraisonPrevue: '2026-02-20', montant: 4500, statut: 'Commandée', notes: '' },
-    { id: 6, numCommande: '241088', client: 'Les Projets Meraki', typeCommande: 'Installation', fournisseur: 'RICHELIEU', article: 'Bec de cane', quantite: 30, unite: 'Unité', dateCommande: '2026-01-25', dateLivraisonPrevue: '2026-02-05', montant: 1250, statut: 'En transit', notes: 'Livraison partielle possible' },
-    { id: 7, numCommande: '250230', client: 'Habitations Lévis', typeCommande: 'Cueillette', fournisseur: 'Aimé Champagne', article: 'Quincaillerie diverse', quantite: 1, unite: 'Lot', dateCommande: '2026-02-03', dateLivraisonPrevue: '2026-02-05', montant: 650, statut: 'Prête', notes: 'À aller chercher' },
-    { id: 8, numCommande: '250240', client: 'Transport Beaulieu', typeCommande: 'Transport', fournisseur: 'Aluminium PS', article: 'Rampes pré-assemblées', quantite: 15, unite: 'Unité', dateCommande: '2026-02-01', dateLivraisonPrevue: '2026-02-12', montant: 0, statut: 'En attente', notes: 'Transport à planifier' },
+    { id: 1, numCommande: '250927', client: 'Steve Boucher', ville: 'Beauport', typeCommande: 'Livraison', service: 'Livraison', fournisseur: 'Les Attaches Viscan', datePrevue: '2026-02-22', dateEnvoi: '', achatsTypes: { verre: false, peinture: false, fibre: false, limon: false, colonne: false, attache: false, plancherAlu: false }, achatsStatuts: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' }, datesReception: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' }, dateCommande: '2026-01-15', montant: 0, statut: 'En attente', notes: 'dossier redonné à Martin le 29-09, possible changements\nmesuré le 18 sept', structure: false, couleur: '', livree: false, dateLivraison: '' },
+    { id: 2, numCommande: '251158', client: 'Steve Boucher', ville: 'Beauport', typeCommande: 'Livraison', service: 'Livraison', fournisseur: 'Les Emballages Carrousel', datePrevue: '2026-02-22', dateEnvoi: '', achatsTypes: { verre: false, peinture: false, fibre: false, limon: false, colonne: false, attache: false, plancherAlu: false }, achatsStatuts: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' }, datesReception: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' }, dateCommande: '2026-01-18', montant: 0, statut: 'En attente', notes: '', structure: false, couleur: '', livree: false, dateLivraison: '' },
+    { id: 3, numCommande: '250647', client: 'CONSTRUCTION GOSCO', ville: 'St-Raymond', typeCommande: 'Installation', service: 'Installation', fournisseur: 'Fonderie Fondalco', datePrevue: '2026-03-29', dateEnvoi: '', achatsTypes: { verre: false, peinture: false, fibre: true, limon: true, colonne: false, attache: true, plancherAlu: false }, achatsStatuts: { verre: '', peinture: '', fibre: 'Commandé', limon: 'Commandé', colonne: '', attache: 'Commandé', plancherAlu: '' }, datesReception: { verre: '', peinture: '', fibre: '2026-03-15', limon: '2026-03-20', colonne: '', attache: '2026-03-10', plancherAlu: '' }, dateCommande: '2026-02-01', montant: 3200, statut: 'Commandée', notes: 'attente au printemps', structure: false, couleur: '', livree: false, dateLivraison: '' },
+    { id: 4, numCommande: '250683', client: 'Marcel Lebreton', ville: 'Québec', typeCommande: 'Installation', service: 'Installation', fournisseur: 'Euro Architectural Components', datePrevue: '2026-03-29', dateEnvoi: '', achatsTypes: { verre: true, peinture: true, fibre: false, limon: false, colonne: true, attache: false, plancherAlu: false }, achatsStatuts: { verre: 'En transit', peinture: 'Commandé', fibre: '', limon: '', colonne: 'En attente', attache: '', plancherAlu: '' }, datesReception: { verre: '2026-03-10', peinture: '2026-03-12', fibre: '', limon: '', colonne: '2026-03-18', attache: '', plancherAlu: '' }, dateCommande: '2026-01-25', montant: 4800, statut: 'En transit', notes: '', structure: true, couleur: 'Noir', livree: false, dateLivraison: '' },
+    { id: 5, numCommande: '250100', client: 'Const. Couture & Tanguay', ville: 'Beauport', typeCommande: 'Installation', service: 'Installation', fournisseur: 'Acier Picard', datePrevue: '2026-04-15', dateEnvoi: '2026-01-20', achatsTypes: { verre: true, peinture: false, fibre: true, limon: false, colonne: false, attache: true, plancherAlu: true }, achatsStatuts: { verre: 'Reçu', peinture: '', fibre: 'Reçu', limon: '', colonne: '', attache: 'Reçu', plancherAlu: 'Commandé' }, datesReception: { verre: '2026-02-28', peinture: '', fibre: '2026-03-01', limon: '', colonne: '', attache: '2026-02-25', plancherAlu: '2026-03-20' }, dateCommande: '2026-01-15', montant: 5500, statut: 'Commandée', notes: 'Client veut attendre', structure: false, couleur: 'Blanc', livree: false, dateLivraison: '' },
+    { id: 6, numCommande: '250062-3', client: 'Drolet construction', ville: 'Lévis', typeCommande: 'Installation', service: 'Installation', fournisseur: 'Les Attaches Viscan', datePrevue: '2026-05-01', dateEnvoi: '', achatsTypes: { verre: false, peinture: true, fibre: false, limon: true, colonne: true, attache: false, plancherAlu: false }, achatsStatuts: { verre: '', peinture: 'En attente', fibre: '', limon: 'En attente', colonne: 'En attente', attache: '', plancherAlu: '' }, datesReception: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' }, dateCommande: '2026-02-03', montant: 2800, statut: 'En attente', notes: 'Attente couleur', structure: false, couleur: '', livree: false, dateLivraison: '' },
+  ]);
+  
+  // === HISTORIQUE DES ACHATS LIVRÉS ===
+  const [historiqueAchats, setHistoriqueAchats] = useState([
+    { id: 100, numCommande: '241088', client: 'Les Projets Meraki', ville: 'Québec', typeCommande: 'Installation', service: 'Installation', fournisseur: 'RICHELIEU', datePrevue: '2026-01-10', dateEnvoi: '2025-12-15', achatsTypes: { verre: true, peinture: true, fibre: false, limon: false, colonne: false, attache: true, plancherAlu: false }, achatsStatuts: { verre: 'Reçu', peinture: 'Reçu', fibre: '', limon: '', colonne: '', attache: 'Reçu', plancherAlu: '' }, datesReception: { verre: '2026-01-05', peinture: '2026-01-08', fibre: '', limon: '', colonne: '', attache: '2026-01-03', plancherAlu: '' }, dateCommande: '2025-12-01', montant: 3800, statut: 'Livrée', notes: '', structure: false, couleur: 'Noir', livree: true, dateLivraison: '2026-01-10' },
+    { id: 101, numCommande: '250050', client: 'Habitations Lévis', ville: 'Lévis', typeCommande: 'Livraison', service: 'Livraison', fournisseur: 'Aimé Champagne', datePrevue: '2026-01-20', dateEnvoi: '2025-12-20', achatsTypes: { verre: false, peinture: false, fibre: true, limon: true, colonne: false, attache: false, plancherAlu: false }, achatsStatuts: { verre: '', peinture: '', fibre: 'Reçu', limon: 'Reçu', colonne: '', attache: '', plancherAlu: '' }, datesReception: { verre: '', peinture: '', fibre: '2026-01-18', limon: '2026-01-18', colonne: '', attache: '', plancherAlu: '' }, dateCommande: '2025-12-10', montant: 1600, statut: 'Livrée', notes: '', structure: false, couleur: 'Brun', livree: true, dateLivraison: '2026-01-20' },
   ]);
   
   // Formulaire nouvel achat
   const [nouvelAchat, setNouvelAchat] = useState({
-    numCommande: '',
-    client: '',
-    typeCommande: 'Installation',
-    fournisseur: '',
-    article: '',
-    quantite: 0,
-    unite: '',
+    numCommande: '', client: '', ville: '', typeCommande: 'Installation', service: 'Installation', fournisseur: '',
+    datePrevue: '', dateEnvoi: '',
+    achatsTypes: { verre: false, peinture: false, fibre: false, limon: false, colonne: false, attache: false, plancherAlu: false },
+    achatsStatuts: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' },
+    datesReception: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' },
     dateCommande: new Date().toISOString().split('T')[0],
-    dateLivraisonPrevue: '',
-    montant: 0,
-    statut: 'En attente',
-    notes: ''
+    montant: 0, statut: 'En attente', notes: '', structure: false, couleur: '', livree: false, dateLivraison: ''
   });
   
   // === ÉTATS DÉLAIS ===
@@ -7054,10 +7061,10 @@ const Achats = () => {
     { id: 2, nom: 'Aiguisage Rousseau', adresse: '1005, av. Bergeron', codePostal: 'G0S 1Z0', ville: 'St-Agapit', province: 'QC', pays: 'Canada', telephone: '418-888-5646', fax: '418-888-4084', contact: '', email: 'info@aiguisage-rousseau.com', transport: '', delaiMoyen: '3 jours' },
     { id: 3, nom: 'Aimé Champagne', adresse: '2186, Route Lagueux', codePostal: 'G7A 1A7', ville: 'Lévis', province: 'Québec', pays: 'Canada', telephone: '418-831-9960', fax: '418-831-9358', contact: '', email: '', transport: '', delaiMoyen: '4 jours' },
     { id: 4, nom: 'Aluminium PS', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: 'Pierre Denis', email: 'pdenis@psaluminium.com', transport: '', delaiMoyen: '7 jours' },
-    { id: 5, nom: 'Les Attaches Viscan', adresse: '123 Rue Industrielle', codePostal: 'G1K 2L3', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-1234', fax: '', contact: 'Marc Simard', email: 'info@viscan.com', transport: '', delaiMoyen: '3 jours' },
-    { id: 6, nom: 'Les Emballages Carrousel', adresse: '456 Boul. Commerce', codePostal: 'G2J 4R5', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-5678', fax: '', contact: '', email: 'ventes@carrousel.com', transport: '', delaiMoyen: '2 jours' },
+    { id: 5, nom: 'Les Attaches Viscan', adresse: '', codePostal: '', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-1234', fax: '', contact: 'Marc Simard', email: 'info@viscan.com', transport: '', delaiMoyen: '3 jours' },
+    { id: 6, nom: 'Les Emballages Carrousel', adresse: '', codePostal: '', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-5678', fax: '', contact: '', email: 'ventes@carrousel.com', transport: '', delaiMoyen: '2 jours' },
     { id: 7, nom: 'RICHELIEU', adresse: '7900 Henri-Bourassa', codePostal: 'H1E 1P4', ville: 'Montréal', province: 'QC', pays: 'Canada', telephone: '514-555-9999', fax: '', contact: '', email: '', transport: '', delaiMoyen: '4 jours' },
-    { id: 8, nom: 'Fonderie Fondalco', adresse: '890 Rue Métallurgie', codePostal: 'G3A 2B1', ville: 'Trois-Rivières', province: 'QC', pays: 'Canada', telephone: '819-555-3333', fax: '', contact: 'Jean Laforge', email: 'commandes@fondalco.com', transport: '', delaiMoyen: '5 jours' },
+    { id: 8, nom: 'Fonderie Fondalco', adresse: '', codePostal: '', ville: 'Trois-Rivières', province: 'QC', pays: 'Canada', telephone: '819-555-3333', fax: '', contact: 'Jean Laforge', email: 'commandes@fondalco.com', transport: '', delaiMoyen: '5 jours' },
     { id: 9, nom: 'Euro Architectural Components', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: '10 jours' },
   ]);
   
@@ -7065,27 +7072,23 @@ const Achats = () => {
     nom: '', adresse: '', codePostal: '', ville: '', province: 'QC', pays: 'Canada', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: ''
   });
   
-  // Types de commande
+  // Types et statuts
   const typesCommande = ['Installation', 'Livraison', 'Cueillette', 'Transport'];
-  const statutsAchat = ['En attente', 'Commandée', 'En transit', 'Prête', 'Livrée', 'Annulée'];
+  const statutsAchat = ['En attente', 'Commandée', 'En transit', 'Prête', 'Livrée'];
+  const statutsPiece = ['', 'En attente', 'Commandé', 'En transit', 'Reçu'];
   
   // === FONCTIONS UTILITAIRES ===
-  
-  // Calculer la date de livraison à partir des semaines
   const calculerDateLivraison = (semaines) => {
-    const aujourd_hui = new Date();
-    const dateLivraison = new Date(aujourd_hui.getTime() + semaines * 7 * 24 * 60 * 60 * 1000);
-    return dateLivraison.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+    const d = new Date();
+    d.setDate(d.getDate() + semaines * 7);
+    return d.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   };
   
-  // Formater date
   const formaterDate = (dateStr) => {
     if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
   };
   
-  // Couleur du statut achat
   const getStatutAchatCouleur = (statut) => {
     switch(statut) {
       case 'Livrée': return 'bg-emerald-100 text-emerald-800';
@@ -7093,58 +7096,82 @@ const Achats = () => {
       case 'En attente': return 'bg-amber-100 text-amber-800';
       case 'Commandée': return 'bg-purple-100 text-purple-800';
       case 'Prête': return 'bg-teal-100 text-teal-800';
-      case 'Annulée': return 'bg-red-100 text-red-800';
       default: return 'bg-slate-100 text-slate-800';
     }
   };
   
-  // Couleur du type de commande
   const getTypeCouleur = (type) => {
     switch(type) {
       case 'Installation': return 'bg-red-500 text-white';
-      case 'Livraison': return 'bg-blue-500 text-white';
-      case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
+      case 'Livraison': return 'bg-sky-200 text-sky-900';
+      case 'Cueillette': return 'bg-yellow-400 text-yellow-900';
       case 'Transport': return 'bg-slate-600 text-white';
       default: return 'bg-slate-400 text-white';
     }
   };
   
-  // Filtrer les achats
+  const getStatutPieceCouleur = (statut) => {
+    switch(statut) {
+      case 'Reçu': return 'bg-emerald-500 text-white';
+      case 'En transit': return 'bg-blue-500 text-white';
+      case 'Commandé': return 'bg-purple-400 text-white';
+      case 'En attente': return 'bg-amber-400 text-white';
+      default: return '';
+    }
+  };
+  
+  // Icône pour les colonnes d'achat
+  const getAchatIcon = (achat, type) => {
+    const key = type === 'Plancher aluminium' ? 'plancherAlu' : type.toLowerCase();
+    if (!achat.achatsTypes[key]) return null;
+    const statut = achat.achatsStatuts[key];
+    if (statut === 'Reçu') return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold">✓</span>;
+    if (statut === 'En transit') return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold">⇄</span>;
+    if (statut === 'Commandé') return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-purple-400 text-white text-xs font-bold">①</span>;
+    if (statut === 'En attente') return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-amber-400 text-white text-xs font-bold">⏳</span>;
+    return <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-200 text-slate-600 text-xs font-bold">●</span>;
+  };
+  
+  // Compter les achats actifs par type
+  const compterAchatsType = (type) => {
+    const key = type === 'Plancher aluminium' ? 'plancherAlu' : type.toLowerCase();
+    return achatsData.filter(a => a.achatsTypes[key]).length;
+  };
+  
+  // Filtrer les achats actifs (non livrés)
   const achatsFiltres = achatsData.filter(achat => {
     const matchRecherche = !rechercheAchat || 
       achat.numCommande.toLowerCase().includes(rechercheAchat.toLowerCase()) ||
-      achat.article.toLowerCase().includes(rechercheAchat.toLowerCase()) ||
+      achat.client.toLowerCase().includes(rechercheAchat.toLowerCase()) ||
       achat.fournisseur.toLowerCase().includes(rechercheAchat.toLowerCase());
     const matchClient = !filtreClient || achat.client === filtreClient;
     const matchStatut = !filtreStatutAchat || achat.statut === filtreStatutAchat;
     const matchType = !filtreTypeCommande || achat.typeCommande === filtreTypeCommande;
-    return matchRecherche && matchClient && matchStatut && matchType;
+    const matchTypeAchat = !filtreTypeAchat || achat.achatsTypes[filtreTypeAchat === 'Plancher aluminium' ? 'plancherAlu' : filtreTypeAchat.toLowerCase()];
+    return matchRecherche && matchClient && matchStatut && matchType && matchTypeAchat;
   });
   
-  // Clients uniques
   const clientsUniques = [...new Set(achatsData.map(a => a.client))].sort();
   
-  // Statistiques
   const statsAchats = {
+    total: achatsData.length,
     enAttente: achatsData.filter(a => a.statut === 'En attente').length,
     commandees: achatsData.filter(a => a.statut === 'Commandée').length,
     enTransit: achatsData.filter(a => a.statut === 'En transit').length,
-    livrees: achatsData.filter(a => a.statut === 'Livrée').length,
     montantTotal: achatsData.reduce((sum, a) => sum + a.montant, 0),
   };
   
   // === CRUD ACHATS ===
   const ajouterAchat = () => {
-    if (!nouvelAchat.numCommande || !nouvelAchat.fournisseur || !nouvelAchat.article) {
-      alert('Veuillez remplir les champs obligatoires (# Commande, Fournisseur, Article)');
-      return;
-    }
-    const achat = { id: achatsData.length + 1, ...nouvelAchat };
-    setAchatsData([...achatsData, achat]);
+    if (!nouvelAchat.numCommande || !nouvelAchat.client) { alert('# Commande et Client requis'); return; }
+    setAchatsData([...achatsData, { id: Date.now(), ...nouvelAchat }]);
     setNouvelAchat({
-      numCommande: '', client: '', typeCommande: 'Installation', fournisseur: '', article: '',
-      quantite: 0, unite: '', dateCommande: new Date().toISOString().split('T')[0],
-      dateLivraisonPrevue: '', montant: 0, statut: 'En attente', notes: ''
+      numCommande: '', client: '', ville: '', typeCommande: 'Installation', service: 'Installation', fournisseur: '',
+      datePrevue: '', dateEnvoi: '',
+      achatsTypes: { verre: false, peinture: false, fibre: false, limon: false, colonne: false, attache: false, plancherAlu: false },
+      achatsStatuts: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' },
+      datesReception: { verre: '', peinture: '', fibre: '', limon: '', colonne: '', attache: '', plancherAlu: '' },
+      dateCommande: new Date().toISOString().split('T')[0], montant: 0, statut: 'En attente', notes: '', structure: false, couleur: '', livree: false, dateLivraison: ''
     });
     setShowAjouterAchatModal(false);
   };
@@ -7162,10 +7189,27 @@ const Achats = () => {
     }
   };
   
+  // === VALIDER LIVRAISON ===
+  const validerLivraison = (achat) => {
+    const achatLivre = { 
+      ...achat, 
+      statut: 'Livrée', 
+      livree: true, 
+      dateLivraison: new Date().toISOString().split('T')[0] 
+    };
+    // Retirer du menu principal
+    setAchatsData(achatsData.filter(a => a.id !== achat.id));
+    // Ajouter à l'historique
+    setHistoriqueAchats([achatLivre, ...historiqueAchats]);
+    setShowConfirmLivraison(false);
+    setAchatAValider(null);
+    setShowDetailAchatModal(false);
+  };
+  
   // === CRUD FOURNISSEURS ===
   const ajouterFournisseur = () => {
     if (!nouveauFournisseur.nom) { alert('Nom requis'); return; }
-    setFournisseursList([...fournisseursList, { id: fournisseursList.length + 1, ...nouveauFournisseur }]);
+    setFournisseursList([...fournisseursList, { id: Date.now(), ...nouveauFournisseur }]);
     setNouveauFournisseur({ nom: '', adresse: '', codePostal: '', ville: '', province: 'QC', pays: 'Canada', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: '' });
     setShowAjouterFournisseurModal(false);
   };
@@ -7184,102 +7228,331 @@ const Achats = () => {
   };
   
   // === DÉLAIS ===
-  const modifierDelai = (id, nouveauDelai) => {
-    setDelaisLivraison(delaisLivraison.map(d => d.id === id ? { ...d, delaiSemaines: parseInt(nouveauDelai) || 0 } : d));
+  const modifierDelai = (id, val) => {
+    setDelaisLivraison(delaisLivraison.map(d => d.id === id ? { ...d, delaiSemaines: parseInt(val) || 0 } : d));
     setDelaiEnEdition(null);
   };
   
   const ajouterRupture = () => {
     if (!nouvelleRupture.piece) { alert('Pièce requise'); return; }
-    setRupturesStock([...rupturesStock, { id: rupturesStock.length + 1, ...nouvelleRupture }]);
+    setRupturesStock([...rupturesStock, { id: Date.now(), ...nouvelleRupture }]);
     setNouvelleRupture({ piece: '', couleur: '', dateReception: '' });
     setShowAjouterRuptureForm(false);
   };
   
   const supprimerRupture = (id) => {
-    if (window.confirm('Supprimer cette rupture ?')) {
-      setRupturesStock(rupturesStock.filter(r => r.id !== id));
-    }
+    if (window.confirm('Supprimer ?')) setRupturesStock(rupturesStock.filter(r => r.id !== id));
   };
   
   const envoyerDelaisParCourriel = () => {
-    let contenu = 'DÉLAIS DE LIVRAISON - Rampes Gardex\n\n';
-    delaisLivraison.forEach(d => {
-      contenu += `${d.secteur}: ${d.delaiSemaines} semaines (${calculerDateLivraison(d.delaiSemaines)})\n`;
-    });
-    if (rupturesStock.length > 0) {
-      contenu += '\n\nRUPTURES DE STOCK:\n';
-      rupturesStock.forEach(r => {
-        contenu += `${r.piece} (${r.couleur}) - Réception prévue: ${formaterDate(r.dateReception)}\n`;
-      });
-    }
-    console.log('📧 Envoi courriel délais:', contenu);
-    alert('✅ Liste des délais envoyée par courriel avec succès!');
+    alert('✅ Liste des délais envoyée par courriel!');
     setShowConfirmEnvoiDelais(false);
   };
 
   // =============================================
-  // === MODAL AJOUTER / MODIFIER ACHAT ===
+  // MODAL DÉTAIL ACHAT
+  // =============================================
+  const DetailAchatModal = () => {
+    if (!showDetailAchatModal || !achatSelectionne) return null;
+    const a = achatSelectionne;
+    const isHistorique = a.livree;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          {/* Header */}
+          <div className="p-5 bg-slate-800 text-white flex items-center justify-between rounded-t-2xl">
+            <div>
+              <h2 className="text-xl font-bold">Détail de l'achat - Commande #{a.numCommande}</h2>
+              <p className="text-slate-300">{a.client} • {a.ville}</p>
+            </div>
+            <button onClick={() => setShowDetailAchatModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+              <Icon name="x" size={24}/>
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* Infos principales */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Service</p>
+                <span className={`px-2 py-1 rounded text-xs font-bold ${getTypeCouleur(a.service)}`}>{a.service}</span>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Date prévue</p>
+                <p className="font-semibold">{a.datePrevue}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Statut</p>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutAchatCouleur(a.statut)}`}>{a.statut}</span>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Montant</p>
+                <p className="font-bold text-lg">{a.montant > 0 ? `${a.montant.toLocaleString()} $` : '-'}</p>
+              </div>
+            </div>
+            
+            {a.couleur && (
+              <div className="bg-slate-50 rounded-xl p-3 inline-block">
+                <p className="text-xs text-slate-500">Couleur</p>
+                <p className="font-semibold">{a.couleur}</p>
+              </div>
+            )}
+            {a.structure && (
+              <span className="ml-3 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Structure: Oui</span>
+            )}
+            
+            {/* Détail des achats par type */}
+            <div>
+              <h3 className="font-bold text-slate-800 mb-3 text-lg">Détail des achats par type</h3>
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-semibold">Type d'achat</th>
+                      <th className="px-4 py-3 text-center font-semibold">Requis</th>
+                      <th className="px-4 py-3 text-center font-semibold">Statut</th>
+                      <th className="px-4 py-3 text-center font-semibold">Date de réception</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {[
+                      { label: 'Verre', key: 'verre' },
+                      { label: 'Peinture', key: 'peinture' },
+                      { label: 'Fibre', key: 'fibre' },
+                      { label: 'Limon', key: 'limon' },
+                      { label: 'Colonne', key: 'colonne' },
+                      { label: 'Attache', key: 'attache' },
+                      { label: 'Plancher aluminium', key: 'plancherAlu' },
+                    ].map(type => (
+                      <tr key={type.key} className={a.achatsTypes[type.key] ? 'bg-white' : 'bg-slate-50 opacity-50'}>
+                        <td className="px-4 py-3 font-medium">{type.label}</td>
+                        <td className="px-4 py-3 text-center">
+                          {a.achatsTypes[type.key] 
+                            ? <span className="text-emerald-600 font-bold">✓ Oui</span>
+                            : <span className="text-slate-400">—</span>
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {a.achatsTypes[type.key] && a.achatsStatuts[type.key] 
+                            ? <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutPieceCouleur(a.achatsStatuts[type.key])}`}>{a.achatsStatuts[type.key]}</span>
+                            : a.achatsTypes[type.key] ? <span className="text-slate-400">Non défini</span> : '—'
+                          }
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {a.achatsTypes[type.key] && a.datesReception[type.key] 
+                            ? formaterDate(a.datesReception[type.key])
+                            : a.achatsTypes[type.key] ? <span className="text-slate-400">En attente</span> : '—'
+                          }
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            {/* Notes */}
+            {a.notes && (
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h4 className="font-semibold text-amber-800 mb-1">Notes</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-line">{a.notes}</p>
+              </div>
+            )}
+            
+            {/* Info livraison (pour historique) */}
+            {a.livree && (
+              <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                <h4 className="font-semibold text-emerald-800 mb-1">✓ Livraison validée</h4>
+                <p className="text-sm text-slate-700">Date de livraison: <strong>{formaterDate(a.dateLivraison)}</strong></p>
+              </div>
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              {!isHistorique && (
+                <button 
+                  onClick={() => { setAchatAValider(a); setShowConfirmLivraison(true); }}
+                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg flex items-center gap-2"
+                >
+                  <Icon name="check" size={18}/>
+                  Valider la livraison
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {!isHistorique && (
+                <button 
+                  onClick={() => { setAchatEnEdition({...a}); setShowDetailAchatModal(false); setShowModifierAchatModal(true); }}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2"
+                >
+                  <Icon name="edit" size={16}/>Modifier
+                </button>
+              )}
+              <button onClick={() => setShowDetailAchatModal(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =============================================
+  // MODAL CONFIRMATION LIVRAISON
+  // =============================================
+  const ConfirmLivraisonModal = () => {
+    if (!showConfirmLivraison || !achatAValider) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon name="check" size={32} className="text-emerald-600"/>
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">Valider la livraison ?</h3>
+          <p className="text-slate-600 mb-2">Commande <strong>#{achatAValider.numCommande}</strong> - {achatAValider.client}</p>
+          <p className="text-sm text-slate-500 mb-6">L'achat sera déplacé dans l'historique des achats livrés.</p>
+          <div className="flex justify-center gap-4">
+            <button onClick={() => { setShowConfirmLivraison(false); setAchatAValider(null); }} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">
+              Annuler
+            </button>
+            <button onClick={() => validerLivraison(achatAValider)} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg">
+              ✓ Confirmer la livraison
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =============================================
+  // MODAL FORMULAIRE ACHAT (AJOUT / MODIF)
   // =============================================
   const AchatFormModal = ({ show, onClose, achat, setAchat, onSave, titre }) => {
     if (!show || !achat) return null;
     
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-slate-200 bg-slate-800 text-white rounded-t-2xl">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-5 bg-slate-800 text-white rounded-t-2xl">
             <h2 className="text-xl font-bold">{titre}</h2>
           </div>
           
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* Infos principales */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1"># Commande *</label>
                 <input type="text" value={achat.numCommande} onChange={(e) => setAchat({...achat, numCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Client</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Client *</label>
                 <input type="text" value={achat.client} onChange={(e) => setAchat({...achat, client: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Type de commande</label>
-                <select value={achat.typeCommande} onChange={(e) => setAchat({...achat, typeCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Ville</label>
+                <input type="text" value={achat.ville} onChange={(e) => setAchat({...achat, ville: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Service</label>
+                <select value={achat.typeCommande} onChange={(e) => setAchat({...achat, typeCommande: e.target.value, service: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
                   {typesCommande.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Fournisseur *</label>
-                <select value={achat.fournisseur} onChange={(e) => setAchat({...achat, fournisseur: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
-                  <option value="">Sélectionner...</option>
-                  {fournisseursList.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Article *</label>
-                <input type="text" value={achat.article} onChange={(e) => setAchat({...achat, article: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Quantité</label>
-                <input type="number" value={achat.quantite} onChange={(e) => setAchat({...achat, quantite: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Unité</label>
-                <input type="text" value={achat.unite} onChange={(e) => setAchat({...achat, unite: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date commande</label>
-                <input type="date" value={achat.dateCommande} onChange={(e) => setAchat({...achat, dateCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Date livraison prévue</label>
-                <input type="date" value={achat.dateLivraisonPrevue} onChange={(e) => setAchat({...achat, dateLivraisonPrevue: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date prévue</label>
+                <input type="date" value={achat.datePrevue} onChange={(e) => setAchat({...achat, datePrevue: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Montant ($)</label>
                 <input type="number" step="0.01" value={achat.montant} onChange={(e) => setAchat({...achat, montant: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
+            </div>
+            
+            {/* Section Types d'achats */}
+            <div>
+              <h3 className="font-bold text-slate-800 mb-3 text-lg border-b pb-2">Types d'achats requis</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: 'Achat de fibre', key: 'fibre', dateLabel: 'Date de réception du fibre' },
+                  { label: 'Achat de limons', key: 'limon', dateLabel: 'Date de réception des limons' },
+                  { label: 'Achat de verres', key: 'verre', dateLabel: 'Date de réception du verre' },
+                  { label: 'Achat de colonnes', key: 'colonne', dateLabel: 'Date de réception des colonnes' },
+                  { label: 'Achat de peinture', key: 'peinture', dateLabel: 'Date de réception de la peinture' },
+                  { label: 'Achat d\'attaches', key: 'attache', dateLabel: 'Date de réception des attaches' },
+                  { label: 'Achat plancher alu.', key: 'plancherAlu', dateLabel: 'Date de réception plancher' },
+                ].map(type => (
+                  <div key={type.key} className={`p-3 rounded-xl border-2 ${achat.achatsTypes[type.key] ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                    <label className="flex items-center gap-2 cursor-pointer mb-2">
+                      <input 
+                        type="checkbox" 
+                        checked={achat.achatsTypes[type.key]} 
+                        onChange={(e) => setAchat({
+                          ...achat, 
+                          achatsTypes: {...achat.achatsTypes, [type.key]: e.target.checked}
+                        })}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm font-semibold text-slate-700">{type.label}</span>
+                    </label>
+                    
+                    {achat.achatsTypes[type.key] && (
+                      <div className="space-y-2">
+                        <select 
+                          value={achat.achatsStatuts[type.key]} 
+                          onChange={(e) => setAchat({
+                            ...achat, 
+                            achatsStatuts: {...achat.achatsStatuts, [type.key]: e.target.value}
+                          })}
+                          className="w-full px-2 py-1 border rounded text-xs"
+                        >
+                          {statutsPiece.map(s => <option key={s} value={s}>{s || 'Statut...'}</option>)}
+                        </select>
+                        <div>
+                          <label className="text-xs text-slate-500">{type.dateLabel}</label>
+                          <input 
+                            type="date" 
+                            value={achat.datesReception[type.key]} 
+                            onChange={(e) => setAchat({
+                              ...achat, 
+                              datesReception: {...achat.datesReception, [type.key]: e.target.value}
+                            })}
+                            className="w-full px-2 py-1 border rounded text-xs"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                
+                {/* Structure toggle */}
+                <div className="p-3 rounded-xl border-2 border-slate-200 bg-white">
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Structure</label>
+                  <div className="flex items-center gap-3">
+                    <button 
+                      onClick={() => setAchat({...achat, structure: !achat.structure})}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${achat.structure ? 'bg-blue-500' : 'bg-slate-300'}`}
+                    >
+                      <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${achat.structure ? 'left-6' : 'left-0.5'}`}/>
+                    </button>
+                    <span className="text-sm">{achat.structure ? 'Oui' : 'Non'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Couleur et notes */}
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Statut</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Couleur</label>
+                <input type="text" value={achat.couleur} onChange={(e) => setAchat({...achat, couleur: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Statut global</label>
                 <select value={achat.statut} onChange={(e) => setAchat({...achat, statut: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
                   {statutsAchat.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
@@ -7301,73 +7574,30 @@ const Achats = () => {
   };
 
   // =============================================
-  // === MODAL FOURNISSEUR (AJOUT / MODIF) ===
+  // MODAL FOURNISSEUR
   // =============================================
   const FournisseurFormModal = ({ show, onClose, fournisseur, setFournisseur, onSave, titre }) => {
     if (!show || !fournisseur) return null;
-    
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <div className="p-6 border-b border-slate-200 bg-slate-800 text-white rounded-t-2xl">
-            <h2 className="text-xl font-bold">{titre}</h2>
+          <div className="p-5 bg-slate-800 text-white rounded-t-2xl"><h2 className="text-xl font-bold">{titre}</h2></div>
+          <div className="p-6 grid grid-cols-2 gap-4">
+            <div className="col-span-2"><label className="block text-sm font-semibold mb-1">Nom *</label><input type="text" value={fournisseur.nom} onChange={(e) => setFournisseur({...fournisseur, nom: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div className="col-span-2"><label className="block text-sm font-semibold mb-1">Adresse</label><input type="text" value={fournisseur.adresse} onChange={(e) => setFournisseur({...fournisseur, adresse: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Ville</label><input type="text" value={fournisseur.ville} onChange={(e) => setFournisseur({...fournisseur, ville: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Province</label><input type="text" value={fournisseur.province} onChange={(e) => setFournisseur({...fournisseur, province: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Code Postal</label><input type="text" value={fournisseur.codePostal} onChange={(e) => setFournisseur({...fournisseur, codePostal: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Pays</label><input type="text" value={fournisseur.pays} onChange={(e) => setFournisseur({...fournisseur, pays: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Téléphone</label><input type="tel" value={fournisseur.telephone} onChange={(e) => setFournisseur({...fournisseur, telephone: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Fax</label><input type="tel" value={fournisseur.fax} onChange={(e) => setFournisseur({...fournisseur, fax: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Contact</label><input type="text" value={fournisseur.contact} onChange={(e) => setFournisseur({...fournisseur, contact: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Email</label><input type="email" value={fournisseur.email} onChange={(e) => setFournisseur({...fournisseur, email: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Transport</label><input type="text" value={fournisseur.transport} onChange={(e) => setFournisseur({...fournisseur, transport: e.target.value})} className="w-full px-3 py-2 border rounded-lg"/></div>
+            <div><label className="block text-sm font-semibold mb-1">Délai moyen</label><input type="text" value={fournisseur.delaiMoyen} onChange={(e) => setFournisseur({...fournisseur, delaiMoyen: e.target.value})} className="w-full px-3 py-2 border rounded-lg" placeholder="ex: 5 jours"/></div>
           </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Nom *</label>
-                <input type="text" value={fournisseur.nom} onChange={(e) => setFournisseur({...fournisseur, nom: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Adresse</label>
-                <input type="text" value={fournisseur.adresse} onChange={(e) => setFournisseur({...fournisseur, adresse: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Ville</label>
-                <input type="text" value={fournisseur.ville} onChange={(e) => setFournisseur({...fournisseur, ville: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Province</label>
-                <input type="text" value={fournisseur.province} onChange={(e) => setFournisseur({...fournisseur, province: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Code Postal</label>
-                <input type="text" value={fournisseur.codePostal} onChange={(e) => setFournisseur({...fournisseur, codePostal: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Pays</label>
-                <input type="text" value={fournisseur.pays} onChange={(e) => setFournisseur({...fournisseur, pays: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Téléphone</label>
-                <input type="tel" value={fournisseur.telephone} onChange={(e) => setFournisseur({...fournisseur, telephone: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Fax</label>
-                <input type="tel" value={fournisseur.fax} onChange={(e) => setFournisseur({...fournisseur, fax: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Contact</label>
-                <input type="text" value={fournisseur.contact} onChange={(e) => setFournisseur({...fournisseur, contact: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
-                <input type="email" value={fournisseur.email} onChange={(e) => setFournisseur({...fournisseur, email: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Transport</label>
-                <input type="text" value={fournisseur.transport} onChange={(e) => setFournisseur({...fournisseur, transport: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Délai moyen</label>
-                <input type="text" value={fournisseur.delaiMoyen} onChange={(e) => setFournisseur({...fournisseur, delaiMoyen: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="ex: 5 jours" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4 border-t border-slate-200 flex justify-end gap-3">
-            <button onClick={onClose} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+          <div className="p-4 border-t flex justify-end gap-3">
+            <button onClick={onClose} className="px-6 py-2 border rounded-lg hover:bg-slate-50">Annuler</button>
             <button onClick={onSave} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Enregistrer</button>
           </div>
         </div>
@@ -7376,52 +7606,38 @@ const Achats = () => {
   };
 
   // =============================================
-  // === MODAL MODIFIER DÉLAIS ===
+  // MODALS DÉLAIS
   // =============================================
   const ModifierDelaisModal = () => {
     if (!showModifierDelaisModal) return null;
-    
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <div className="p-6">
             <h2 className="text-3xl font-bold text-center text-blue-600 underline mb-6">Modification des délais</h2>
-            
             <div className="bg-white rounded-lg overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-200">
                   <tr>
                     <th className="px-4 py-3 text-center text-blue-600">Secteur</th>
-                    <th className="px-4 py-3 text-center text-blue-600">Nombre de<br/>semaines</th>
-                    <th className="px-4 py-3 text-center w-16"></th>
+                    <th className="px-4 py-3 text-center text-blue-600">Nombre de semaines</th>
+                    <th className="px-4 py-3 w-16"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {delaisLivraison.map((delai, index) => (
-                    <tr key={delai.id} className={index % 2 === 0 ? 'bg-slate-100' : 'bg-white'}>
-                      <td className="px-4 py-3 font-semibold text-center">{delai.secteur}</td>
+                  {delaisLivraison.map((d, i) => (
+                    <tr key={d.id} className={i % 2 === 0 ? 'bg-slate-100' : 'bg-white'}>
+                      <td className="px-4 py-3 font-semibold text-center">{d.secteur}</td>
                       <td className="px-4 py-3 text-center">
-                        {delaiEnEdition === delai.id ? (
-                          <input 
-                            type="number"
-                            defaultValue={delai.delaiSemaines}
-                            min="0"
-                            className="w-20 px-2 py-1 border rounded text-center mx-auto"
-                            onBlur={(e) => modifierDelai(delai.id, e.target.value)}
-                            onKeyDown={(e) => { if (e.key === 'Enter') modifierDelai(delai.id, e.target.value); }}
-                            autoFocus
+                        {delaiEnEdition === d.id ? (
+                          <input type="number" defaultValue={d.delaiSemaines} min="0" className="w-20 px-2 py-1 border rounded text-center" autoFocus
+                            onBlur={(e) => modifierDelai(d.id, e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') modifierDelai(d.id, e.target.value); }}
                           />
-                        ) : (
-                          <span className="text-xl font-bold">{delai.delaiSemaines}</span>
-                        )}
+                        ) : <span className="text-xl font-bold">{d.delaiSemaines}</span>}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <button 
-                          onClick={() => setDelaiEnEdition(delai.id)}
-                          className="text-blue-500 hover:text-blue-700"
-                        >
-                          <Icon name="edit" size={20}/>
-                        </button>
+                        <button onClick={() => setDelaiEnEdition(d.id)} className="text-blue-500 hover:text-blue-700"><Icon name="edit" size={20}/></button>
                       </td>
                     </tr>
                   ))}
@@ -7429,29 +7645,21 @@ const Achats = () => {
               </table>
             </div>
           </div>
-          
           <div className="p-4 flex justify-center">
-            <button onClick={() => { setShowModifierDelaisModal(false); setDelaiEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
-              Sortir
-            </button>
+            <button onClick={() => { setShowModifierDelaisModal(false); setDelaiEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">Sortir</button>
           </div>
         </div>
       </div>
     );
   };
 
-  // =============================================
-  // === MODAL MODIFIER RUPTURES DE STOCK ===
-  // =============================================
   const ModifierRupturesModal = () => {
     if (!showModifierRupturesModal) return null;
-    
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <div className="p-6">
             <h2 className="text-3xl font-bold text-center text-blue-600 underline mb-6">Modification des ruptures de stock</h2>
-            
             <div className="bg-white rounded-lg overflow-hidden mb-4">
               <table className="w-full text-sm">
                 <thead className="bg-slate-200">
@@ -7459,94 +7667,53 @@ const Achats = () => {
                     <th className="px-4 py-3 text-center text-blue-600">Pièces</th>
                     <th className="px-4 py-3 text-center text-blue-600">Couleur</th>
                     <th className="px-4 py-3 text-center text-blue-600">Date de réception</th>
-                    <th className="px-4 py-3 text-center w-24"></th>
+                    <th className="px-4 py-3 w-24"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {rupturesStock.map(rupture => (
-                    <tr key={rupture.id} className="hover:bg-slate-50">
-                      <td className="px-4 py-3">
-                        {ruptureEnEdition === rupture.id ? (
-                          <input type="text" defaultValue={rupture.piece} className="w-full px-2 py-1 border rounded"
-                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, piece: e.target.value} : r)); }}
-                          />
-                        ) : rupture.piece}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {ruptureEnEdition === rupture.id ? (
-                          <input type="text" defaultValue={rupture.couleur} className="w-full px-2 py-1 border rounded"
-                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, couleur: e.target.value} : r)); }}
-                          />
-                        ) : rupture.couleur}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {ruptureEnEdition === rupture.id ? (
-                          <input type="date" defaultValue={rupture.dateReception} className="px-2 py-1 border rounded"
-                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, dateReception: e.target.value} : r)); }}
-                          />
-                        ) : formaterDate(rupture.dateReception)}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex gap-1 justify-center">
-                          <button onClick={() => setRuptureEnEdition(ruptureEnEdition === rupture.id ? null : rupture.id)} className="text-blue-500 hover:text-blue-700">
-                            <Icon name="edit" size={18}/>
-                          </button>
-                          <button onClick={() => supprimerRupture(rupture.id)} className="text-red-500 hover:text-red-700">
-                            <Icon name="trash" size={18}/>
-                          </button>
-                        </div>
+                  {rupturesStock.map(r => (
+                    <tr key={r.id}>
+                      <td className="px-4 py-3">{ruptureEnEdition === r.id ? <input type="text" defaultValue={r.piece} className="w-full px-2 py-1 border rounded" onBlur={(e) => setRupturesStock(rupturesStock.map(x => x.id === r.id ? {...x, piece: e.target.value} : x))}/> : r.piece}</td>
+                      <td className="px-4 py-3 text-center">{ruptureEnEdition === r.id ? <input type="text" defaultValue={r.couleur} className="w-full px-2 py-1 border rounded" onBlur={(e) => setRupturesStock(rupturesStock.map(x => x.id === r.id ? {...x, couleur: e.target.value} : x))}/> : r.couleur}</td>
+                      <td className="px-4 py-3 text-center">{ruptureEnEdition === r.id ? <input type="date" defaultValue={r.dateReception} className="px-2 py-1 border rounded" onBlur={(e) => setRupturesStock(rupturesStock.map(x => x.id === r.id ? {...x, dateReception: e.target.value} : x))}/> : formaterDate(r.dateReception)}</td>
+                      <td className="px-4 py-3 text-center flex gap-1 justify-center">
+                        <button onClick={() => setRuptureEnEdition(ruptureEnEdition === r.id ? null : r.id)} className="text-blue-500"><Icon name="edit" size={18}/></button>
+                        <button onClick={() => supprimerRupture(r.id)} className="text-red-500"><Icon name="trash" size={18}/></button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            
-            {/* Formulaire ajout rupture */}
             {showAjouterRuptureForm && (
               <div className="bg-white rounded-lg p-4 mb-4 border-2 border-blue-300">
-                <h4 className="font-semibold text-slate-700 mb-3">Nouvelle rupture</h4>
                 <div className="grid grid-cols-3 gap-3">
-                  <input type="text" placeholder="Pièce" value={nouvelleRupture.piece} onChange={(e) => setNouvelleRupture({...nouvelleRupture, piece: e.target.value})} className="px-3 py-2 border rounded-lg" />
-                  <input type="text" placeholder="Couleur" value={nouvelleRupture.couleur} onChange={(e) => setNouvelleRupture({...nouvelleRupture, couleur: e.target.value})} className="px-3 py-2 border rounded-lg" />
-                  <input type="date" value={nouvelleRupture.dateReception} onChange={(e) => setNouvelleRupture({...nouvelleRupture, dateReception: e.target.value})} className="px-3 py-2 border rounded-lg" />
+                  <input type="text" placeholder="Pièce" value={nouvelleRupture.piece} onChange={(e) => setNouvelleRupture({...nouvelleRupture, piece: e.target.value})} className="px-3 py-2 border rounded-lg"/>
+                  <input type="text" placeholder="Couleur" value={nouvelleRupture.couleur} onChange={(e) => setNouvelleRupture({...nouvelleRupture, couleur: e.target.value})} className="px-3 py-2 border rounded-lg"/>
+                  <input type="date" value={nouvelleRupture.dateReception} onChange={(e) => setNouvelleRupture({...nouvelleRupture, dateReception: e.target.value})} className="px-3 py-2 border rounded-lg"/>
                 </div>
-                <div className="mt-3 flex gap-2">
-                  <button onClick={ajouterRupture} className="px-4 py-2 bg-emerald-500 text-white rounded-lg">Ajouter</button>
-                  <button onClick={() => setShowAjouterRuptureForm(false)} className="px-4 py-2 border rounded-lg">Annuler</button>
-                </div>
+                <div className="mt-3 flex gap-2"><button onClick={ajouterRupture} className="px-4 py-2 bg-emerald-500 text-white rounded-lg">Ajouter</button><button onClick={() => setShowAjouterRuptureForm(false)} className="px-4 py-2 border rounded-lg">Annuler</button></div>
               </div>
             )}
           </div>
-          
           <div className="p-4 flex justify-center gap-4">
-            <button onClick={() => { setShowModifierRupturesModal(false); setRuptureEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
-              Sortir
-            </button>
-            <button onClick={() => setShowAjouterRuptureForm(true)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
-              Ajouter Rupture
-            </button>
+            <button onClick={() => { setShowModifierRupturesModal(false); setRuptureEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">Sortir</button>
+            <button onClick={() => setShowAjouterRuptureForm(true)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">Ajouter Rupture</button>
           </div>
         </div>
       </div>
     );
   };
 
-  // === MODAL CONFIRMER ENVOI DÉLAIS ===
   const ConfirmEnvoiDelaisModal = () => {
     if (!showConfirmEnvoiDelais) return null;
-    
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
         <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
           <p className="text-lg font-bold text-slate-800 mb-6">Confirmer l'envoi de la liste des délais</p>
           <div className="flex justify-center gap-6">
-            <button onClick={envoyerDelaisParCourriel} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">
-              Confirmer
-            </button>
-            <button onClick={() => setShowConfirmEnvoiDelais(false)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">
-              Annuler
-            </button>
+            <button onClick={envoyerDelaisParCourriel} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">Confirmer</button>
+            <button onClick={() => setShowConfirmEnvoiDelais(false)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">Annuler</button>
           </div>
         </div>
       </div>
@@ -7554,11 +7721,97 @@ const Achats = () => {
   };
 
   // =============================================
-  // === RENDU PRINCIPAL ===
+  // TABLEAU D'ACHATS COMMUN (utilisé pour actifs et historique)
+  // =============================================
+  const TableauAchats = ({ data, isHistorique }) => (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-800 text-white">
+            <tr>
+              <th className="px-3 py-3 text-left"># Projet</th>
+              <th className="px-3 py-3 text-left">Client<br/><span className="font-normal text-xs text-slate-300">Service / Ville</span></th>
+              <th className="px-3 py-3 text-center">Date prévue</th>
+              <th className="px-2 py-3 text-center text-xs">Verre</th>
+              <th className="px-2 py-3 text-center text-xs">Peinture</th>
+              <th className="px-2 py-3 text-center text-xs">Fibre</th>
+              <th className="px-2 py-3 text-center text-xs">Limon</th>
+              <th className="px-2 py-3 text-center text-xs">Colonne</th>
+              <th className="px-2 py-3 text-center text-xs">Attache</th>
+              <th className="px-3 py-3 text-center">Statut</th>
+              {isHistorique && <th className="px-3 py-3 text-center">Date livraison</th>}
+              {!isHistorique && <th className="px-3 py-3 text-center">Actions</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {data.map((achat) => (
+              <tr 
+                key={achat.id} 
+                className="hover:bg-blue-50 cursor-pointer group"
+                onClick={() => { setAchatSelectionne(achat); setShowDetailAchatModal(true); }}
+              >
+                <td className="px-3 py-3">
+                  <p className="font-bold text-slate-800 text-base">{achat.numCommande}</p>
+                </td>
+                <td className="px-3 py-3">
+                  <p className="font-medium">{achat.client}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${getTypeCouleur(achat.service)}`}>{achat.service}</span>
+                    <span className="text-xs text-slate-500">{achat.ville}</span>
+                  </div>
+                  {achat.notes && <p className="text-xs text-slate-400 mt-1 line-clamp-1">{achat.notes.split('\n')[0]}</p>}
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <p className="font-medium">{achat.datePrevue}</p>
+                  {achat.dateEnvoi && <p className="text-xs text-slate-400">Envoi: {achat.dateEnvoi}</p>}
+                </td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Verre')}</td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Peinture')}</td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Fibre')}</td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Limon')}</td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Colonne')}</td>
+                <td className="px-2 py-3 text-center">{getAchatIcon(achat, 'Attache')}</td>
+                <td className="px-3 py-3 text-center">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutAchatCouleur(achat.statut)}`}>{achat.statut}</span>
+                </td>
+                {isHistorique && (
+                  <td className="px-3 py-3 text-center text-emerald-700 font-medium">{achat.dateLivraison}</td>
+                )}
+                {!isHistorique && (
+                  <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1 justify-center">
+                      <button 
+                        onClick={() => { setAchatAValider(achat); setShowConfirmLivraison(true); }}
+                        className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Valider livraison"
+                      >
+                        <Icon name="check" size={16}/>
+                      </button>
+                      <button onClick={() => { setAchatEnEdition({...achat}); setShowModifierAchatModal(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Modifier">
+                        <Icon name="edit" size={16}/>
+                      </button>
+                      <button onClick={() => supprimerAchat(achat.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Supprimer">
+                        <Icon name="trash" size={16}/>
+                      </button>
+                    </div>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.length === 0 && <div className="p-12 text-center text-slate-400">Aucun achat trouvé</div>}
+    </div>
+  );
+
+  // =============================================
+  // RENDU PRINCIPAL
   // =============================================
   return (
     <div className="space-y-4">
-      {/* Modals */}
+      {/* Tous les modals */}
+      <DetailAchatModal />
+      <ConfirmLivraisonModal />
       <AchatFormModal show={showAjouterAchatModal} onClose={() => setShowAjouterAchatModal(false)} achat={nouvelAchat} setAchat={setNouvelAchat} onSave={ajouterAchat} titre="Nouvel achat" />
       <AchatFormModal show={showModifierAchatModal} onClose={() => { setShowModifierAchatModal(false); setAchatEnEdition(null); }} achat={achatEnEdition} setAchat={setAchatEnEdition} onSave={modifierAchat} titre="Modifier l'achat" />
       <FournisseurFormModal show={showAjouterFournisseurModal} onClose={() => setShowAjouterFournisseurModal(false)} fournisseur={nouveauFournisseur} setFournisseur={setNouveauFournisseur} onSave={ajouterFournisseur} titre="Ajouter un fournisseur" />
@@ -7570,17 +7823,21 @@ const Achats = () => {
       {/* Header */}
       <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button className="p-2 text-white hover:bg-slate-700 rounded-lg">
-            <Icon name="chevron-left" size={28}/>
-          </button>
-          <h1 className="text-2xl font-bold text-white">Achats & Délais</h1>
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg"><Icon name="chevron-left" size={28}/></button>
+          <h1 className="text-2xl font-bold text-white">Liste des achats pour les commandes</h1>
+        </div>
+        <div className="flex items-center gap-6 text-white text-sm">
+          <div className="text-right"><p className="text-slate-400">Commandes à mesurer:</p><p className="text-2xl font-bold text-blue-400">{statsAchats.total}</p></div>
         </div>
       </div>
 
       {/* Onglets */}
       <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
         <button onClick={() => setAchatsTab('achats')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'achats' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-          📦 Achats ({achatsData.length})
+          📦 Achats actifs ({achatsData.length})
+        </button>
+        <button onClick={() => setAchatsTab('historique')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'historique' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          📋 Historique ({historiqueAchats.length})
         </button>
         <button onClick={() => setAchatsTab('delais')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'delais' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
           🕐 Délais de livraison
@@ -7590,60 +7847,50 @@ const Achats = () => {
         </button>
       </div>
 
-      {/* ===================================== */}
-      {/* ONGLET ACHATS */}
-      {/* ===================================== */}
+      {/* ===== ONGLET ACHATS ACTIFS ===== */}
       {achatsTab === 'achats' && (
         <>
-          {/* Statistiques */}
+          {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            <div className="bg-white p-4 rounded-xl border border-amber-200">
-              <p className="text-xs text-slate-500">En attente</p>
-              <p className="text-2xl font-bold text-amber-600">{statsAchats.enAttente}</p>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-purple-200">
-              <p className="text-xs text-slate-500">Commandées</p>
-              <p className="text-2xl font-bold text-purple-600">{statsAchats.commandees}</p>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-blue-200">
-              <p className="text-xs text-slate-500">En transit</p>
-              <p className="text-2xl font-bold text-blue-600">{statsAchats.enTransit}</p>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-emerald-200">
-              <p className="text-xs text-slate-500">Livrées</p>
-              <p className="text-2xl font-bold text-emerald-600">{statsAchats.livrees}</p>
-            </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-xs text-slate-500">Montant total</p>
-              <p className="text-2xl font-bold text-slate-800">{statsAchats.montantTotal.toLocaleString()} $</p>
-            </div>
+            <div className="bg-white p-3 rounded-xl border border-amber-200"><p className="text-xs text-slate-500">En attente</p><p className="text-xl font-bold text-amber-600">{statsAchats.enAttente}</p></div>
+            <div className="bg-white p-3 rounded-xl border border-purple-200"><p className="text-xs text-slate-500">Commandées</p><p className="text-xl font-bold text-purple-600">{statsAchats.commandees}</p></div>
+            <div className="bg-white p-3 rounded-xl border border-blue-200"><p className="text-xs text-slate-500">En transit</p><p className="text-xl font-bold text-blue-600">{statsAchats.enTransit}</p></div>
+            <div className="bg-white p-3 rounded-xl border border-emerald-200"><p className="text-xs text-slate-500">Montant total</p><p className="text-xl font-bold text-slate-800">{statsAchats.montantTotal.toLocaleString()} $</p></div>
+            <div className="bg-white p-3 rounded-xl border border-slate-200"><p className="text-xs text-slate-500">Historique livrés</p><p className="text-xl font-bold text-emerald-600">{historiqueAchats.length}</p></div>
           </div>
 
-          {/* Filtres et bouton ajout */}
+          {/* Filtres */}
           <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[180px]">
-              <label className="block text-xs text-slate-500 mb-1">Recherche</label>
-              <input type="text" value={rechercheAchat} onChange={(e) => setRechercheAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="# commande, article, fournisseur..." />
+              <label className="block text-xs text-slate-500 mb-1">Rechercher une commande</label>
+              <input type="text" value={rechercheAchat} onChange={(e) => setRechercheAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="# commande, client, fournisseur..."/>
             </div>
-            <div className="min-w-[160px]">
+            <div className="min-w-[150px]">
               <label className="block text-xs text-slate-500 mb-1">Client</label>
               <select value={filtreClient} onChange={(e) => setFiltreClient(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                <option value="">Tous les clients</option>
+                <option value="">Tous</option>
                 {clientsUniques.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-            <div className="min-w-[140px]">
+            <div className="min-w-[130px]">
               <label className="block text-xs text-slate-500 mb-1">Statut</label>
               <select value={filtreStatutAchat} onChange={(e) => setFiltreStatutAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                <option value="">Tous les statuts</option>
+                <option value="">Tous</option>
                 {statutsAchat.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
-            <div className="min-w-[140px]">
-              <label className="block text-xs text-slate-500 mb-1">Type</label>
+            <div className="min-w-[130px]">
+              <label className="block text-xs text-slate-500 mb-1">Service</label>
               <select value={filtreTypeCommande} onChange={(e) => setFiltreTypeCommande(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
-                <option value="">Tous les types</option>
+                <option value="">Tous</option>
                 {typesCommande.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[150px]">
+              <label className="block text-xs text-slate-500 mb-1">Type d'achat</label>
+              <select value={filtreTypeAchat} onChange={(e) => setFiltreTypeAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous types</option>
+                {typesAchats.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
             <button onClick={() => setShowAjouterAchatModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow">
@@ -7651,87 +7898,41 @@ const Achats = () => {
             </button>
           </div>
 
-          {/* Tableau des achats */}
-          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-slate-800 text-white">
-                  <tr>
-                    <th className="px-4 py-3 text-left"># Commande</th>
-                    <th className="px-4 py-3 text-left">Client</th>
-                    <th className="px-4 py-3 text-center">Type</th>
-                    <th className="px-4 py-3 text-left">Fournisseur</th>
-                    <th className="px-4 py-3 text-left">Article</th>
-                    <th className="px-4 py-3 text-center">Qté</th>
-                    <th className="px-4 py-3 text-center">Date commande</th>
-                    <th className="px-4 py-3 text-center">Livraison prévue</th>
-                    <th className="px-4 py-3 text-right">Montant</th>
-                    <th className="px-4 py-3 text-center">Statut</th>
-                    <th className="px-4 py-3 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {achatsFiltres.map((achat, index) => (
-                    <tr key={achat.id} className={`hover:bg-slate-50 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
-                      <td className="px-4 py-3 font-bold text-slate-800">{achat.numCommande}</td>
-                      <td className="px-4 py-3 text-slate-600">{achat.client}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2 py-1 rounded text-xs font-bold ${getTypeCouleur(achat.typeCommande)}`}>{achat.typeCommande}</span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-600">{achat.fournisseur}</td>
-                      <td className="px-4 py-3 text-slate-600">
-                        <p>{achat.article}</p>
-                        {achat.notes && <p className="text-xs text-slate-400 mt-0.5">{achat.notes}</p>}
-                      </td>
-                      <td className="px-4 py-3 text-center font-semibold">{achat.quantite} {achat.unite}</td>
-                      <td className="px-4 py-3 text-center text-slate-600">{achat.dateCommande}</td>
-                      <td className="px-4 py-3 text-center text-slate-600">{achat.dateLivraisonPrevue}</td>
-                      <td className="px-4 py-3 text-right font-semibold">{achat.montant > 0 ? `${achat.montant.toLocaleString()} $` : '-'}</td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutAchatCouleur(achat.statut)}`}>{achat.statut}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex gap-1 justify-center">
-                          <button onClick={() => { setAchatEnEdition({...achat}); setShowModifierAchatModal(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Modifier">
-                            <Icon name="edit" size={16}/>
-                          </button>
-                          <button onClick={() => supprimerAchat(achat.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Supprimer">
-                            <Icon name="trash" size={16}/>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            {achatsFiltres.length === 0 && (
-              <div className="p-12 text-center text-slate-400">Aucun achat trouvé</div>
-            )}
+          {/* Légende des icônes */}
+          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+            <span className="font-semibold">Légende:</span>
+            <span className="flex items-center gap-1"><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-white text-xs">✓</span> Reçu</span>
+            <span className="flex items-center gap-1"><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500 text-white text-xs">⇄</span> En transit</span>
+            <span className="flex items-center gap-1"><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-purple-400 text-white text-xs">①</span> Commandé</span>
+            <span className="flex items-center gap-1"><span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white text-xs">⏳</span> En attente</span>
           </div>
+
+          <TableauAchats data={achatsFiltres} isHistorique={false} />
         </>
       )}
 
-      {/* ===================================== */}
-      {/* ONGLET DÉLAIS DE LIVRAISON */}
-      {/* ===================================== */}
+      {/* ===== ONGLET HISTORIQUE ===== */}
+      {achatsTab === 'historique' && (
+        <>
+          <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 flex items-center gap-3">
+            <Icon name="check" size={24} className="text-emerald-600"/>
+            <div>
+              <p className="font-semibold text-emerald-800">Historique des achats livrés</p>
+              <p className="text-sm text-emerald-600">{historiqueAchats.length} livraison(s) complétée(s)</p>
+            </div>
+          </div>
+          <TableauAchats data={historiqueAchats} isHistorique={true} />
+        </>
+      )}
+
+      {/* ===== ONGLET DÉLAIS ===== */}
       {achatsTab === 'delais' && (
         <>
-          {/* Boutons d'action */}
           <div className="flex justify-end gap-3">
-            <button onClick={() => setShowModifierDelaisModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium">
-              <Icon name="clock" size={18}/>Modifier délai semaines
-            </button>
-            <button onClick={() => setShowModifierRupturesModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium">
-              <Icon name="file" size={18}/>Modifier ruptures de stock
-            </button>
-            <button onClick={() => setShowConfirmEnvoiDelais(true)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2 text-sm font-medium">
-              <Icon name="mail" size={18}/>Envoi par courriel
-            </button>
+            <button onClick={() => setShowModifierDelaisModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium"><Icon name="clock" size={18}/>Modifier délai semaines</button>
+            <button onClick={() => setShowModifierRupturesModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium"><Icon name="file" size={18}/>Modifier ruptures de stock</button>
+            <button onClick={() => setShowConfirmEnvoiDelais(true)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2 text-sm font-medium"><Icon name="mail" size={18}/>Envoi par courriel</button>
           </div>
-
-          {/* Tableau des délais */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-slate-100">
@@ -7742,39 +7943,29 @@ const Achats = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {delaisLivraison.map((delai, index) => (
-                  <tr key={delai.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
-                    <td className="px-6 py-3 font-semibold text-slate-800">{delai.secteur}</td>
-                    <td className="px-4 py-3 text-right font-bold text-lg">{delai.delaiSemaines}</td>
+                {delaisLivraison.map((d, i) => (
+                  <tr key={d.id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="px-6 py-3 font-semibold">{d.secteur}</td>
+                    <td className="px-4 py-3 text-right font-bold text-lg">{d.delaiSemaines}</td>
                     <td className="px-4 py-3 text-left text-slate-600 font-semibold">SEMAINES</td>
-                    <td className="px-6 py-3 text-center font-medium text-slate-700">{calculerDateLivraison(delai.delaiSemaines)}</td>
+                    <td className="px-6 py-3 text-center font-medium">{calculerDateLivraison(d.delaiSemaines)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-
-          {/* Date début construction */}
           <div className="flex items-center gap-3 text-sm">
             <span className="text-slate-600">Début semaine de la construction:</span>
-            <input type="date" value={debutConstruction} onChange={(e) => setDebutConstruction(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg" />
+            <input type="date" value={debutConstruction} onChange={(e) => setDebutConstruction(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg"/>
           </div>
-
-          {/* Ruptures de stock */}
           {rupturesStock.length > 0 && (
             <div>
-              <h3 className="text-2xl font-bold text-center text-slate-800 underline mb-4">Rupture de stock</h3>
+              <h3 className="text-2xl font-bold text-center underline mb-4">Rupture de stock</h3>
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
                 <table className="w-full text-sm">
                   <tbody className="divide-y divide-slate-200">
-                    {rupturesStock.map(rupture => (
-                      <tr key={rupture.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-3 font-semibold">{rupture.piece}</td>
-                        <td className="px-6 py-3 text-center text-slate-600">{rupture.couleur}</td>
-                        <td className="px-6 py-3 text-center">
-                          <span className="bg-slate-100 px-3 py-1 rounded">{formaterDate(rupture.dateReception)}</span>
-                        </td>
-                      </tr>
+                    {rupturesStock.map(r => (
+                      <tr key={r.id}><td className="px-6 py-3 font-semibold">{r.piece}</td><td className="px-6 py-3 text-center">{r.couleur}</td><td className="px-6 py-3 text-center"><span className="bg-slate-100 px-3 py-1 rounded">{formaterDate(r.dateReception)}</span></td></tr>
                     ))}
                   </tbody>
                 </table>
@@ -7784,55 +7975,27 @@ const Achats = () => {
         </>
       )}
 
-      {/* ===================================== */}
-      {/* ONGLET FOURNISSEURS */}
-      {/* ===================================== */}
+      {/* ===== ONGLET FOURNISSEURS ===== */}
       {achatsTab === 'fournisseurs' && (
         <>
-          {/* Barre de recherche et ajout */}
           <div className="flex items-center justify-between gap-4">
-            <input type="text" value={rechercheFournisseur} onChange={(e) => setRechercheFournisseur(e.target.value)} className="px-4 py-2 border border-slate-300 rounded-lg w-full max-w-md" placeholder="Rechercher un fournisseur..." />
-            <button onClick={() => setShowAjouterFournisseurModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow whitespace-nowrap">
-              <Icon name="plus" size={18}/>Ajouter un fournisseur
-            </button>
+            <input type="text" value={rechercheFournisseur} onChange={(e) => setRechercheFournisseur(e.target.value)} className="px-4 py-2 border border-slate-300 rounded-lg w-full max-w-md" placeholder="Rechercher un fournisseur..."/>
+            <button onClick={() => setShowAjouterFournisseurModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow whitespace-nowrap"><Icon name="plus" size={18}/>Ajouter un fournisseur</button>
           </div>
-
-          {/* Tableau des fournisseurs */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-800 text-white">
                   <tr>
-                    <th className="px-4 py-3 text-left">Fournisseur</th>
-                    <th className="px-4 py-3 text-left">Adresse</th>
-                    <th className="px-4 py-3 text-center">Ville</th>
-                    <th className="px-4 py-3 text-center">Téléphone</th>
-                    <th className="px-4 py-3 text-center">Contact</th>
-                    <th className="px-4 py-3 text-center">Email</th>
-                    <th className="px-4 py-3 text-center">Délai moyen</th>
-                    <th className="px-4 py-3 text-center">Actions</th>
+                    <th className="px-4 py-3 text-left">Fournisseur</th><th className="px-4 py-3 text-left">Adresse</th><th className="px-4 py-3 text-center">Ville</th><th className="px-4 py-3 text-center">Téléphone</th><th className="px-4 py-3 text-center">Contact</th><th className="px-4 py-3 text-center">Email</th><th className="px-4 py-3 text-center">Délai</th><th className="px-4 py-3 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {fournisseursList
-                    .filter(f => !rechercheFournisseur || f.nom.toLowerCase().includes(rechercheFournisseur.toLowerCase()))
-                    .map((f, index) => (
-                    <tr key={f.id} className={`hover:bg-slate-50 ${index % 2 === 0 ? 'bg-white' : 'bg-sky-50'}`}>
-                      <td className="px-4 py-3 font-bold text-slate-800">{f.nom}</td>
-                      <td className="px-4 py-3 text-slate-600 text-xs">{f.adresse}</td>
-                      <td className="px-4 py-3 text-center text-slate-600">{f.ville}</td>
-                      <td className="px-4 py-3 text-center text-slate-600">{f.telephone}</td>
-                      <td className="px-4 py-3 text-center text-slate-600">{f.contact}</td>
-                      <td className="px-4 py-3 text-center text-slate-600 text-xs">{f.email}</td>
-                      <td className="px-4 py-3 text-center">
-                        {f.delaiMoyen && <span className="px-3 py-1 bg-slate-100 rounded-full text-xs">{f.delaiMoyen}</span>}
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex gap-1 justify-center">
-                          <button onClick={() => { setFournisseurEnEdition({...f}); setShowModifierFournisseurModal(true); }} className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button>
-                          <button onClick={() => supprimerFournisseur(f.id)} className="px-3 py-1 bg-red-500 text-white text-xs rounded">Supprimer</button>
-                        </div>
-                      </td>
+                  {fournisseursList.filter(f => !rechercheFournisseur || f.nom.toLowerCase().includes(rechercheFournisseur.toLowerCase())).map((f, i) => (
+                    <tr key={f.id} className={`hover:bg-slate-50 ${i % 2 === 0 ? 'bg-white' : 'bg-sky-50'}`}>
+                      <td className="px-4 py-3 font-bold">{f.nom}</td><td className="px-4 py-3 text-xs text-slate-600">{f.adresse}</td><td className="px-4 py-3 text-center text-slate-600">{f.ville}</td><td className="px-4 py-3 text-center">{f.telephone}</td><td className="px-4 py-3 text-center">{f.contact}</td><td className="px-4 py-3 text-center text-xs">{f.email}</td>
+                      <td className="px-4 py-3 text-center">{f.delaiMoyen && <span className="px-3 py-1 bg-slate-100 rounded-full text-xs">{f.delaiMoyen}</span>}</td>
+                      <td className="px-4 py-3 text-center"><div className="flex gap-1 justify-center"><button onClick={() => { setFournisseurEnEdition({...f}); setShowModifierFournisseurModal(true); }} className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button><button onClick={() => supprimerFournisseur(f.id)} className="px-3 py-1 bg-red-500 text-white text-xs rounded">Supprimer</button></div></td>
                     </tr>
                   ))}
                 </tbody>
@@ -7844,7 +8007,6 @@ const Achats = () => {
     </div>
   );
 };
-
   // === RENTABILITÉ ===
 // === RENTABILITÉ DES INSTALLATIONS ===
 const Rentabilite = () => {
