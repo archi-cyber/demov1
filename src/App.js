@@ -9578,9 +9578,6 @@ const NonConformites = () => {
 };
 
 
-
-
-
   // === MULTI-LOGEMENTS ===
   const MultiLogements = () => (
     <div className="space-y-6">
@@ -9633,6 +9630,1317 @@ const NonConformites = () => {
       </div>
     </div>
   );
+  // === MODULE REPRISES ===
+// Remplacer le GenericScreen pour 'reprises' dans le router par: case 'reprises': return <Reprises />;
+
+const Reprises = () => {
+  const [onglet, setOnglet] = useState('actives'); // actives, historique, statistiques, conseils
+
+  // === ÉQUIPES ===
+  const equipes = [
+    'Équipe Installation A',
+    'Équipe Installation B',
+    'Équipe Production Aluminium',
+    'Équipe Production Verre',
+    'Équipe Livraison',
+    'Équipe Mesure',
+  ];
+
+  // === TYPES DE REPRISES ===
+  const typesReprise = [
+    'Erreur de mesure',
+    'Défaut de matériau',
+    'Mauvaise coupe',
+    'Problème d\'installation',
+    'Non-conformité client',
+    'Dommage en transport',
+    'Erreur de couleur',
+    'Pièce manquante',
+    'Défaut de soudure',
+    'Mauvais alignement',
+    'Autre',
+  ];
+
+  const priorites = ['Haute', 'Moyenne', 'Basse'];
+  const statutsReprise = ['Planifiée', 'En cours', 'En attente de pièces', 'Complétée'];
+
+  // === DONNÉES DE REPRISES ACTIVES ===
+  const [reprisesData, setReprisesData] = useState([
+    {
+      id: 1, numCommande: '250927', client: 'Steve Boucher', ville: 'Beauport',
+      equipe: 'Équipe Installation A', typeReprise: 'Erreur de mesure',
+      raison: 'Mesure du garde-corps non conforme, écart de 2cm sur la longueur totale',
+      dateReprise: '2026-01-28', dateOrigine: '2026-01-15', nombreReprises: 1,
+      statut: 'En cours', priorite: 'Haute', notes: 'Client mécontent, à prioriser',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 450, tempsEstime: '3h', responsable: 'Martin Gagnon'
+    },
+    {
+      id: 2, numCommande: '251158', client: 'Steve Boucher', ville: 'Beauport',
+      equipe: 'Équipe Production Verre', typeReprise: 'Défaut de matériau',
+      raison: 'Verre trempé fissuré à la livraison, possible choc thermique en production',
+      dateReprise: '2026-01-30', dateOrigine: '2026-01-18', nombreReprises: 1,
+      statut: 'En attente de pièces', priorite: 'Haute', notes: 'Nouveau verre commandé chez fournisseur',
+      service: 'Livraison', completee: false, dateCompletion: '',
+      coutEstime: 680, tempsEstime: '2h', responsable: 'Jean-Pierre Roy'
+    },
+    {
+      id: 3, numCommande: '250647', client: 'CONSTRUCTION GOSCO', ville: 'St-Raymond',
+      equipe: 'Équipe Installation B', typeReprise: 'Problème d\'installation',
+      raison: 'Poteaux non alignés avec la structure du balcon, nécessite réajustement complet',
+      dateReprise: '2026-02-01', dateOrigine: '2026-01-25', nombreReprises: 2,
+      statut: 'Planifiée', priorite: 'Moyenne', notes: 'Deuxième reprise - vérifier structure avant intervention',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 1200, tempsEstime: '6h', responsable: 'Luc Tremblay'
+    },
+    {
+      id: 4, numCommande: '250683', client: 'Marcel Lebreton', ville: 'Québec',
+      equipe: 'Équipe Mesure', typeReprise: 'Erreur de mesure',
+      raison: 'Dimensions erronées transmises à la production, escalier mal mesuré',
+      dateReprise: '2026-01-27', dateOrigine: '2026-01-20', nombreReprises: 1,
+      statut: 'En cours', priorite: 'Haute', notes: 'Remesure effectuée le 26 janvier',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 350, tempsEstime: '4h', responsable: 'André Simard'
+    },
+    {
+      id: 5, numCommande: '250100', client: 'Const. Couture & Tanguay', ville: 'Beauport',
+      equipe: 'Équipe Production Aluminium', typeReprise: 'Mauvaise coupe',
+      raison: 'Limon coupé 5mm trop court, ne s\'ajuste pas au support',
+      dateReprise: '2026-02-02', dateOrigine: '2026-01-15', nombreReprises: 1,
+      statut: 'En cours', priorite: 'Moyenne', notes: '',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 280, tempsEstime: '2h', responsable: 'Pierre Lavoie'
+    },
+    {
+      id: 6, numCommande: '250062-3', client: 'Drolet construction', ville: 'Lévis',
+      equipe: 'Équipe Livraison', typeReprise: 'Dommage en transport',
+      raison: 'Rampe aluminium endommagée pendant le transport, égratignures profondes',
+      dateReprise: '2026-02-01', dateOrigine: '2026-01-28', nombreReprises: 1,
+      statut: 'Planifiée', priorite: 'Basse', notes: 'Revoir emballage pour ce type de pièce',
+      service: 'Livraison', completee: false, dateCompletion: '',
+      coutEstime: 520, tempsEstime: '1.5h', responsable: 'François Dubé'
+    },
+    {
+      id: 7, numCommande: '250890', client: 'Habitations Pelletier', ville: 'Lévis',
+      equipe: 'Équipe Installation A', typeReprise: 'Erreur de couleur',
+      raison: 'Couleur noir mat installée au lieu de noir brillant, commande mal lue',
+      dateReprise: '2026-01-29', dateOrigine: '2026-01-10', nombreReprises: 1,
+      statut: 'En attente de pièces', priorite: 'Moyenne', notes: 'Pièces en peinture noir brillant commandées',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 890, tempsEstime: '5h', responsable: 'Martin Gagnon'
+    },
+    {
+      id: 8, numCommande: '250745', client: 'Rénovations Plus', ville: 'Québec',
+      equipe: 'Équipe Production Aluminium', typeReprise: 'Défaut de soudure',
+      raison: 'Soudure du coin du cadre insuffisante, risque structural',
+      dateReprise: '2026-02-02', dateOrigine: '2026-01-22', nombreReprises: 1,
+      statut: 'En cours', priorite: 'Haute', notes: 'Vérifier tous les cadres du même lot',
+      service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 320, tempsEstime: '2.5h', responsable: 'Pierre Lavoie'
+    },
+  ]);
+
+  // === HISTORIQUE DES REPRISES COMPLÉTÉES ===
+  const [historiqueReprises, setHistoriqueReprises] = useState([
+    {
+      id: 100, numCommande: '241088', client: 'Les Projets Meraki', ville: 'Québec',
+      equipe: 'Équipe Installation A', typeReprise: 'Problème d\'installation',
+      raison: 'Fixation murale insuffisante, garde-corps instable',
+      dateReprise: '2025-12-10', dateOrigine: '2025-11-20', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Haute', notes: 'Résolu avec ancrages chimiques',
+      service: 'Installation', completee: true, dateCompletion: '2025-12-15',
+      coutEstime: 380, tempsEstime: '3h', responsable: 'Martin Gagnon'
+    },
+    {
+      id: 101, numCommande: '250050', client: 'Habitations Lévis', ville: 'Lévis',
+      equipe: 'Équipe Mesure', typeReprise: 'Erreur de mesure',
+      raison: 'Mesure de l\'escalier incorrecte, pente non prise en compte',
+      dateReprise: '2025-12-18', dateOrigine: '2025-12-01', nombreReprises: 2,
+      statut: 'Complétée', priorite: 'Haute', notes: 'Deuxième erreur de mesure sur ce projet',
+      service: 'Installation', completee: true, dateCompletion: '2025-12-28',
+      coutEstime: 750, tempsEstime: '5h', responsable: 'André Simard'
+    },
+    {
+      id: 102, numCommande: '241200', client: 'Const. Beaurivage', ville: 'St-Nicolas',
+      equipe: 'Équipe Installation B', typeReprise: 'Mauvais alignement',
+      raison: 'Barrotins mal alignés, espacement irrégulier',
+      dateReprise: '2026-01-05', dateOrigine: '2025-12-15', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Moyenne', notes: '',
+      service: 'Installation', completee: true, dateCompletion: '2026-01-10',
+      coutEstime: 200, tempsEstime: '2h', responsable: 'Luc Tremblay'
+    },
+    {
+      id: 103, numCommande: '241055', client: 'Domaine des Cèdres', ville: 'Ste-Foy',
+      equipe: 'Équipe Production Verre', typeReprise: 'Défaut de matériau',
+      raison: 'Verre non conforme aux normes, bulles visibles',
+      dateReprise: '2025-11-20', dateOrigine: '2025-11-05', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Haute', notes: 'Fournisseur avisé',
+      service: 'Livraison', completee: true, dateCompletion: '2025-12-01',
+      coutEstime: 920, tempsEstime: '3h', responsable: 'Jean-Pierre Roy'
+    },
+    {
+      id: 104, numCommande: '250010', client: 'Immeubles Trudel', ville: 'Lévis',
+      equipe: 'Équipe Livraison', typeReprise: 'Dommage en transport',
+      raison: 'Panneau de verre cassé lors du déchargement',
+      dateReprise: '2026-01-12', dateOrigine: '2026-01-05', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Haute', notes: 'Formation transport effectuée',
+      service: 'Livraison', completee: true, dateCompletion: '2026-01-20',
+      coutEstime: 1100, tempsEstime: '2h', responsable: 'François Dubé'
+    },
+    {
+      id: 105, numCommande: '241150', client: 'Gestion Immo Capitale', ville: 'Québec',
+      equipe: 'Équipe Installation A', typeReprise: 'Pièce manquante',
+      raison: 'Capuchons de poteaux manquants, oubli en production',
+      dateReprise: '2025-10-15', dateOrigine: '2025-10-01', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Basse', notes: '',
+      service: 'Installation', completee: true, dateCompletion: '2025-10-20',
+      coutEstime: 80, tempsEstime: '1h', responsable: 'Martin Gagnon'
+    },
+    {
+      id: 106, numCommande: '241300', client: 'Les Habitations du Fleuve', ville: 'Lévis',
+      equipe: 'Équipe Production Aluminium', typeReprise: 'Mauvaise coupe',
+      raison: 'Main courante coupée trop longue de 8mm',
+      dateReprise: '2025-11-02', dateOrigine: '2025-10-20', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Moyenne', notes: '',
+      service: 'Installation', completee: true, dateCompletion: '2025-11-05',
+      coutEstime: 150, tempsEstime: '1.5h', responsable: 'Pierre Lavoie'
+    },
+    {
+      id: 107, numCommande: '250200', client: 'Maison Bonneau', ville: 'Charlesbourg',
+      equipe: 'Équipe Mesure', typeReprise: 'Erreur de mesure',
+      raison: 'Hauteur du garde-corps mesurée depuis le mauvais point de référence',
+      dateReprise: '2026-01-20', dateOrigine: '2026-01-08', nombreReprises: 1,
+      statut: 'Complétée', priorite: 'Haute', notes: '',
+      service: 'Installation', completee: true, dateCompletion: '2026-01-25',
+      coutEstime: 400, tempsEstime: '3h', responsable: 'André Simard'
+    },
+  ]);
+
+  // === FILTRES ===
+  const [recherche, setRecherche] = useState('');
+  const [filtreEquipe, setFiltreEquipe] = useState('');
+  const [filtreType, setFiltreType] = useState('');
+  const [filtrePriorite, setFiltrePriorite] = useState('');
+  const [filtreStatut, setFiltreStatut] = useState('');
+  const [filtrePeriode, setFiltrePeriode] = useState('tout'); // jour, semaine, mois, annee, tout
+  const [filtreAnnee, setFiltreAnnee] = useState(new Date().getFullYear());
+
+  // === MODALS ===
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [repriseSelectionnee, setRepriseSelectionnee] = useState(null);
+  const [showAjouterModal, setShowAjouterModal] = useState(false);
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
+  const [repriseACompleter, setRepriseACompleter] = useState(null);
+  const [showModifierModal, setShowModifierModal] = useState(false);
+  const [repriseEnEdition, setRepriseEnEdition] = useState(null);
+
+  // Formulaire nouvelle reprise
+  const [nouvelleReprise, setNouvelleReprise] = useState({
+    numCommande: '', client: '', ville: '', equipe: '', typeReprise: '',
+    raison: '', dateReprise: new Date().toISOString().split('T')[0],
+    dateOrigine: '', nombreReprises: 1, statut: 'Planifiée', priorite: 'Moyenne',
+    notes: '', service: 'Installation', completee: false, dateCompletion: '',
+    coutEstime: 0, tempsEstime: '', responsable: ''
+  });
+
+  // ============================================================
+  // FONCTIONS UTILITAIRES
+  // ============================================================
+  const formaterDate = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const formaterDateCourte = (dateStr) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('fr-CA');
+  };
+
+  const isAujourdhui = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    return d.toDateString() === now.toDateString();
+  };
+
+  const isCetteSemaine = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    const debutSemaine = new Date(now);
+    debutSemaine.setDate(now.getDate() - now.getDay());
+    debutSemaine.setHours(0,0,0,0);
+    const finSemaine = new Date(debutSemaine);
+    finSemaine.setDate(debutSemaine.getDate() + 7);
+    return d >= debutSemaine && d < finSemaine;
+  };
+
+  const isCeMois = (dateStr) => {
+    if (!dateStr) return false;
+    const d = new Date(dateStr);
+    const now = new Date();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  };
+
+  const isCetteAnnee = (dateStr) => {
+    if (!dateStr) return false;
+    return new Date(dateStr).getFullYear() === new Date().getFullYear();
+  };
+
+  const isAnnee = (dateStr, annee) => {
+    if (!dateStr) return false;
+    return new Date(dateStr).getFullYear() === annee;
+  };
+
+  const getPrioriteCouleur = (p) => {
+    switch(p) {
+      case 'Haute': return 'bg-red-100 text-red-800 border-red-300';
+      case 'Moyenne': return 'bg-amber-100 text-amber-800 border-amber-300';
+      case 'Basse': return 'bg-green-100 text-green-800 border-green-300';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getStatutCouleur = (s) => {
+    switch(s) {
+      case 'Complétée': return 'bg-emerald-100 text-emerald-800';
+      case 'En cours': return 'bg-blue-100 text-blue-800';
+      case 'Planifiée': return 'bg-purple-100 text-purple-800';
+      case 'En attente de pièces': return 'bg-amber-100 text-amber-800';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getTypeCouleur = (t) => {
+    switch(t) {
+      case 'Erreur de mesure': return 'bg-red-500 text-white';
+      case 'Défaut de matériau': return 'bg-orange-500 text-white';
+      case 'Mauvaise coupe': return 'bg-amber-500 text-white';
+      case 'Problème d\'installation': return 'bg-blue-500 text-white';
+      case 'Non-conformité client': return 'bg-purple-500 text-white';
+      case 'Dommage en transport': return 'bg-slate-600 text-white';
+      case 'Erreur de couleur': return 'bg-pink-500 text-white';
+      case 'Pièce manquante': return 'bg-teal-500 text-white';
+      case 'Défaut de soudure': return 'bg-rose-600 text-white';
+      case 'Mauvais alignement': return 'bg-indigo-500 text-white';
+      default: return 'bg-slate-400 text-white';
+    }
+  };
+
+  // ============================================================
+  // FILTRAGE
+  // ============================================================
+  const toutesReprises = [...reprisesData, ...historiqueReprises];
+
+  const filtrerParPeriode = (data) => {
+    switch(filtrePeriode) {
+      case 'jour': return data.filter(r => isAujourdhui(r.dateReprise));
+      case 'semaine': return data.filter(r => isCetteSemaine(r.dateReprise));
+      case 'mois': return data.filter(r => isCeMois(r.dateReprise));
+      case 'annee': return data.filter(r => isCetteAnnee(r.dateReprise));
+      default: return data;
+    }
+  };
+
+  const filtrerReprises = (data) => {
+    return data.filter(r => {
+      const matchRecherche = !recherche ||
+        r.numCommande.toLowerCase().includes(recherche.toLowerCase()) ||
+        r.client.toLowerCase().includes(recherche.toLowerCase()) ||
+        r.raison.toLowerCase().includes(recherche.toLowerCase());
+      const matchEquipe = !filtreEquipe || r.equipe === filtreEquipe;
+      const matchType = !filtreType || r.typeReprise === filtreType;
+      const matchPriorite = !filtrePriorite || r.priorite === filtrePriorite;
+      const matchStatut = !filtreStatut || r.statut === filtreStatut;
+      return matchRecherche && matchEquipe && matchType && matchPriorite && matchStatut;
+    });
+  };
+
+  const reprisesActivesFiltrees = filtrerParPeriode(filtrerReprises(reprisesData));
+  const historiqueFiltree = filtrerReprises(historiqueReprises);
+
+  // ============================================================
+  // STATISTIQUES
+  // ============================================================
+
+  // Stats globales
+  const totalReprisesActives = reprisesData.length;
+  const totalHistorique = historiqueReprises.length;
+  const totalToutes = totalReprisesActives + totalHistorique;
+  const coutTotalActif = reprisesData.reduce((s, r) => s + r.coutEstime, 0);
+  const coutTotalHistorique = historiqueReprises.reduce((s, r) => s + r.coutEstime, 0);
+  const commandesMultiReprises = toutesReprises.filter(r => r.nombreReprises > 1).length;
+
+  // % reprise par équipe (sur TOUTES les reprises)
+  const statsParEquipe = equipes.map(eq => {
+    const reprisesEquipe = toutesReprises.filter(r => r.equipe === eq);
+    const total = reprisesEquipe.length;
+    const pourcentage = totalToutes > 0 ? ((total / totalToutes) * 100).toFixed(1) : 0;
+    const cout = reprisesEquipe.reduce((s, r) => s + r.coutEstime, 0);
+    const actives = reprisesData.filter(r => r.equipe === eq).length;
+    const completees = historiqueReprises.filter(r => r.equipe === eq).length;
+    return { equipe: eq, total, pourcentage, cout, actives, completees };
+  }).sort((a, b) => b.total - a.total);
+
+  // Stats par type
+  const statsParType = typesReprise.map(t => {
+    const count = toutesReprises.filter(r => r.typeReprise === t).length;
+    return { type: t, count, pourcentage: totalToutes > 0 ? ((count / totalToutes) * 100).toFixed(1) : 0 };
+  }).filter(s => s.count > 0).sort((a, b) => b.count - a.count);
+
+  // Stats par période
+  const statsJour = toutesReprises.filter(r => isAujourdhui(r.dateReprise)).length;
+  const statsSemaine = toutesReprises.filter(r => isCetteSemaine(r.dateReprise)).length;
+  const statsMois = toutesReprises.filter(r => isCeMois(r.dateReprise)).length;
+  const statsAnneeEnCours = toutesReprises.filter(r => isCetteAnnee(r.dateReprise)).length;
+  const statsAnneePrecedente = toutesReprises.filter(r => isAnnee(r.dateReprise, new Date().getFullYear() - 1)).length;
+
+  // Bilan annuel
+  const anneesDisponibles = [...new Set(toutesReprises.map(r => new Date(r.dateReprise).getFullYear()))].sort((a,b) => b - a);
+  const bilanAnnuel = anneesDisponibles.map(annee => {
+    const reprisesAnnee = toutesReprises.filter(r => isAnnee(r.dateReprise, annee));
+    const cout = reprisesAnnee.reduce((s, r) => s + r.coutEstime, 0);
+    const parEquipe = equipes.map(eq => ({
+      equipe: eq,
+      count: reprisesAnnee.filter(r => r.equipe === eq).length
+    })).filter(e => e.count > 0);
+    const parType = typesReprise.map(t => ({
+      type: t,
+      count: reprisesAnnee.filter(r => r.typeReprise === t).length
+    })).filter(t => t.count > 0).sort((a,b) => b.count - a.count);
+    return { annee, total: reprisesAnnee.length, cout, parEquipe, parType };
+  });
+
+  // Stats pour une commande spécifique (quand on filtre par commande)
+  const getStatsCommande = (numCommande) => {
+    const reprises = toutesReprises.filter(r => r.numCommande === numCommande);
+    if (reprises.length === 0) return null;
+    return {
+      numCommande,
+      client: reprises[0].client,
+      totalReprises: reprises.length,
+      nombreMaxReprises: Math.max(...reprises.map(r => r.nombreReprises)),
+      coutTotal: reprises.reduce((s, r) => s + r.coutEstime, 0),
+      equipesImpliquees: [...new Set(reprises.map(r => r.equipe))],
+      typesImpliques: [...new Set(reprises.map(r => r.typeReprise))],
+      reprises
+    };
+  };
+
+  // Stats commande filtrée (si recherche = numéro de commande exact)
+  const commandeRecherchee = recherche ? getStatsCommande(recherche) : null;
+
+  // ============================================================
+  // CRUD
+  // ============================================================
+  const ajouterReprise = () => {
+    if (!nouvelleReprise.numCommande || !nouvelleReprise.client || !nouvelleReprise.equipe || !nouvelleReprise.typeReprise) {
+      alert('# Commande, Client, Équipe et Type de reprise sont requis');
+      return;
+    }
+    setReprisesData([...reprisesData, { id: Date.now(), ...nouvelleReprise }]);
+    setNouvelleReprise({
+      numCommande: '', client: '', ville: '', equipe: '', typeReprise: '',
+      raison: '', dateReprise: new Date().toISOString().split('T')[0],
+      dateOrigine: '', nombreReprises: 1, statut: 'Planifiée', priorite: 'Moyenne',
+      notes: '', service: 'Installation', completee: false, dateCompletion: '',
+      coutEstime: 0, tempsEstime: '', responsable: ''
+    });
+    setShowAjouterModal(false);
+  };
+
+  const modifierReprise = () => {
+    if (!repriseEnEdition) return;
+    setReprisesData(reprisesData.map(r => r.id === repriseEnEdition.id ? repriseEnEdition : r));
+    setShowModifierModal(false);
+    setRepriseEnEdition(null);
+  };
+
+  const supprimerReprise = (id) => {
+    if (window.confirm('Supprimer cette reprise ?')) {
+      setReprisesData(reprisesData.filter(r => r.id !== id));
+    }
+  };
+
+  const completerReprise = (reprise) => {
+    const repriseComplete = {
+      ...reprise,
+      statut: 'Complétée',
+      completee: true,
+      dateCompletion: new Date().toISOString().split('T')[0]
+    };
+    setReprisesData(reprisesData.filter(r => r.id !== reprise.id));
+    setHistoriqueReprises([repriseComplete, ...historiqueReprises]);
+    setShowConfirmComplete(false);
+    setRepriseACompleter(null);
+    setShowDetailModal(false);
+  };
+
+  // ============================================================
+  // COMPOSANTS MODALS
+  // ============================================================
+
+  // MODAL DÉTAIL REPRISE
+  const DetailModal = () => {
+    if (!showDetailModal || !repriseSelectionnee) return null;
+    const r = repriseSelectionnee;
+    const isHist = r.completee;
+    const statsCmd = getStatsCommande(r.numCommande);
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-5 bg-slate-800 text-white flex items-center justify-between rounded-t-2xl">
+            <div>
+              <h2 className="text-xl font-bold">Détail reprise - #{r.numCommande}</h2>
+              <p className="text-slate-300">{r.client} • {r.ville}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {r.nombreReprises > 1 && (
+                <span className="px-3 py-1 bg-red-500 text-white rounded-full text-sm font-bold">
+                  {r.nombreReprises}x reprises
+                </span>
+              )}
+              <button onClick={() => setShowDetailModal(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+                <Icon name="x" size={24}/>
+              </button>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-5">
+            {/* Infos principales */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Équipe</p>
+                <p className="font-semibold text-sm">{r.equipe}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Responsable</p>
+                <p className="font-semibold text-sm">{r.responsable || '—'}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Priorité</p>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${getPrioriteCouleur(r.priorite)}`}>{r.priorite}</span>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-3">
+                <p className="text-xs text-slate-500">Statut</p>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutCouleur(r.statut)}`}>{r.statut}</span>
+              </div>
+            </div>
+
+            {/* Type et raison */}
+            <div className="bg-red-50 rounded-xl p-4 border border-red-200">
+              <div className="flex items-center gap-3 mb-2">
+                <span className={`px-3 py-1 rounded text-xs font-bold ${getTypeCouleur(r.typeReprise)}`}>{r.typeReprise}</span>
+                <span className="text-xs text-slate-500">Service: {r.service}</span>
+              </div>
+              <p className="text-sm text-slate-800 font-medium">{r.raison}</p>
+            </div>
+
+            {/* Dates et coût */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="bg-white rounded-xl p-3 border border-slate-200">
+                <p className="text-xs text-slate-500">Date commande originale</p>
+                <p className="font-medium text-sm">{formaterDate(r.dateOrigine)}</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-slate-200">
+                <p className="text-xs text-slate-500">Date de reprise</p>
+                <p className="font-medium text-sm">{formaterDate(r.dateReprise)}</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-slate-200">
+                <p className="text-xs text-slate-500">Coût estimé</p>
+                <p className="font-bold text-lg text-red-600">{r.coutEstime.toLocaleString()} $</p>
+              </div>
+              <div className="bg-white rounded-xl p-3 border border-slate-200">
+                <p className="text-xs text-slate-500">Temps estimé</p>
+                <p className="font-bold text-lg">{r.tempsEstime || '—'}</p>
+              </div>
+            </div>
+
+            {r.notes && (
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h4 className="font-semibold text-amber-800 mb-1">Notes</h4>
+                <p className="text-sm text-slate-700 whitespace-pre-line">{r.notes}</p>
+              </div>
+            )}
+
+            {isHist && (
+              <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                <h4 className="font-semibold text-emerald-800 mb-1">✓ Reprise complétée</h4>
+                <p className="text-sm text-slate-700">Date de complétion: <strong>{formaterDate(r.dateCompletion)}</strong></p>
+              </div>
+            )}
+
+            {/* Stats commande */}
+            {statsCmd && statsCmd.totalReprises > 1 && (
+              <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                <h4 className="font-semibold text-slate-800 mb-3">📊 Statistiques de la commande #{r.numCommande}</h4>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div><span className="text-slate-500">Total reprises:</span> <strong className="text-red-600">{statsCmd.totalReprises}</strong></div>
+                  <div><span className="text-slate-500">Coût total:</span> <strong className="text-red-600">{statsCmd.coutTotal.toLocaleString()} $</strong></div>
+                  <div><span className="text-slate-500">Équipes impliquées:</span> <strong>{statsCmd.equipesImpliquees.join(', ')}</strong></div>
+                  <div><span className="text-slate-500">Types:</span> <strong>{statsCmd.typesImpliques.join(', ')}</strong></div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              {!isHist && (
+                <button
+                  onClick={() => { setRepriseACompleter(r); setShowConfirmComplete(true); }}
+                  className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg flex items-center gap-2"
+                >
+                  <Icon name="check" size={18}/>Marquer comme complétée
+                </button>
+              )}
+            </div>
+            <div className="flex gap-2">
+              {!isHist && (
+                <button
+                  onClick={() => { setRepriseEnEdition({...r}); setShowDetailModal(false); setShowModifierModal(true); }}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2"
+                >
+                  <Icon name="edit" size={16}/>Modifier
+                </button>
+              )}
+              <button onClick={() => setShowDetailModal(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100">
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL CONFIRMER COMPLÉTION
+  const ConfirmCompleteModal = () => {
+    if (!showConfirmComplete || !repriseACompleter) return null;
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon name="check" size={32} className="text-emerald-600"/>
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">Compléter la reprise ?</h3>
+          <p className="text-slate-600 mb-2">Commande <strong>#{repriseACompleter.numCommande}</strong> - {repriseACompleter.client}</p>
+          <p className="text-sm text-slate-500 mb-6">La reprise sera déplacée dans l'historique.</p>
+          <div className="flex justify-center gap-4">
+            <button onClick={() => { setShowConfirmComplete(false); setRepriseACompleter(null); }} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={() => completerReprise(repriseACompleter)} className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg">✓ Confirmer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL FORMULAIRE (AJOUT / MODIF)
+  const RepriseFormModal = ({ show, onClose, reprise, setReprise, onSave, titre }) => {
+    if (!show || !reprise) return null;
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-5 bg-slate-800 text-white rounded-t-2xl">
+            <h2 className="text-xl font-bold">{titre}</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1"># Commande *</label>
+                <input type="text" value={reprise.numCommande} onChange={(e) => setReprise({...reprise, numCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Client *</label>
+                <input type="text" value={reprise.client} onChange={(e) => setReprise({...reprise, client: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Ville</label>
+                <input type="text" value={reprise.ville} onChange={(e) => setReprise({...reprise, ville: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Équipe *</label>
+                <select value={reprise.equipe} onChange={(e) => setReprise({...reprise, equipe: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  <option value="">Sélectionner...</option>
+                  {equipes.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Type de reprise *</label>
+                <select value={reprise.typeReprise} onChange={(e) => setReprise({...reprise, typeReprise: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  <option value="">Sélectionner...</option>
+                  {typesReprise.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Responsable</label>
+                <input type="text" value={reprise.responsable} onChange={(e) => setReprise({...reprise, responsable: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date commande originale</label>
+                <input type="date" value={reprise.dateOrigine} onChange={(e) => setReprise({...reprise, dateOrigine: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date de reprise</label>
+                <input type="date" value={reprise.dateReprise} onChange={(e) => setReprise({...reprise, dateReprise: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Nombre de reprises</label>
+                <input type="number" min="1" value={reprise.nombreReprises} onChange={(e) => setReprise({...reprise, nombreReprises: parseInt(e.target.value) || 1})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Priorité</label>
+                <select value={reprise.priorite} onChange={(e) => setReprise({...reprise, priorite: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  {priorites.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Statut</label>
+                <select value={reprise.statut} onChange={(e) => setReprise({...reprise, statut: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  {statutsReprise.filter(s => s !== 'Complétée').map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Service</label>
+                <select value={reprise.service} onChange={(e) => setReprise({...reprise, service: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  <option value="Installation">Installation</option>
+                  <option value="Livraison">Livraison</option>
+                  <option value="Production">Production</option>
+                  <option value="Mesure">Mesure</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Coût estimé ($)</label>
+                <input type="number" step="0.01" value={reprise.coutEstime} onChange={(e) => setReprise({...reprise, coutEstime: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Temps estimé</label>
+                <input type="text" placeholder="ex: 3h" value={reprise.tempsEstime} onChange={(e) => setReprise({...reprise, tempsEstime: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg"/>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Raison détaillée</label>
+              <textarea value={reprise.raison} onChange={(e) => setReprise({...reprise, raison: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2} placeholder="Décrire la raison de la reprise..."/>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Notes</label>
+              <textarea value={reprise.notes} onChange={(e) => setReprise({...reprise, notes: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2}/>
+            </div>
+          </div>
+          <div className="p-4 border-t border-slate-200 flex justify-end gap-3">
+            <button onClick={onClose} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={onSave} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // TABLEAU DE REPRISES
+  // ============================================================
+  const TableauReprises = ({ data, isHistorique }) => (
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-800 text-white">
+            <tr>
+              <th className="px-3 py-3 text-left"># Commande</th>
+              <th className="px-3 py-3 text-left">Client / Ville</th>
+              <th className="px-3 py-3 text-center">Équipe</th>
+              <th className="px-3 py-3 text-center">Type</th>
+              <th className="px-3 py-3 text-center">Nb reprises</th>
+              <th className="px-3 py-3 text-center">Priorité</th>
+              <th className="px-3 py-3 text-center">Statut</th>
+              <th className="px-3 py-3 text-center">Coût</th>
+              <th className="px-3 py-3 text-center">Date</th>
+              {!isHistorique && <th className="px-3 py-3 text-center">Actions</th>}
+              {isHistorique && <th className="px-3 py-3 text-center">Complétée le</th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {data.map((r, i) => (
+              <tr
+                key={r.id}
+                className={`hover:bg-blue-50 cursor-pointer ${i % 2 === 0 ? 'bg-white' : 'bg-slate-50'} ${r.nombreReprises > 1 ? 'border-l-4 border-l-red-500' : ''}`}
+                onClick={() => { setRepriseSelectionnee(r); setShowDetailModal(true); }}
+              >
+                <td className="px-3 py-3">
+                  <p className="font-bold text-slate-800">{r.numCommande}</p>
+                </td>
+                <td className="px-3 py-3">
+                  <p className="font-medium">{r.client}</p>
+                  <p className="text-xs text-slate-500">{r.ville}</p>
+                </td>
+                <td className="px-3 py-3 text-center text-xs font-medium">{r.equipe.replace('Équipe ', '')}</td>
+                <td className="px-3 py-3 text-center">
+                  <span className={`px-2 py-0.5 rounded text-xs font-bold ${getTypeCouleur(r.typeReprise)}`}>{r.typeReprise}</span>
+                </td>
+                <td className="px-3 py-3 text-center">
+                  {r.nombreReprises > 1
+                    ? <span className="inline-flex items-center justify-center w-7 h-7 bg-red-500 text-white rounded-full font-bold text-sm">{r.nombreReprises}</span>
+                    : <span className="text-slate-400">1</span>
+                  }
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${getPrioriteCouleur(r.priorite)}`}>{r.priorite}</span>
+                </td>
+                <td className="px-3 py-3 text-center">
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(r.statut)}`}>{r.statut}</span>
+                </td>
+                <td className="px-3 py-3 text-center font-medium text-red-600">{r.coutEstime.toLocaleString()} $</td>
+                <td className="px-3 py-3 text-center text-xs">{formaterDateCourte(r.dateReprise)}</td>
+                {!isHistorique && (
+                  <td className="px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => { setRepriseACompleter(r); setShowConfirmComplete(true); }} className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded" title="Compléter">
+                        <Icon name="check" size={16}/>
+                      </button>
+                      <button onClick={() => { setRepriseEnEdition({...r}); setShowModifierModal(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Modifier">
+                        <Icon name="edit" size={16}/>
+                      </button>
+                      <button onClick={() => supprimerReprise(r.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Supprimer">
+                        <Icon name="trash" size={16}/>
+                      </button>
+                    </div>
+                  </td>
+                )}
+                {isHistorique && (
+                  <td className="px-3 py-3 text-center text-xs text-emerald-700 font-medium">{formaterDateCourte(r.dateCompletion)}</td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {data.length === 0 && <div className="p-12 text-center text-slate-400">Aucune reprise trouvée</div>}
+    </div>
+  );
+
+  // ============================================================
+  // BARRE DE PROGRESSION
+  // ============================================================
+  const BarreProgression = ({ valeur, max, couleur, label }) => {
+    const pct = max > 0 ? Math.min((valeur / max) * 100, 100) : 0;
+    return (
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-medium text-slate-700 w-44 truncate" title={label}>{label}</span>
+        <div className="flex-1 h-5 bg-slate-100 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full ${couleur} transition-all duration-500`} style={{ width: `${pct}%` }}/>
+        </div>
+        <span className="text-sm font-bold text-slate-800 w-16 text-right">{valeur} ({pct.toFixed(0)}%)</span>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // RENDU PRINCIPAL
+  // ============================================================
+  return (
+    <div className="space-y-4">
+      {/* Modals */}
+      <DetailModal />
+      <ConfirmCompleteModal />
+      <RepriseFormModal show={showAjouterModal} onClose={() => setShowAjouterModal(false)} reprise={nouvelleReprise} setReprise={setNouvelleReprise} onSave={ajouterReprise} titre="Nouvelle reprise" />
+      <RepriseFormModal show={showModifierModal} onClose={() => { setShowModifierModal(false); setRepriseEnEdition(null); }} reprise={repriseEnEdition} setReprise={setRepriseEnEdition} onSave={modifierReprise} titre="Modifier la reprise" />
+
+      {/* Header */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg"><Icon name="chevron-left" size={28}/></button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Reprises</h1>
+            <p className="text-slate-400 text-sm">Suivi des reprises et statistiques d'équipes</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6 text-white text-sm">
+          <div className="text-right"><p className="text-slate-400">Actives</p><p className="text-2xl font-bold text-red-400">{totalReprisesActives}</p></div>
+          <div className="text-right"><p className="text-slate-400">Ce mois</p><p className="text-2xl font-bold text-amber-400">{statsMois}</p></div>
+          <div className="text-right"><p className="text-slate-400">Coût actif</p><p className="text-2xl font-bold text-red-300">{coutTotalActif.toLocaleString()} $</p></div>
+        </div>
+      </div>
+
+      {/* Onglets */}
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+        <button onClick={() => setOnglet('actives')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'actives' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          🔧 Actives ({reprisesData.length})
+        </button>
+        <button onClick={() => setOnglet('historique')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'historique' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          📋 Historique ({historiqueReprises.length})
+        </button>
+        <button onClick={() => setOnglet('statistiques')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'statistiques' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          📊 Statistiques
+        </button>
+        <button onClick={() => setOnglet('conseils')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'conseils' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          💡 Conseils & Prévention
+        </button>
+      </div>
+
+      {/* ===== ONGLET ACTIVES ===== */}
+      {onglet === 'actives' && (
+        <>
+          {/* Stats rapides par période */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <button onClick={() => setFiltrePeriode('jour')} className={`p-3 rounded-xl border text-left transition-all ${filtrePeriode === 'jour' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <p className="text-xs text-slate-500">Aujourd'hui</p>
+              <p className="text-xl font-bold text-slate-800">{statsJour}</p>
+            </button>
+            <button onClick={() => setFiltrePeriode('semaine')} className={`p-3 rounded-xl border text-left transition-all ${filtrePeriode === 'semaine' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <p className="text-xs text-slate-500">Cette semaine</p>
+              <p className="text-xl font-bold text-slate-800">{statsSemaine}</p>
+            </button>
+            <button onClick={() => setFiltrePeriode('mois')} className={`p-3 rounded-xl border text-left transition-all ${filtrePeriode === 'mois' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <p className="text-xs text-slate-500">Ce mois</p>
+              <p className="text-xl font-bold text-slate-800">{statsMois}</p>
+            </button>
+            <button onClick={() => setFiltrePeriode('annee')} className={`p-3 rounded-xl border text-left transition-all ${filtrePeriode === 'annee' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <p className="text-xs text-slate-500">Cette année</p>
+              <p className="text-xl font-bold text-slate-800">{statsAnneeEnCours}</p>
+            </button>
+            <button onClick={() => setFiltrePeriode('tout')} className={`p-3 rounded-xl border text-left transition-all ${filtrePeriode === 'tout' ? 'border-blue-400 bg-blue-50 ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
+              <p className="text-xs text-slate-500">Tout</p>
+              <p className="text-xl font-bold text-slate-800">{totalToutes}</p>
+            </button>
+          </div>
+
+          {/* Filtres */}
+          <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-xs text-slate-500 mb-1">Rechercher</label>
+              <input type="text" value={recherche} onChange={(e) => setRecherche(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="# commande, client, raison..."/>
+            </div>
+            <div className="min-w-[180px]">
+              <label className="block text-xs text-slate-500 mb-1">Équipe</label>
+              <select value={filtreEquipe} onChange={(e) => setFiltreEquipe(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Toutes les équipes</option>
+                {equipes.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[150px]">
+              <label className="block text-xs text-slate-500 mb-1">Type</label>
+              <select value={filtreType} onChange={(e) => setFiltreType(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous types</option>
+                {typesReprise.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[110px]">
+              <label className="block text-xs text-slate-500 mb-1">Priorité</label>
+              <select value={filtrePriorite} onChange={(e) => setFiltrePriorite(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Toutes</option>
+                {priorites.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <button onClick={() => setShowAjouterModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow">
+              <Icon name="plus" size={18}/>Nouvelle reprise
+            </button>
+          </div>
+
+          {/* Stats commande filtrée */}
+          {commandeRecherchee && (
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <h3 className="font-bold text-blue-800 mb-2">📊 Stats commande #{commandeRecherchee.numCommande} - {commandeRecherchee.client}</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Total reprises</p><p className="text-xl font-bold text-red-600">{commandeRecherchee.totalReprises}</p></div>
+                <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Nb max reprises</p><p className="text-xl font-bold text-red-600">{commandeRecherchee.nombreMaxReprises}x</p></div>
+                <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Coût total</p><p className="text-xl font-bold text-red-600">{commandeRecherchee.coutTotal.toLocaleString()} $</p></div>
+                <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Équipes</p><p className="text-sm font-medium">{commandeRecherchee.equipesImpliquees.map(e => e.replace('Équipe ', '')).join(', ')}</p></div>
+              </div>
+            </div>
+          )}
+
+          {/* % par équipe (mini résumé) */}
+          {filtreEquipe && (
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+              <h4 className="font-semibold text-slate-800 mb-2">Statistiques: {filtreEquipe}</h4>
+              {(() => {
+                const eqStat = statsParEquipe.find(s => s.equipe === filtreEquipe);
+                if (!eqStat) return null;
+                return (
+                  <div className="grid grid-cols-4 gap-3 text-sm">
+                    <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Total reprises</p><p className="text-xl font-bold">{eqStat.total}</p></div>
+                    <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">% du total</p><p className="text-xl font-bold text-red-600">{eqStat.pourcentage}%</p></div>
+                    <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Coût total</p><p className="text-xl font-bold text-red-600">{eqStat.cout.toLocaleString()} $</p></div>
+                    <div className="bg-white rounded-lg p-3 border"><p className="text-xs text-slate-500">Actives / Complétées</p><p className="text-xl font-bold">{eqStat.actives} / {eqStat.completees}</p></div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          <TableauReprises data={reprisesActivesFiltrees} isHistorique={false} />
+        </>
+      )}
+
+      {/* ===== ONGLET HISTORIQUE ===== */}
+      {onglet === 'historique' && (
+        <>
+          <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 flex items-center gap-3">
+            <Icon name="check" size={24} className="text-emerald-600"/>
+            <div>
+              <p className="font-semibold text-emerald-800">Historique des reprises complétées</p>
+              <p className="text-sm text-emerald-600">{historiqueReprises.length} reprise(s) complétée(s) — Coût total: {coutTotalHistorique.toLocaleString()} $</p>
+            </div>
+          </div>
+
+          {/* Filtres historique */}
+          <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-xs text-slate-500 mb-1">Rechercher</label>
+              <input type="text" value={recherche} onChange={(e) => setRecherche(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="# commande, client..."/>
+            </div>
+            <div className="min-w-[180px]">
+              <label className="block text-xs text-slate-500 mb-1">Équipe</label>
+              <select value={filtreEquipe} onChange={(e) => setFiltreEquipe(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Toutes</option>
+                {equipes.map(eq => <option key={eq} value={eq}>{eq}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[150px]">
+              <label className="block text-xs text-slate-500 mb-1">Type</label>
+              <select value={filtreType} onChange={(e) => setFiltreType(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous</option>
+                {typesReprise.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <TableauReprises data={historiqueFiltree} isHistorique={true} />
+        </>
+      )}
+
+      {/* ===== ONGLET STATISTIQUES ===== */}
+      {onglet === 'statistiques' && (
+        <div className="space-y-6">
+          {/* Vue d'ensemble */}
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <div className="bg-white p-4 rounded-xl border border-slate-200 text-center">
+              <p className="text-xs text-slate-500">Total toutes</p>
+              <p className="text-3xl font-bold text-slate-800">{totalToutes}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-red-200 text-center">
+              <p className="text-xs text-slate-500">Actives</p>
+              <p className="text-3xl font-bold text-red-600">{totalReprisesActives}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-emerald-200 text-center">
+              <p className="text-xs text-slate-500">Complétées</p>
+              <p className="text-3xl font-bold text-emerald-600">{totalHistorique}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-amber-200 text-center">
+              <p className="text-xs text-slate-500">Multi-reprises</p>
+              <p className="text-3xl font-bold text-amber-600">{commandesMultiReprises}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-red-200 text-center">
+              <p className="text-xs text-slate-500">Coût total</p>
+              <p className="text-2xl font-bold text-red-600">{(coutTotalActif + coutTotalHistorique).toLocaleString()} $</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200 text-center">
+              <p className="text-xs text-slate-500">Coût moyen</p>
+              <p className="text-2xl font-bold text-blue-600">{totalToutes > 0 ? Math.round((coutTotalActif + coutTotalHistorique) / totalToutes).toLocaleString() : 0} $</p>
+            </div>
+          </div>
+
+          {/* % par équipe */}
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <h3 className="font-bold text-slate-800 text-lg mb-4">📊 Pourcentage de reprises par équipe</h3>
+            <div className="space-y-3">
+              {statsParEquipe.map((s, i) => {
+                const couleurs = ['bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-blue-500', 'bg-purple-500', 'bg-teal-500'];
+                return (
+                  <BarreProgression
+                    key={s.equipe}
+                    label={s.equipe.replace('Équipe ', '')}
+                    valeur={s.total}
+                    max={totalToutes}
+                    couleur={couleurs[i % couleurs.length]}
+                  />
+                );
+              })}
+            </div>
+            {/* Tableau détaillé équipes */}
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left">Équipe</th>
+                    <th className="px-4 py-2 text-center">Total</th>
+                    <th className="px-4 py-2 text-center">%</th>
+                    <th className="px-4 py-2 text-center">Actives</th>
+                    <th className="px-4 py-2 text-center">Complétées</th>
+                    <th className="px-4 py-2 text-center">Coût</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {statsParEquipe.map((s, i) => (
+                    <tr key={s.equipe} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                      <td className="px-4 py-2 font-semibold">{s.equipe}</td>
+                      <td className="px-4 py-2 text-center font-bold">{s.total}</td>
+                      <td className="px-4 py-2 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${parseFloat(s.pourcentage) > 20 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                          {s.pourcentage}%
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-center text-red-600 font-medium">{s.actives}</td>
+                      <td className="px-4 py-2 text-center text-emerald-600 font-medium">{s.completees}</td>
+                      <td className="px-4 py-2 text-center font-medium">{s.cout.toLocaleString()} $</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* % par type */}
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <h3 className="font-bold text-slate-800 text-lg mb-4">🔍 Répartition par type de reprise</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {statsParType.map(s => (
+                <div key={s.type} className="bg-slate-50 rounded-xl p-3 border border-slate-200 flex items-center gap-3">
+                  <span className={`px-2 py-1 rounded text-xs font-bold ${getTypeCouleur(s.type)}`}>{s.count}</span>
+                  <div>
+                    <p className="text-sm font-medium">{s.type}</p>
+                    <p className="text-xs text-slate-500">{s.pourcentage}%</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bilan annuel */}
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <h3 className="font-bold text-slate-800 text-lg mb-4">📅 Bilan annuel comparatif</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {bilanAnnuel.map(b => (
+                <div key={b.annee} className={`rounded-xl p-4 border-2 ${b.annee === new Date().getFullYear() ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-xl font-bold">{b.annee} {b.annee === new Date().getFullYear() && <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full ml-2">En cours</span>}</h4>
+                    <span className="text-2xl font-bold text-red-600">{b.total} reprises</span>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-3">Coût total: <strong>{b.cout.toLocaleString()} $</strong></p>
+                  {b.parType.length > 0 && (
+                    <div className="mb-2">
+                      <p className="text-xs font-semibold text-slate-500 mb-1">Types les plus fréquents:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {b.parType.slice(0, 3).map(t => (
+                          <span key={t.type} className={`px-2 py-0.5 rounded text-xs font-bold ${getTypeCouleur(t.type)}`}>{t.type} ({t.count})</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {b.parEquipe.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500 mb-1">Par équipe:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {b.parEquipe.map(e => (
+                          <span key={e.equipe} className="px-2 py-0.5 bg-white border border-slate-300 rounded text-xs">{e.equipe.replace('Équipe ', '')} ({e.count})</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Comparaison année en cours vs précédente */}
+          {statsAnneePrecedente > 0 && (
+            <div className="bg-white rounded-xl p-6 border border-slate-200">
+              <h3 className="font-bold text-slate-800 text-lg mb-4">📈 Tendance année en cours vs précédente</h3>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="text-center p-4 rounded-xl bg-slate-50 border">
+                  <p className="text-sm text-slate-500">{new Date().getFullYear() - 1}</p>
+                  <p className="text-4xl font-bold text-slate-600">{statsAnneePrecedente}</p>
+                  <p className="text-xs text-slate-400">reprises</p>
+                </div>
+                <div className="text-center p-4 rounded-xl bg-blue-50 border border-blue-200">
+                  <p className="text-sm text-blue-600">{new Date().getFullYear()} (en cours)</p>
+                  <p className="text-4xl font-bold text-blue-700">{statsAnneeEnCours}</p>
+                  <p className="text-xs text-slate-400">reprises</p>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                {statsAnneeEnCours > statsAnneePrecedente
+                  ? <p className="text-red-600 font-semibold">⚠️ Hausse de {((statsAnneeEnCours - statsAnneePrecedente) / statsAnneePrecedente * 100).toFixed(0)}% par rapport à l'an dernier</p>
+                  : <p className="text-emerald-600 font-semibold">✅ Baisse de {((statsAnneePrecedente - statsAnneeEnCours) / statsAnneePrecedente * 100).toFixed(0)}% par rapport à l'an dernier</p>
+                }
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ===== ONGLET CONSEILS ===== */}
+      {onglet === 'conseils' && (
+        <div className="space-y-6">
+          <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+            <p className="font-semibold text-blue-800">💡 Conseils et recommandations basés sur l'analyse de vos reprises</p>
+            <p className="text-sm text-blue-600 mt-1">Ces conseils sont générés automatiquement à partir des données de reprises les plus fréquentes.</p>
+          </div>
+
+          {/* Conseils dynamiques basés sur les données */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Conseil #1 - Erreurs de mesure */}
+            {toutesReprises.filter(r => r.typeReprise === 'Erreur de mesure').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-red-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">📏</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Erreurs de mesure ({toutesReprises.filter(r => r.typeReprise === 'Erreur de mesure').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">C'est l'un des types de reprise les plus coûteux. Voici des mesures préventives:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Double vérification:</strong> Toujours faire vérifier les mesures par un second mesureur</li>
+                      <li>• <strong>Photos systématiques:</strong> Prendre des photos de chaque point de mesure avec le ruban visible</li>
+                      <li>• <strong>Gabarit standard:</strong> Utiliser un formulaire de mesure avec checklist des points à vérifier</li>
+                      <li>• <strong>Formation continue:</strong> Session mensuelle de calibration des mesureurs</li>
+                      <li>• <strong>Outil numérique:</strong> Envisager un télémètre laser avec transfert direct des données</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conseil #2 - Défauts de matériau */}
+            {toutesReprises.filter(r => r.typeReprise === 'Défaut de matériau').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-orange-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🔬</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Défauts de matériau ({toutesReprises.filter(r => r.typeReprise === 'Défaut de matériau').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">Les défauts matériaux impactent la qualité et la satisfaction client:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Inspection à réception:</strong> Vérifier chaque lot de matériaux dès la réception</li>
+                      <li>• <strong>Registre fournisseurs:</strong> Tenir un historique de qualité par fournisseur</li>
+                      <li>• <strong>Échantillonnage:</strong> Tester un échantillon avant mise en production</li>
+                      <li>• <strong>Communication fournisseur:</strong> Signaler systématiquement les défauts au fournisseur</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conseil #3 - Installation */}
+            {toutesReprises.filter(r => r.typeReprise === 'Problème d\'installation').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-blue-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🔧</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Problèmes d'installation ({toutesReprises.filter(r => r.typeReprise === 'Problème d\'installation').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">Améliorations pour réduire les erreurs d'installation:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Visite préalable:</strong> Évaluer le chantier avant le jour d'installation</li>
+                      <li>• <strong>Checklist terrain:</strong> Liste de vérification pré-installation (niveau, support, accès)</li>
+                      <li>• <strong>Mentor/compagnon:</strong> Jumeler les nouveaux installateurs avec des expérimentés</li>
+                      <li>• <strong>Photos avant/après:</strong> Documenter l'état du chantier avant et après</li>
+                      <li>• <strong>Briefing d'équipe:</strong> Revue du projet 15 min avant chaque installation</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conseil #4 - Transport */}
+            {toutesReprises.filter(r => r.typeReprise === 'Dommage en transport').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-slate-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🚚</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Dommages en transport ({toutesReprises.filter(r => r.typeReprise === 'Dommage en transport').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">Prévenir les dommages pendant le transport:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Emballage renforcé:</strong> Protéger les coins et surfaces avec mousse et carton</li>
+                      <li>• <strong>Arrimage sécurisé:</strong> Utiliser des sangles et séparateurs dans le camion</li>
+                      <li>• <strong>Formation chauffeur:</strong> Procédure de chargement/déchargement standardisée</li>
+                      <li>• <strong>Inspection au départ:</strong> Vérifier l'état des pièces avant le départ</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conseil #5 - Coupe */}
+            {toutesReprises.filter(r => r.typeReprise === 'Mauvaise coupe').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-amber-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">✂️</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Mauvaises coupes ({toutesReprises.filter(r => r.typeReprise === 'Mauvaise coupe').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">Réduire les erreurs de coupe en production:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Validation croisée:</strong> Vérifier les dimensions sur le bon de coupe vs la commande</li>
+                      <li>• <strong>Marquage clair:</strong> Identifier chaque pièce avec numéro de commande</li>
+                      <li>• <strong>Calibration machines:</strong> Vérification quotidienne des gabarits de coupe</li>
+                      <li>• <strong>Mesure post-coupe:</strong> Contrôle dimensionnel après chaque coupe critique</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Conseil #6 - Couleur */}
+            {toutesReprises.filter(r => r.typeReprise === 'Erreur de couleur').length > 0 && (
+              <div className="bg-white rounded-xl p-5 border-l-4 border-l-pink-500 border border-slate-200">
+                <div className="flex items-start gap-3">
+                  <span className="text-2xl">🎨</span>
+                  <div>
+                    <h4 className="font-bold text-slate-800">Erreurs de couleur ({toutesReprises.filter(r => r.typeReprise === 'Erreur de couleur').length} cas)</h4>
+                    <p className="text-sm text-slate-600 mt-1">Éviter les erreurs de couleur:</p>
+                    <ul className="mt-2 text-sm text-slate-700 space-y-1">
+                      <li>• <strong>Code couleur standardisé:</strong> Utiliser des codes précis au lieu de descriptions textuelles</li>
+                      <li>• <strong>Confirmation client:</strong> Faire valider la couleur par le client avec un échantillon</li>
+                      <li>• <strong>Étiquetage:</strong> Étiqueter chaque lot avec couleur + code + numéro de commande</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Recommandations générales */}
+          <div className="bg-white rounded-xl p-6 border border-slate-200">
+            <h3 className="font-bold text-slate-800 text-lg mb-4">🎯 Recommandations générales</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
+                <h4 className="font-semibold text-emerald-800 mb-2">✅ Actions immédiates</h4>
+                <ul className="text-sm text-slate-700 space-y-1">
+                  <li>• Réunion hebdomadaire de 15 min sur les reprises de la semaine</li>
+                  <li>• Formulaire de reprise obligatoire avec cause identifiée</li>
+                  <li>• Photo avant/après pour chaque reprise</li>
+                  <li>• Feedback immédiat à l'équipe concernée</li>
+                </ul>
+              </div>
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <h4 className="font-semibold text-blue-800 mb-2">📋 Actions à moyen terme</h4>
+                <ul className="text-sm text-slate-700 space-y-1">
+                  <li>• Programme de formation trimestriel par type d'erreur</li>
+                  <li>• Système de bonus pour les équipes avec le moins de reprises</li>
+                  <li>• Audit qualité mensuel sur les processus critiques</li>
+                  <li>• Analyse des tendances et ajustement des procédures</li>
+                </ul>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                <h4 className="font-semibold text-amber-800 mb-2">⚠️ Points d'attention</h4>
+                <ul className="text-sm text-slate-700 space-y-1">
+                  {statsParEquipe[0] && <li>• L'équipe <strong>{statsParEquipe[0].equipe}</strong> a le plus de reprises ({statsParEquipe[0].pourcentage}%) — nécessite un suivi rapproché</li>}
+                  {commandesMultiReprises > 0 && <li>• <strong>{commandesMultiReprises}</strong> commande(s) ont nécessité plusieurs reprises — analyser les causes profondes</li>}
+                  {statsParType[0] && <li>• Le type <strong>"{statsParType[0].type}"</strong> est le plus fréquent ({statsParType[0].pourcentage}%) — priorité d'amélioration</li>}
+                </ul>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-4 border border-purple-200">
+                <h4 className="font-semibold text-purple-800 mb-2">🏆 Objectifs suggérés</h4>
+                <ul className="text-sm text-slate-700 space-y-1">
+                  <li>• Réduire les reprises de 20% d'ici la fin de l'année</li>
+                  <li>• Éliminer les erreurs de mesure récurrentes sous 3 mois</li>
+                  <li>• Aucune commande avec plus de 2 reprises</li>
+                  <li>• Coût moyen par reprise sous {totalToutes > 0 ? Math.round((coutTotalActif + coutTotalHistorique) / totalToutes * 0.8).toLocaleString() : 300} $</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
   // === ROUTER ===
   const renderScreen = () => {
@@ -9648,6 +10956,7 @@ const NonConformites = () => {
       case 'achats': return <Achats />;
       case 'rentabilite': return <Rentabilite />;
       case 'attentes': return <Attentes />;
+      case 'reprises': return <Reprises />;
       case 'nonconformites': return <NonConformites />;
       case 'multilogements': return <MultiLogements />;
       default: return <GenericScreen title={menuItems.find(m => m.id === currentScreen)?.label || 'Module'} />;
