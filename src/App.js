@@ -9579,46 +9579,884 @@ const NonConformites = () => {
 
 
   // === MULTI-LOGEMENTS ===
-  const MultiLogements = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Multi-logements</h1>
-          <p className="text-slate-500 mt-1">Gestion des grands projets</p>
-        </div>
-        <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
-          <Icon name="plus" size={20}/>Nouveau projet
-        </button>
-      </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div className="p-6 border-b border-slate-100">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-xl font-bold text-slate-800">Résidences du Parc</h2>
-              <p className="text-slate-500">Gestion Immobilière XYZ</p>
+ // === MODULE MULTI-LOGEMENTS ===
+// Remplacer dans le router: case 'multilogements': return <MultiLogements />;
+
+const MultiLogements = () => {
+  const [onglet, setOnglet] = useState('actifs'); // actifs, historique
+  const [sousOnglet, setSousOnglet] = useState('tous'); // tous, commercial, multiphase
+
+  // === DONNÉES DES PROJETS ===
+  const [projets, setProjets] = useState([
+    {
+      id: 1,
+      nom: 'Résidences du Parc - Phase Gardex',
+      client: 'Gestion Immobilière XYZ',
+      ville: 'Québec',
+      typeProjet: 'Commercial', // Commercial ou Multi-phase
+      numCommande: '250500',
+      dateDebut: '2025-11-01',
+      dateFin: '2026-06-30',
+      responsable: 'Martin Gagnon',
+      notes: 'Projet de 12 bâtiments, accès restreint le week-end',
+      statut: 'En cours', // En cours, En pause, Complété
+      batiments: [
+        { id: 101, nom: 'Bâtiment A - Unité 101', piedsLineaires: 45, nombrePoteaux: 12, nombreBarrotins: 48, nombreVerres: 24, couleur: 'Noir', typeRampe: 'Aluminium avec verre', statut: 'Complété', dateCompletion: '2025-12-15', notes: '' },
+        { id: 102, nom: 'Bâtiment A - Unité 102', piedsLineaires: 38, nombrePoteaux: 10, nombreBarrotins: 40, nombreVerres: 20, couleur: 'Noir', typeRampe: 'Aluminium avec verre', statut: 'Complété', dateCompletion: '2025-12-20', notes: '' },
+        { id: 103, nom: 'Bâtiment A - Unité 103', piedsLineaires: 42, nombrePoteaux: 11, nombreBarrotins: 44, nombreVerres: 22, couleur: 'Noir', typeRampe: 'Aluminium avec verre', statut: 'Complété', dateCompletion: '2026-01-10', notes: '' },
+        { id: 104, nom: 'Bâtiment A - Unité 104', piedsLineaires: 40, nombrePoteaux: 10, nombreBarrotins: 40, nombreVerres: 20, couleur: 'Noir', typeRampe: 'Aluminium avec verre', statut: 'Complété', dateCompletion: '2026-01-18', notes: '' },
+        { id: 201, nom: 'Bâtiment B - Unité 201', piedsLineaires: 52, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Blanc', typeRampe: 'Aluminium avec verre', statut: 'En cours', dateCompletion: '', notes: 'Installation prévue semaine prochaine' },
+        { id: 202, nom: 'Bâtiment B - Unité 202', piedsLineaires: 48, nombrePoteaux: 13, nombreBarrotins: 52, nombreVerres: 26, couleur: 'Blanc', typeRampe: 'Aluminium avec verre', statut: 'En cours', dateCompletion: '', notes: '' },
+        { id: 203, nom: 'Bâtiment B - Unité 203', piedsLineaires: 50, nombrePoteaux: 13, nombreBarrotins: 52, nombreVerres: 26, couleur: 'Blanc', typeRampe: 'Aluminium avec verre', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 301, nom: 'Bâtiment C - Unité 301', piedsLineaires: 60, nombrePoteaux: 16, nombreBarrotins: 64, nombreVerres: 32, couleur: 'Noir', typeRampe: 'Aluminium avec barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 302, nom: 'Bâtiment C - Unité 302', piedsLineaires: 55, nombrePoteaux: 15, nombreBarrotins: 60, nombreVerres: 0, couleur: 'Noir', typeRampe: 'Aluminium avec barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 303, nom: 'Bâtiment C - Unité 303', piedsLineaires: 58, nombrePoteaux: 15, nombreBarrotins: 60, nombreVerres: 0, couleur: 'Noir', typeRampe: 'Aluminium avec barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 401, nom: 'Bâtiment D - Unité 401', piedsLineaires: 65, nombrePoteaux: 18, nombreBarrotins: 72, nombreVerres: 36, couleur: 'Gris', typeRampe: 'Aluminium avec verre', statut: 'Planifié', dateCompletion: '', notes: 'Accès par le stationnement' },
+        { id: 402, nom: 'Bâtiment D - Unité 402', piedsLineaires: 62, nombrePoteaux: 17, nombreBarrotins: 68, nombreVerres: 34, couleur: 'Gris', typeRampe: 'Aluminium avec verre', statut: 'Planifié', dateCompletion: '', notes: '' },
+      ]
+    },
+    {
+      id: 2,
+      nom: 'Condos Rivière',
+      client: 'Construction Beaurivage',
+      ville: 'Lévis',
+      typeProjet: 'Commercial',
+      numCommande: '250620',
+      dateDebut: '2026-01-15',
+      dateFin: '2026-09-30',
+      responsable: 'Luc Tremblay',
+      notes: 'Projet prioritaire, client VIP',
+      statut: 'En cours',
+      batiments: [
+        { id: 1, nom: 'Tour A - Étage 1', piedsLineaires: 80, nombrePoteaux: 22, nombreBarrotins: 88, nombreVerres: 44, couleur: 'Noir mat', typeRampe: 'Aluminium avec verre 10mm', statut: 'Complété', dateCompletion: '2026-01-28', notes: '' },
+        { id: 2, nom: 'Tour A - Étage 2', piedsLineaires: 80, nombrePoteaux: 22, nombreBarrotins: 88, nombreVerres: 44, couleur: 'Noir mat', typeRampe: 'Aluminium avec verre 10mm', statut: 'En cours', dateCompletion: '', notes: 'Verre commandé' },
+        { id: 3, nom: 'Tour A - Étage 3', piedsLineaires: 80, nombrePoteaux: 22, nombreBarrotins: 88, nombreVerres: 44, couleur: 'Noir mat', typeRampe: 'Aluminium avec verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 4, nom: 'Tour B - Étage 1', piedsLineaires: 95, nombrePoteaux: 26, nombreBarrotins: 104, nombreVerres: 52, couleur: 'Blanc', typeRampe: 'Aluminium avec verre 6mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 5, nom: 'Tour B - Étage 2', piedsLineaires: 95, nombrePoteaux: 26, nombreBarrotins: 104, nombreVerres: 52, couleur: 'Blanc', typeRampe: 'Aluminium avec verre 6mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+        { id: 6, nom: 'Tour B - Étage 3', piedsLineaires: 95, nombrePoteaux: 26, nombreBarrotins: 104, nombreVerres: 52, couleur: 'Blanc', typeRampe: 'Aluminium avec verre 6mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+      ]
+    },
+    {
+      id: 3,
+      nom: 'Projet Domaine Champlain',
+      client: 'Habitations Pelletier',
+      ville: 'Beauport',
+      typeProjet: 'Multi-phase',
+      numCommande: '250780',
+      dateDebut: '2025-10-01',
+      dateFin: '2026-12-31',
+      responsable: 'André Simard',
+      notes: 'Projet en 4 phases, chaque phase dépend de la précédente',
+      statut: 'En cours',
+      phases: [
+        {
+          id: 1, nom: 'Phase 1 - Fondations & Structure', statut: 'Complétée', dateDebut: '2025-10-01', dateFin: '2025-12-15',
+          description: 'Installation des ancrages et supports structuraux pour les 8 unités',
+          batiments: [
+            { id: 1, nom: 'Unité 1', piedsLineaires: 35, nombrePoteaux: 8, nombreBarrotins: 32, nombreVerres: 16, couleur: 'Noir', typeRampe: 'Aluminium', statut: 'Complété', dateCompletion: '2025-11-10', notes: '' },
+            { id: 2, nom: 'Unité 2', piedsLineaires: 35, nombrePoteaux: 8, nombreBarrotins: 32, nombreVerres: 16, couleur: 'Noir', typeRampe: 'Aluminium', statut: 'Complété', dateCompletion: '2025-11-15', notes: '' },
+            { id: 3, nom: 'Unité 3', piedsLineaires: 40, nombrePoteaux: 10, nombreBarrotins: 40, nombreVerres: 20, couleur: 'Noir', typeRampe: 'Aluminium', statut: 'Complété', dateCompletion: '2025-11-20', notes: '' },
+            { id: 4, nom: 'Unité 4', piedsLineaires: 40, nombrePoteaux: 10, nombreBarrotins: 40, nombreVerres: 20, couleur: 'Noir', typeRampe: 'Aluminium', statut: 'Complété', dateCompletion: '2025-12-01', notes: '' },
+          ]
+        },
+        {
+          id: 2, nom: 'Phase 2 - Rampes principales', statut: 'En cours', dateDebut: '2026-01-10', dateFin: '2026-04-30',
+          description: 'Installation des rampes d\'escalier et garde-corps principaux',
+          batiments: [
+            { id: 5, nom: 'Unité 1 - Rampes', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Noir', typeRampe: 'Alu + verre 6mm', statut: 'Complété', dateCompletion: '2026-01-25', notes: '' },
+            { id: 6, nom: 'Unité 2 - Rampes', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Noir', typeRampe: 'Alu + verre 6mm', statut: 'En cours', dateCompletion: '', notes: 'Verre en attente' },
+            { id: 7, nom: 'Unité 3 - Rampes', piedsLineaires: 60, nombrePoteaux: 16, nombreBarrotins: 64, nombreVerres: 32, couleur: 'Noir', typeRampe: 'Alu + verre 6mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 8, nom: 'Unité 4 - Rampes', piedsLineaires: 60, nombrePoteaux: 16, nombreBarrotins: 64, nombreVerres: 32, couleur: 'Noir', typeRampe: 'Alu + verre 6mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+          ]
+        },
+        {
+          id: 3, nom: 'Phase 3 - Balcons', statut: 'Planifiée', dateDebut: '2026-05-01', dateFin: '2026-09-30',
+          description: 'Installation des garde-corps de balcon pour toutes les unités',
+          batiments: [
+            { id: 9, nom: 'Unité 1 - Balcon', piedsLineaires: 25, nombrePoteaux: 6, nombreBarrotins: 24, nombreVerres: 12, couleur: 'Noir', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 10, nom: 'Unité 2 - Balcon', piedsLineaires: 25, nombrePoteaux: 6, nombreBarrotins: 24, nombreVerres: 12, couleur: 'Noir', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 11, nom: 'Unité 3 - Balcon', piedsLineaires: 30, nombrePoteaux: 8, nombreBarrotins: 32, nombreVerres: 16, couleur: 'Noir', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 12, nom: 'Unité 4 - Balcon', piedsLineaires: 30, nombrePoteaux: 8, nombreBarrotins: 32, nombreVerres: 16, couleur: 'Noir', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+          ]
+        },
+        {
+          id: 4, nom: 'Phase 4 - Finitions', statut: 'Planifiée', dateDebut: '2026-10-01', dateFin: '2026-12-31',
+          description: 'Capuchons, joints, retouches peinture et inspection finale',
+          batiments: [
+            { id: 13, nom: 'Toutes unités - Finitions', piedsLineaires: 0, nombrePoteaux: 0, nombreBarrotins: 0, nombreVerres: 0, couleur: '', typeRampe: 'Finitions diverses', statut: 'Planifié', dateCompletion: '', notes: 'Inspection finale requise' },
+          ]
+        },
+      ]
+    },
+    {
+      id: 4,
+      nom: 'Les Terrasses du Fleuve',
+      client: 'Groupe Immobilier Desjardins',
+      ville: 'Lévis',
+      typeProjet: 'Multi-phase',
+      numCommande: '250850',
+      dateDebut: '2026-01-01',
+      dateFin: '2026-10-31',
+      responsable: 'Martin Gagnon',
+      notes: 'Projet 3 phases - vue sur le fleuve',
+      statut: 'En cours',
+      phases: [
+        {
+          id: 1, nom: 'Phase 1 - Bloc Est', statut: 'En cours', dateDebut: '2026-01-01', dateFin: '2026-04-15',
+          description: 'Rampes et garde-corps du bloc Est (6 unités)',
+          batiments: [
+            { id: 1, nom: 'Est-101', piedsLineaires: 48, nombrePoteaux: 12, nombreBarrotins: 48, nombreVerres: 24, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'Complété', dateCompletion: '2026-01-20', notes: '' },
+            { id: 2, nom: 'Est-102', piedsLineaires: 48, nombrePoteaux: 12, nombreBarrotins: 48, nombreVerres: 24, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'Complété', dateCompletion: '2026-01-28', notes: '' },
+            { id: 3, nom: 'Est-103', piedsLineaires: 52, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'En cours', dateCompletion: '', notes: '' },
+            { id: 4, nom: 'Est-201', piedsLineaires: 48, nombrePoteaux: 12, nombreBarrotins: 48, nombreVerres: 24, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 5, nom: 'Est-202', piedsLineaires: 48, nombrePoteaux: 12, nombreBarrotins: 48, nombreVerres: 24, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 6, nom: 'Est-203', piedsLineaires: 52, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 10mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+          ]
+        },
+        {
+          id: 2, nom: 'Phase 2 - Bloc Ouest', statut: 'Planifiée', dateDebut: '2026-04-15', dateFin: '2026-07-31',
+          description: 'Rampes et garde-corps du bloc Ouest (6 unités)',
+          batiments: [
+            { id: 7, nom: 'Ouest-101', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 28, couleur: 'Blanc', typeRampe: 'Alu + barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 8, nom: 'Ouest-102', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 0, couleur: 'Blanc', typeRampe: 'Alu + barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 9, nom: 'Ouest-201', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 0, couleur: 'Blanc', typeRampe: 'Alu + barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 10, nom: 'Ouest-202', piedsLineaires: 55, nombrePoteaux: 14, nombreBarrotins: 56, nombreVerres: 0, couleur: 'Blanc', typeRampe: 'Alu + barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+          ]
+        },
+        {
+          id: 3, nom: 'Phase 3 - Terrasses communes', statut: 'Planifiée', dateDebut: '2026-08-01', dateFin: '2026-10-31',
+          description: 'Garde-corps des terrasses communes et aires de jeux',
+          batiments: [
+            { id: 11, nom: 'Terrasse principale', piedsLineaires: 120, nombrePoteaux: 32, nombreBarrotins: 128, nombreVerres: 64, couleur: 'Gris anthracite', typeRampe: 'Alu + verre 12mm', statut: 'Planifié', dateCompletion: '', notes: '' },
+            { id: 12, nom: 'Aire de jeux', piedsLineaires: 40, nombrePoteaux: 10, nombreBarrotins: 40, nombreVerres: 0, couleur: 'Blanc', typeRampe: 'Alu + barrotins', statut: 'Planifié', dateCompletion: '', notes: '' },
+          ]
+        },
+      ]
+    },
+  ]);
+
+  // === HISTORIQUE ===
+  const [historiqueProj, setHistoriqueProj] = useState([
+    {
+      id: 100,
+      nom: 'Place des Érables',
+      client: 'Les Projets Meraki',
+      ville: 'Ste-Foy',
+      typeProjet: 'Commercial',
+      numCommande: '241090',
+      dateDebut: '2025-06-01',
+      dateFin: '2025-10-30',
+      responsable: 'Luc Tremblay',
+      notes: 'Projet complété dans les délais',
+      statut: 'Complété',
+      batiments: [
+        { id: 1, nom: 'Bloc 1', piedsLineaires: 70, nombrePoteaux: 18, nombreBarrotins: 72, nombreVerres: 36, couleur: 'Noir', typeRampe: 'Alu + verre', statut: 'Complété', dateCompletion: '2025-08-15', notes: '' },
+        { id: 2, nom: 'Bloc 2', piedsLineaires: 65, nombrePoteaux: 17, nombreBarrotins: 68, nombreVerres: 34, couleur: 'Noir', typeRampe: 'Alu + verre', statut: 'Complété', dateCompletion: '2025-09-20', notes: '' },
+        { id: 3, nom: 'Bloc 3', piedsLineaires: 60, nombrePoteaux: 16, nombreBarrotins: 64, nombreVerres: 32, couleur: 'Noir', typeRampe: 'Alu + verre', statut: 'Complété', dateCompletion: '2025-10-28', notes: '' },
+      ]
+    },
+  ]);
+
+  // === FILTRES ===
+  const [recherche, setRecherche] = useState('');
+  const [filtreStatut, setFiltreStatut] = useState('');
+
+  // === MODALS ===
+  const [showProjetDetail, setShowProjetDetail] = useState(false);
+  const [projetSelectionne, setProjetSelectionne] = useState(null);
+  const [showBatimentDetail, setShowBatimentDetail] = useState(false);
+  const [batimentSelectionne, setBatimentSelectionne] = useState(null);
+  const [phaseParent, setPhaseParent] = useState(null);
+  const [showAjouterProjet, setShowAjouterProjet] = useState(false);
+  const [showAjouterBatiment, setShowAjouterBatiment] = useState(false);
+  const [showConfirmComplete, setShowConfirmComplete] = useState(false);
+  const [batimentACompleter, setBatimentACompleter] = useState(null);
+  const [phaseACompleter, setPhaseACompleter] = useState(null);
+
+  // Formulaires
+  const batimentVide = { nom: '', piedsLineaires: 0, nombrePoteaux: 0, nombreBarrotins: 0, nombreVerres: 0, couleur: '', typeRampe: '', statut: 'Planifié', dateCompletion: '', notes: '' };
+  const [nouveauBatiment, setNouveauBatiment] = useState({ ...batimentVide });
+  const [nouveauProjet, setNouveauProjet] = useState({
+    nom: '', client: '', ville: '', typeProjet: 'Commercial', numCommande: '',
+    dateDebut: new Date().toISOString().split('T')[0], dateFin: '',
+    responsable: '', notes: '', statut: 'En cours', batiments: [], phases: []
+  });
+
+  // === UTILITAIRES ===
+  const formaterDate = (d) => d ? new Date(d).toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+  const getStatutCouleur = (s) => {
+    switch (s) {
+      case 'Complété': case 'Complétée': return 'bg-emerald-100 text-emerald-800';
+      case 'En cours': return 'bg-blue-100 text-blue-800';
+      case 'Planifié': case 'Planifiée': return 'bg-purple-100 text-purple-800';
+      case 'En pause': return 'bg-amber-100 text-amber-800';
+      default: return 'bg-slate-100 text-slate-700';
+    }
+  };
+
+  const getStatutBadgeCouleur = (s) => {
+    switch (s) {
+      case 'Complété': return 'bg-emerald-500';
+      case 'En cours': return 'bg-blue-500';
+      case 'Planifié': return 'bg-purple-400';
+      default: return 'bg-slate-400';
+    }
+  };
+
+  // Tous les bâtiments d'un projet (commercial = direct, multi-phase = via phases)
+  const getTousBatiments = (projet) => {
+    if (projet.typeProjet === 'Commercial') return projet.batiments || [];
+    if (projet.typeProjet === 'Multi-phase' && projet.phases) {
+      return projet.phases.flatMap(p => p.batiments || []);
+    }
+    return [];
+  };
+
+  const getProgression = (projet) => {
+    const bats = getTousBatiments(projet);
+    const total = bats.length;
+    const completes = bats.filter(b => b.statut === 'Complété').length;
+    return { total, completes, pct: total > 0 ? Math.round((completes / total) * 100) : 0 };
+  };
+
+  const getTotalPieds = (bats) => bats.reduce((s, b) => s + b.piedsLineaires, 0);
+  const getTotalPoteaux = (bats) => bats.reduce((s, b) => s + b.nombrePoteaux, 0);
+  const getTotalBarrotins = (bats) => bats.reduce((s, b) => s + b.nombreBarrotins, 0);
+  const getTotalVerres = (bats) => bats.reduce((s, b) => s + b.nombreVerres, 0);
+
+  // Phase actuelle (multi-phase)
+  const getPhaseActuelle = (projet) => {
+    if (projet.typeProjet !== 'Multi-phase' || !projet.phases) return null;
+    const enCours = projet.phases.find(p => p.statut === 'En cours');
+    if (enCours) return enCours;
+    const planifiee = projet.phases.find(p => p.statut === 'Planifiée');
+    return planifiee || projet.phases[projet.phases.length - 1];
+  };
+
+  const getPhaseProgression = (phase) => {
+    if (!phase || !phase.batiments) return { total: 0, completes: 0, pct: 0 };
+    const t = phase.batiments.length;
+    const c = phase.batiments.filter(b => b.statut === 'Complété').length;
+    return { total: t, completes: c, pct: t > 0 ? Math.round((c / t) * 100) : 0 };
+  };
+
+  // Filtrage
+  const projetsFiltres = projets.filter(p => {
+    const matchRecherche = !recherche ||
+      p.nom.toLowerCase().includes(recherche.toLowerCase()) ||
+      p.client.toLowerCase().includes(recherche.toLowerCase()) ||
+      p.numCommande.toLowerCase().includes(recherche.toLowerCase());
+    const matchType = sousOnglet === 'tous' ||
+      (sousOnglet === 'commercial' && p.typeProjet === 'Commercial') ||
+      (sousOnglet === 'multiphase' && p.typeProjet === 'Multi-phase');
+    const matchStatut = !filtreStatut || p.statut === filtreStatut;
+    return matchRecherche && matchType && matchStatut;
+  });
+
+  const historiqueFiltree = historiqueProj.filter(p => {
+    const matchRecherche = !recherche ||
+      p.nom.toLowerCase().includes(recherche.toLowerCase()) ||
+      p.client.toLowerCase().includes(recherche.toLowerCase());
+    return matchRecherche;
+  });
+
+  // Stats globales
+  const totalProjets = projets.length;
+  const projetsCommercial = projets.filter(p => p.typeProjet === 'Commercial').length;
+  const projetsMultiphase = projets.filter(p => p.typeProjet === 'Multi-phase').length;
+  const totalBatimentsActifs = projets.reduce((s, p) => s + getTousBatiments(p).length, 0);
+  const totalBatimentsCompletes = projets.reduce((s, p) => s + getTousBatiments(p).filter(b => b.statut === 'Complété').length, 0);
+  const totalPiedsLineaires = projets.reduce((s, p) => s + getTotalPieds(getTousBatiments(p)), 0);
+
+  // === ACTIONS ===
+  const completerBatiment = (projetId, batimentId, phaseId) => {
+    setProjets(projets.map(p => {
+      if (p.id !== projetId) return p;
+      if (p.typeProjet === 'Commercial') {
+        const newBats = p.batiments.map(b =>
+          b.id === batimentId ? { ...b, statut: 'Complété', dateCompletion: new Date().toISOString().split('T')[0] } : b
+        );
+        const tousCompletes = newBats.every(b => b.statut === 'Complété');
+        return { ...p, batiments: newBats, statut: tousCompletes ? 'Complété' : p.statut };
+      }
+      if (p.typeProjet === 'Multi-phase' && p.phases) {
+        const newPhases = p.phases.map(ph => {
+          if (ph.id !== phaseId) return ph;
+          const newBats = ph.batiments.map(b =>
+            b.id === batimentId ? { ...b, statut: 'Complété', dateCompletion: new Date().toISOString().split('T')[0] } : b
+          );
+          const tousCompletes = newBats.every(b => b.statut === 'Complété');
+          return { ...ph, batiments: newBats, statut: tousCompletes ? 'Complétée' : ph.statut };
+        });
+        const toutesPhasesCompletes = newPhases.every(ph => ph.statut === 'Complétée');
+        return { ...p, phases: newPhases, statut: toutesPhasesCompletes ? 'Complété' : p.statut };
+      }
+      return p;
+    }));
+
+    setShowConfirmComplete(false);
+    setBatimentACompleter(null);
+    setShowBatimentDetail(false);
+
+    // Vérifier si projet complété → historique
+    setTimeout(() => {
+      setProjets(prev => {
+        const completes = prev.filter(p => p.statut === 'Complété');
+        if (completes.length > 0) {
+          setHistoriqueProj(h => [...completes, ...h]);
+          return prev.filter(p => p.statut !== 'Complété');
+        }
+        return prev;
+      });
+    }, 500);
+  };
+
+  const ajouterBatiment = () => {
+    if (!nouveauBatiment.nom) { alert('Nom du bâtiment requis'); return; }
+    if (!projetSelectionne) return;
+    setProjets(projets.map(p => {
+      if (p.id !== projetSelectionne.id) return p;
+      if (p.typeProjet === 'Commercial') {
+        return { ...p, batiments: [...p.batiments, { id: Date.now(), ...nouveauBatiment }] };
+      }
+      return p;
+    }));
+    setNouveauBatiment({ ...batimentVide });
+    setShowAjouterBatiment(false);
+    // Rafraîchir le projet sélectionné
+    setProjetSelectionne(prev => {
+      const updated = projets.find(p => p.id === prev.id);
+      return updated || prev;
+    });
+  };
+
+  const ajouterProjet = () => {
+    if (!nouveauProjet.nom || !nouveauProjet.client) { alert('Nom et Client requis'); return; }
+    setProjets([...projets, { id: Date.now(), ...nouveauProjet }]);
+    setNouveauProjet({
+      nom: '', client: '', ville: '', typeProjet: 'Commercial', numCommande: '',
+      dateDebut: new Date().toISOString().split('T')[0], dateFin: '',
+      responsable: '', notes: '', statut: 'En cours', batiments: [], phases: []
+    });
+    setShowAjouterProjet(false);
+  };
+
+  // ============================================================
+  // COMPOSANTS
+  // ============================================================
+
+  // Barre de progression
+  const ProgressBar = ({ pct, height, couleurFond, couleurBarre }) => (
+    <div className={`${couleurFond || 'bg-slate-100'} rounded-full overflow-hidden ${height || 'h-3'}`}>
+      <div
+        className={`${couleurBarre || 'bg-gradient-to-r from-amber-400 to-yellow-500'} h-full rounded-full transition-all duration-700`}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+
+  // Carte projet
+  const CarteProjet = ({ projet, isHistorique }) => {
+    const prog = getProgression(projet);
+    const bats = getTousBatiments(projet);
+    const phaseActuelle = projet.typeProjet === 'Multi-phase' ? getPhaseActuelle(projet) : null;
+
+    return (
+      <div
+        className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => { setProjetSelectionne(projet); setShowProjetDetail(true); }}
+      >
+        <div className="p-5 border-b border-slate-100">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`px-2 py-0.5 rounded text-xs font-bold ${projet.typeProjet === 'Commercial' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'}`}>
+                  {projet.typeProjet}
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(projet.statut)}`}>{projet.statut}</span>
+                <span className="text-xs text-slate-400">#{projet.numCommande}</span>
+              </div>
+              <h2 className="text-xl font-bold text-slate-800">{projet.nom}</h2>
+              <p className="text-slate-500 text-sm">{projet.client} • {projet.ville}</p>
             </div>
             <div className="text-right">
               <p className="text-sm text-slate-500">Progression</p>
-              <p className="text-2xl font-bold text-amber-600">4/12</p>
+              <p className="text-3xl font-bold text-amber-600">{prog.completes}/{prog.total}</p>
+              <p className="text-xs text-slate-400">{prog.pct}%</p>
             </div>
           </div>
-          <div className="mt-4 bg-slate-100 rounded-full h-3 overflow-hidden">
-            <div className="bg-gradient-to-r from-amber-400 to-yellow-500 h-full rounded-full" style={{ width: '33%' }}/>
+          <div className="mt-3">
+            <ProgressBar pct={prog.pct} />
           </div>
-        </div>
-        <div className="divide-y divide-slate-100">
-          {['Bâtiment A - Unité 101', 'Bâtiment A - Unité 102', 'Bâtiment B - Unité 201'].map((unite, i) => (
-            <div key={i} className="p-4 flex justify-between items-center hover:bg-slate-50">
-              <span className="text-slate-700">{unite}</span>
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${i < 2 ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'}`}>
-                {i < 2 ? 'Complétée' : 'Planifiée'}
-              </span>
+          {phaseActuelle && (
+            <div className="mt-3 bg-purple-50 rounded-lg p-2 flex items-center gap-2">
+              <span className="text-purple-600 text-xs font-bold">Phase actuelle:</span>
+              <span className="text-sm font-semibold text-purple-800">{phaseActuelle.nom}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(phaseActuelle.statut)}`}>{phaseActuelle.statut}</span>
             </div>
-          ))}
+          )}
         </div>
+        <div className="grid grid-cols-4 divide-x divide-slate-100 text-center py-3 text-xs">
+          <div><p className="text-slate-400">Pieds lin.</p><p className="font-bold text-slate-800">{getTotalPieds(bats).toLocaleString()}</p></div>
+          <div><p className="text-slate-400">Poteaux</p><p className="font-bold text-slate-800">{getTotalPoteaux(bats)}</p></div>
+          <div><p className="text-slate-400">Barrotins</p><p className="font-bold text-slate-800">{getTotalBarrotins(bats)}</p></div>
+          <div><p className="text-slate-400">Verres</p><p className="font-bold text-slate-800">{getTotalVerres(bats)}</p></div>
+        </div>
+      </div>
+    );
+  };
+
+  // Ligne bâtiment
+  const LigneBatiment = ({ bat, projetId, phaseId, isHistorique }) => (
+    <div
+      className={`flex items-center justify-between p-3 hover:bg-blue-50 cursor-pointer border-l-4 ${bat.statut === 'Complété' ? 'border-l-emerald-500 bg-emerald-50/30' : bat.statut === 'En cours' ? 'border-l-blue-500' : 'border-l-slate-300'}`}
+      onClick={() => { setBatimentSelectionne(bat); setPhaseParent(phaseId); setShowBatimentDetail(true); }}
+    >
+      <div className="flex items-center gap-3 flex-1">
+        <div className={`w-3 h-3 rounded-full ${getStatutBadgeCouleur(bat.statut)}`} />
+        <div>
+          <p className="font-medium text-slate-800">{bat.nom}</p>
+          <p className="text-xs text-slate-400">{bat.piedsLineaires} pi. lin. • {bat.nombrePoteaux} poteaux • {bat.couleur || '—'}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutCouleur(bat.statut)}`}>{bat.statut}</span>
+        {!isHistorique && bat.statut !== 'Complété' && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setBatimentACompleter(bat); setPhaseACompleter(phaseId); setShowConfirmComplete(true); }}
+            className="p-1.5 text-emerald-600 hover:bg-emerald-100 rounded" title="Marquer complété"
+          >
+            <Icon name="check" size={16} />
+          </button>
+        )}
       </div>
     </div>
   );
+
+  // ============================================================
+  // MODALS
+  // ============================================================
+
+  // MODAL DÉTAIL PROJET
+  const ProjetDetailModal = () => {
+    if (!showProjetDetail || !projetSelectionne) return null;
+    const p = projetSelectionne;
+    const prog = getProgression(p);
+    const bats = getTousBatiments(p);
+    const isHist = p.statut === 'Complété';
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-5 bg-slate-800 text-white flex items-center justify-between rounded-t-2xl">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`px-2 py-0.5 rounded text-xs font-bold ${p.typeProjet === 'Commercial' ? 'bg-blue-500' : 'bg-purple-500'}`}>{p.typeProjet}</span>
+                <span className="text-slate-300">#{p.numCommande}</span>
+              </div>
+              <h2 className="text-xl font-bold">{p.nom}</h2>
+              <p className="text-slate-300">{p.client} • {p.ville}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-4xl font-bold text-amber-400">{prog.pct}%</p>
+              <p className="text-slate-400 text-sm">{prog.completes}/{prog.total} bâtiments</p>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {/* Progression */}
+            <div className="p-5 border-b border-slate-100">
+              <ProgressBar pct={prog.pct} height="h-4" />
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                <div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-xs text-slate-500">Pieds linéaires</p><p className="text-xl font-bold">{getTotalPieds(bats).toLocaleString()}</p></div>
+                <div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-xs text-slate-500">Poteaux</p><p className="text-xl font-bold">{getTotalPoteaux(bats)}</p></div>
+                <div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-xs text-slate-500">Barrotins</p><p className="text-xl font-bold">{getTotalBarrotins(bats)}</p></div>
+                <div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-xs text-slate-500">Verres</p><p className="text-xl font-bold">{getTotalVerres(bats)}</p></div>
+                <div className="bg-slate-50 rounded-xl p-3 text-center"><p className="text-xs text-slate-500">Responsable</p><p className="text-sm font-bold">{p.responsable || '—'}</p></div>
+              </div>
+              {p.notes && (
+                <div className="mt-3 bg-amber-50 rounded-lg p-3 border border-amber-200">
+                  <p className="text-sm text-slate-700">{p.notes}</p>
+                </div>
+              )}
+            </div>
+
+            {/* COMMERCIAL : Liste des bâtiments */}
+            {p.typeProjet === 'Commercial' && (
+              <div className="p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-bold text-slate-800 text-lg">Bâtiments ({p.batiments?.length || 0})</h3>
+                  {!isHist && (
+                    <button onClick={() => setShowAjouterBatiment(true)} className="px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg flex items-center gap-1">
+                      <Icon name="plus" size={16} />Ajouter
+                    </button>
+                  )}
+                </div>
+                <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+                  {(p.batiments || []).map(bat => (
+                    <LigneBatiment key={bat.id} bat={bat} projetId={p.id} phaseId={null} isHistorique={isHist} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MULTI-PHASE : Phases avec bâtiments */}
+            {p.typeProjet === 'Multi-phase' && p.phases && (
+              <div className="p-5 space-y-5">
+                <h3 className="font-bold text-slate-800 text-lg">Phases du projet ({p.phases.length})</h3>
+
+                {/* Timeline des phases */}
+                <div className="flex items-center gap-1 overflow-x-auto pb-2">
+                  {p.phases.map((ph, i) => {
+                    const phProg = getPhaseProgression(ph);
+                    return (
+                      <div key={ph.id} className="flex items-center">
+                        <div className={`flex-shrink-0 px-4 py-2 rounded-xl border-2 text-center min-w-[140px] ${ph.statut === 'Complétée' ? 'border-emerald-400 bg-emerald-50' : ph.statut === 'En cours' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-slate-50'}`}>
+                          <p className="text-xs font-bold text-slate-500">Phase {ph.id}</p>
+                          <p className="text-sm font-semibold truncate">{ph.nom.replace(`Phase ${ph.id} - `, '')}</p>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(ph.statut)}`}>{ph.statut}</span>
+                          <p className="text-xs text-slate-500 mt-1">{phProg.completes}/{phProg.total}</p>
+                        </div>
+                        {i < p.phases.length - 1 && (
+                          <div className={`w-8 h-0.5 flex-shrink-0 ${ph.statut === 'Complétée' ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Détail de chaque phase */}
+                {p.phases.map(ph => {
+                  const phProg = getPhaseProgression(ph);
+                  return (
+                    <div key={ph.id} className={`rounded-xl border-2 overflow-hidden ${ph.statut === 'Complétée' ? 'border-emerald-200' : ph.statut === 'En cours' ? 'border-blue-200' : 'border-slate-200'}`}>
+                      <div className={`p-4 ${ph.statut === 'Complétée' ? 'bg-emerald-50' : ph.statut === 'En cours' ? 'bg-blue-50' : 'bg-slate-50'}`}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-slate-800">{ph.nom}</h4>
+                              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(ph.statut)}`}>{ph.statut}</span>
+                            </div>
+                            <p className="text-sm text-slate-500 mt-0.5">{ph.description}</p>
+                            <p className="text-xs text-slate-400 mt-1">{formaterDate(ph.dateDebut)} → {formaterDate(ph.dateFin)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-slate-800">{phProg.completes}/{phProg.total}</p>
+                            <p className="text-xs text-slate-500">{phProg.pct}%</p>
+                          </div>
+                        </div>
+                        <div className="mt-2">
+                          <ProgressBar
+                            pct={phProg.pct}
+                            height="h-2"
+                            couleurBarre={ph.statut === 'Complétée' ? 'bg-emerald-500' : 'bg-blue-500'}
+                          />
+                        </div>
+                      </div>
+                      <div className="divide-y divide-slate-100">
+                        {ph.batiments.map(bat => (
+                          <LigneBatiment key={bat.id} bat={bat} projetId={p.id} phaseId={ph.id} isHistorique={isHist} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+            <button onClick={() => setShowProjetDetail(false)} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-100">Fermer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL DÉTAIL BÂTIMENT
+  const BatimentDetailModal = () => {
+    if (!showBatimentDetail || !batimentSelectionne) return null;
+    const b = batimentSelectionne;
+
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="p-5 bg-slate-800 text-white flex items-center justify-between rounded-t-2xl">
+            <div>
+              <h2 className="text-xl font-bold">{b.nom}</h2>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatutCouleur(b.statut)}`}>{b.statut}</span>
+            </div>
+            <button onClick={() => setShowBatimentDetail(false)} className="p-2 hover:bg-slate-700 rounded-lg">
+              <Icon name="x" size={24} />
+            </button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* Détails principaux */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 rounded-xl p-4 text-center border border-blue-200">
+                <p className="text-xs text-blue-600 font-semibold">Pieds linéaires</p>
+                <p className="text-3xl font-bold text-blue-800">{b.piedsLineaires}</p>
+              </div>
+              <div className="bg-amber-50 rounded-xl p-4 text-center border border-amber-200">
+                <p className="text-xs text-amber-600 font-semibold">Nombre de poteaux</p>
+                <p className="text-3xl font-bold text-amber-800">{b.nombrePoteaux}</p>
+              </div>
+              <div className="bg-slate-50 rounded-xl p-4 text-center border border-slate-200">
+                <p className="text-xs text-slate-500 font-semibold">Barrotins</p>
+                <p className="text-3xl font-bold text-slate-800">{b.nombreBarrotins}</p>
+              </div>
+              <div className="bg-teal-50 rounded-xl p-4 text-center border border-teal-200">
+                <p className="text-xs text-teal-600 font-semibold">Verres</p>
+                <p className="text-3xl font-bold text-teal-800">{b.nombreVerres}</p>
+              </div>
+            </div>
+
+            {/* Infos complémentaires */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-slate-500">Couleur</p>
+                <p className="font-semibold">{b.couleur || '—'}</p>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3">
+                <p className="text-xs text-slate-500">Type de rampe</p>
+                <p className="font-semibold">{b.typeRampe || '—'}</p>
+              </div>
+            </div>
+
+            {b.dateCompletion && (
+              <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                <p className="text-xs text-emerald-600">✓ Complété le</p>
+                <p className="font-semibold text-emerald-800">{formaterDate(b.dateCompletion)}</p>
+              </div>
+            )}
+
+            {b.notes && (
+              <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
+                <p className="text-xs text-amber-600 font-semibold">Notes</p>
+                <p className="text-sm text-slate-700">{b.notes}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-slate-200 flex justify-between">
+            {b.statut !== 'Complété' && projetSelectionne && (
+              <button
+                onClick={() => {
+                  setBatimentACompleter(b);
+                  setPhaseACompleter(phaseParent);
+                  setShowBatimentDetail(false);
+                  setShowConfirmComplete(true);
+                }}
+                className="px-5 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg flex items-center gap-2"
+              >
+                <Icon name="check" size={18} />Marquer complété
+              </button>
+            )}
+            <button onClick={() => setShowBatimentDetail(false)} className="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-100 ml-auto">Fermer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL CONFIRMER COMPLÉTION
+  const ConfirmCompleteModal = () => {
+    if (!showConfirmComplete || !batimentACompleter) return null;
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[70] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 text-center">
+          <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Icon name="check" size={32} className="text-emerald-600" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">Marquer comme complété ?</h3>
+          <p className="text-slate-600 mb-1"><strong>{batimentACompleter.nom}</strong></p>
+          <p className="text-sm text-slate-500 mb-6">{batimentACompleter.piedsLineaires} pi. lin. • {batimentACompleter.nombrePoteaux} poteaux</p>
+          <div className="flex justify-center gap-4">
+            <button onClick={() => { setShowConfirmComplete(false); setBatimentACompleter(null); }} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+            <button
+              onClick={() => completerBatiment(projetSelectionne?.id, batimentACompleter.id, phaseACompleter)}
+              className="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg"
+            >✓ Confirmer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL AJOUTER BÂTIMENT
+  const AjouterBatimentModal = () => {
+    if (!showAjouterBatiment) return null;
+    return (
+      <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+          <div className="p-5 bg-slate-800 text-white rounded-t-2xl">
+            <h2 className="text-xl font-bold">Ajouter un bâtiment</h2>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-1">Nom *</label>
+              <input type="text" value={nouveauBatiment.nom} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, nom: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="ex: Bâtiment E - Unité 501" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Pieds linéaires</label><input type="number" value={nouveauBatiment.piedsLineaires} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, piedsLineaires: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Nombre de poteaux</label><input type="number" value={nouveauBatiment.nombrePoteaux} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, nombrePoteaux: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Barrotins</label><input type="number" value={nouveauBatiment.nombreBarrotins} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, nombreBarrotins: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Verres</label><input type="number" value={nouveauBatiment.nombreVerres} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, nombreVerres: parseInt(e.target.value) || 0 })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Couleur</label><input type="text" value={nouveauBatiment.couleur} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, couleur: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold text-slate-700 mb-1">Type de rampe</label><input type="text" value={nouveauBatiment.typeRampe} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, typeRampe: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" /></div>
+            </div>
+            <div><label className="block text-sm font-semibold text-slate-700 mb-1">Notes</label><textarea value={nouveauBatiment.notes} onChange={(e) => setNouveauBatiment({ ...nouveauBatiment, notes: e.target.value })} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2} /></div>
+          </div>
+          <div className="p-4 border-t flex justify-end gap-3">
+            <button onClick={() => setShowAjouterBatiment(false)} className="px-6 py-2 border rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={ajouterBatiment} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Ajouter</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // MODAL AJOUTER PROJET
+  const AjouterProjetModal = () => {
+    if (!showAjouterProjet) return null;
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-5 bg-slate-800 text-white rounded-t-2xl"><h2 className="text-xl font-bold">Nouveau projet</h2></div>
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2"><label className="block text-sm font-semibold mb-1">Nom du projet *</label><input type="text" value={nouveauProjet.nom} onChange={(e) => setNouveauProjet({ ...nouveauProjet, nom: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Client *</label><input type="text" value={nouveauProjet.client} onChange={(e) => setNouveauProjet({ ...nouveauProjet, client: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Ville</label><input type="text" value={nouveauProjet.ville} onChange={(e) => setNouveauProjet({ ...nouveauProjet, ville: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Type</label>
+                <select value={nouveauProjet.typeProjet} onChange={(e) => setNouveauProjet({ ...nouveauProjet, typeProjet: e.target.value })} className="w-full px-3 py-2 border rounded-lg">
+                  <option value="Commercial">Commercial</option>
+                  <option value="Multi-phase">Multi-phase</option>
+                </select>
+              </div>
+              <div><label className="block text-sm font-semibold mb-1"># Commande</label><input type="text" value={nouveauProjet.numCommande} onChange={(e) => setNouveauProjet({ ...nouveauProjet, numCommande: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Date début</label><input type="date" value={nouveauProjet.dateDebut} onChange={(e) => setNouveauProjet({ ...nouveauProjet, dateDebut: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Date fin</label><input type="date" value={nouveauProjet.dateFin} onChange={(e) => setNouveauProjet({ ...nouveauProjet, dateFin: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+              <div><label className="block text-sm font-semibold mb-1">Responsable</label><input type="text" value={nouveauProjet.responsable} onChange={(e) => setNouveauProjet({ ...nouveauProjet, responsable: e.target.value })} className="w-full px-3 py-2 border rounded-lg" /></div>
+            </div>
+            <div><label className="block text-sm font-semibold mb-1">Notes</label><textarea value={nouveauProjet.notes} onChange={(e) => setNouveauProjet({ ...nouveauProjet, notes: e.target.value })} className="w-full px-3 py-2 border rounded-lg" rows={2} /></div>
+            <p className="text-sm text-slate-500">Les bâtiments/phases pourront être ajoutés après la création du projet.</p>
+          </div>
+          <div className="p-4 border-t flex justify-end gap-3">
+            <button onClick={() => setShowAjouterProjet(false)} className="px-6 py-2 border rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={ajouterProjet} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Créer le projet</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ============================================================
+  // RENDU PRINCIPAL
+  // ============================================================
+  return (
+    <div className="space-y-4">
+      {/* Modals */}
+      <ProjetDetailModal />
+      <BatimentDetailModal />
+      <ConfirmCompleteModal />
+      <AjouterBatimentModal />
+      <AjouterProjetModal />
+
+      {/* Header */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg"><Icon name="chevron-left" size={28} /></button>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Multi-logements</h1>
+            <p className="text-slate-400 text-sm">Projets commerciaux et multi-phases</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-6 text-white text-sm">
+          <div className="text-right"><p className="text-slate-400">Projets actifs</p><p className="text-2xl font-bold text-amber-400">{totalProjets}</p></div>
+          <div className="text-right"><p className="text-slate-400">Bâtiments</p><p className="text-2xl font-bold text-blue-400">{totalBatimentsCompletes}/{totalBatimentsActifs}</p></div>
+          <div className="text-right"><p className="text-slate-400">Pieds linéaires</p><p className="text-2xl font-bold text-slate-300">{totalPiedsLineaires.toLocaleString()}</p></div>
+        </div>
+      </div>
+
+      {/* Onglets */}
+      <div className="flex items-center justify-between">
+        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl">
+          <button onClick={() => setOnglet('actifs')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'actifs' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            🏗️ Projets actifs ({projets.length})
+          </button>
+          <button onClick={() => setOnglet('historique')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${onglet === 'historique' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+            📋 Historique ({historiqueProj.length})
+          </button>
+        </div>
+        <button onClick={() => setShowAjouterProjet(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow">
+          <Icon name="plus" size={18} />Nouveau projet
+        </button>
+      </div>
+
+      {/* ===== PROJETS ACTIFS ===== */}
+      {onglet === 'actifs' && (
+        <>
+          {/* Sous-filtres par type */}
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex gap-1 bg-white border border-slate-200 p-1 rounded-lg">
+              <button onClick={() => setSousOnglet('tous')} className={`px-3 py-1.5 rounded text-sm font-medium ${sousOnglet === 'tous' ? 'bg-slate-800 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                Tous ({projets.length})
+              </button>
+              <button onClick={() => setSousOnglet('commercial')} className={`px-3 py-1.5 rounded text-sm font-medium ${sousOnglet === 'commercial' ? 'bg-blue-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                Commercial ({projetsCommercial})
+              </button>
+              <button onClick={() => setSousOnglet('multiphase')} className={`px-3 py-1.5 rounded text-sm font-medium ${sousOnglet === 'multiphase' ? 'bg-purple-500 text-white' : 'text-slate-600 hover:bg-slate-50'}`}>
+                Multi-phase ({projetsMultiphase})
+              </button>
+            </div>
+            <input type="text" value={recherche} onChange={(e) => setRecherche(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm flex-1 max-w-xs" placeholder="Rechercher projet, client..." />
+          </div>
+
+          {/* Liste des projets */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {projetsFiltres.map(p => (
+              <CarteProjet key={p.id} projet={p} />
+            ))}
+          </div>
+          {projetsFiltres.length === 0 && (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+              <p className="text-slate-400">Aucun projet trouvé</p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ===== HISTORIQUE ===== */}
+      {onglet === 'historique' && (
+        <>
+          <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200 flex items-center gap-3">
+            <Icon name="check" size={24} className="text-emerald-600" />
+            <div>
+              <p className="font-semibold text-emerald-800">Projets complétés</p>
+              <p className="text-sm text-emerald-600">{historiqueProj.length} projet(s) terminé(s)</p>
+            </div>
+          </div>
+          <input type="text" value={recherche} onChange={(e) => setRecherche(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg text-sm max-w-xs" placeholder="Rechercher..." />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {historiqueFiltree.map(p => (
+              <CarteProjet key={p.id} projet={p} isHistorique />
+            ))}
+          </div>
+          {historiqueFiltree.length === 0 && (
+            <div className="bg-white rounded-2xl p-12 text-center border border-slate-100">
+              <p className="text-slate-400">Aucun projet dans l'historique</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+};
 
   // === ÉCRAN GÉNÉRIQUE ===
   const GenericScreen = ({ title }) => (
@@ -9630,6 +10468,7 @@ const NonConformites = () => {
       </div>
     </div>
   );
+
   // === MODULE REPRISES ===
 // Remplacer le GenericScreen pour 'reprises' dans le router par: case 'reprises': return <Reprises />;
 
