@@ -290,7 +290,6 @@ const [transportForm, setTransportForm] = useState({
     { id: 'achats', icon: 'cart', label: 'Achats' },
     { id: 'rentabilite', icon: 'trend', label: 'Rentabilité' },
     { id: 'attentes', icon: 'alert', label: 'Attentes' },
-    { id: 'delais', icon: 'clock', label: 'Délais de livraison' },
     { id: 'nonconformites', icon: 'alert', label: 'Non-conformités' },
     { id: 'multilogements', icon: 'building', label: 'Multi-logements' },
     { id: 'reprises', icon: 'refresh', label: 'Reprises' },
@@ -6972,137 +6971,879 @@ const Inventaire = () => {
     </div>
   );
 };
+
   // === ACHATS ===
-  const Achats = () => {
-    const [achatsTab, setAchatsTab] = useState('commandes');
-    const [achatsData] = useState([
-      { id: 1, numero: 'PO-2024-001', fournisseur: 'Alu-Québec', date: '2026-01-15', montant: 4500, statut: 'Livrée', items: 'Aluminium 6063-T5 (200 pieds)' },
-      { id: 2, numero: 'PO-2024-002', fournisseur: 'Fasteners Pro', date: '2026-01-18', montant: 850, statut: 'En transit', items: 'Vis inox #10 (5000 unités)' },
-      { id: 3, numero: 'PO-2024-003', fournisseur: 'Rampes Canada', date: '2026-01-20', montant: 2200, statut: 'En attente', items: 'Main courante ronde (100 pieds)' },
-    ]);
+  // === ACHATS & DÉLAIS ===
+const Achats = () => {
+  const [achatsTab, setAchatsTab] = useState('achats');
+  
+  // === ÉTATS ACHATS ===
+  const [filtreClient, setFiltreClient] = useState('');
+  const [filtreStatutAchat, setFiltreStatutAchat] = useState('');
+  const [filtreTypeCommande, setFiltreTypeCommande] = useState('');
+  const [rechercheAchat, setRechercheAchat] = useState('');
+  const [showAjouterAchatModal, setShowAjouterAchatModal] = useState(false);
+  const [showModifierAchatModal, setShowModifierAchatModal] = useState(false);
+  const [achatEnEdition, setAchatEnEdition] = useState(null);
+  
+  const [achatsData, setAchatsData] = useState([
+    { id: 1, numCommande: '250100', client: 'Const. Couture & Tanguay', typeCommande: 'Installation', fournisseur: 'Les Attaches Viscan', article: 'Vis autopercente #14 x 1 1/2"', quantite: 5, unite: 'Boîte de 1000', dateCommande: '2026-01-15', dateLivraisonPrevue: '2026-02-01', montant: 450, statut: 'Livrée', notes: '' },
+    { id: 2, numCommande: '250062-3', client: 'Drolet construction', typeCommande: 'Installation', fournisseur: 'Fonderie Fondalco', article: 'Embout de main classique Blanc', quantite: 20, unite: 'Unité', dateCommande: '2026-01-18', dateLivraisonPrevue: '2026-02-10', montant: 850, statut: 'En transit', notes: 'Attente couleur confirmée' },
+    { id: 3, numCommande: '250187', client: 'Dalcon', typeCommande: 'Installation', fournisseur: 'Euro Architectural Components', article: 'Attache vision bas (Stainless)', quantite: 50, unite: 'Unité', dateCommande: '2026-01-20', dateLivraisonPrevue: '2026-02-15', montant: 2200, statut: 'En attente', notes: 'Commande confirmée' },
+    { id: 4, numCommande: '250205', client: 'Construction ABC', typeCommande: 'Livraison', fournisseur: 'Les Emballages Carrousel', article: 'Pellicule plastique 3" x 1000\'', quantite: 10, unite: 'Rouleau', dateCommande: '2026-01-22', dateLivraisonPrevue: '2026-01-29', montant: 380, statut: 'Livrée', notes: '' },
+    { id: 5, numCommande: '250220', client: 'Résidences du Fleuve', typeCommande: 'Installation', fournisseur: 'Acier Picard', article: 'Aluminium 6063-T5', quantite: 200, unite: 'Pieds', dateCommande: '2026-02-01', dateLivraisonPrevue: '2026-02-20', montant: 4500, statut: 'Commandée', notes: '' },
+    { id: 6, numCommande: '241088', client: 'Les Projets Meraki', typeCommande: 'Installation', fournisseur: 'RICHELIEU', article: 'Bec de cane', quantite: 30, unite: 'Unité', dateCommande: '2026-01-25', dateLivraisonPrevue: '2026-02-05', montant: 1250, statut: 'En transit', notes: 'Livraison partielle possible' },
+    { id: 7, numCommande: '250230', client: 'Habitations Lévis', typeCommande: 'Cueillette', fournisseur: 'Aimé Champagne', article: 'Quincaillerie diverse', quantite: 1, unite: 'Lot', dateCommande: '2026-02-03', dateLivraisonPrevue: '2026-02-05', montant: 650, statut: 'Prête', notes: 'À aller chercher' },
+    { id: 8, numCommande: '250240', client: 'Transport Beaulieu', typeCommande: 'Transport', fournisseur: 'Aluminium PS', article: 'Rampes pré-assemblées', quantite: 15, unite: 'Unité', dateCommande: '2026-02-01', dateLivraisonPrevue: '2026-02-12', montant: 0, statut: 'En attente', notes: 'Transport à planifier' },
+  ]);
+  
+  // Formulaire nouvel achat
+  const [nouvelAchat, setNouvelAchat] = useState({
+    numCommande: '',
+    client: '',
+    typeCommande: 'Installation',
+    fournisseur: '',
+    article: '',
+    quantite: 0,
+    unite: '',
+    dateCommande: new Date().toISOString().split('T')[0],
+    dateLivraisonPrevue: '',
+    montant: 0,
+    statut: 'En attente',
+    notes: ''
+  });
+  
+  // === ÉTATS DÉLAIS ===
+  const [showModifierDelaisModal, setShowModifierDelaisModal] = useState(false);
+  const [showModifierRupturesModal, setShowModifierRupturesModal] = useState(false);
+  const [showConfirmEnvoiDelais, setShowConfirmEnvoiDelais] = useState(false);
+  const [delaiEnEdition, setDelaiEnEdition] = useState(null);
+  const [ruptureEnEdition, setRuptureEnEdition] = useState(null);
+  const [showAjouterRuptureForm, setShowAjouterRuptureForm] = useState(false);
+  const [debutConstruction, setDebutConstruction] = useState('2024-07-22');
+  
+  const [delaisLivraison, setDelaisLivraison] = useState([
+    { id: 1, secteur: 'PRODUCTION D\'ALUMINIUM', delaiSemaines: 2 },
+    { id: 2, secteur: 'PRODUCTION DU VERRE 5-6mm', delaiSemaines: 3 },
+    { id: 3, secteur: 'PRODUCTION DU VERRE 10-12mm', delaiSemaines: 4 },
+    { id: 4, secteur: 'PRODUCTION DU FIBRE', delaiSemaines: 3 },
+    { id: 5, secteur: 'PRODUCTION DE MARCHES DE FIBRE', delaiSemaines: 3 },
+    { id: 6, secteur: 'PRODUCTION DES LIMONS', delaiSemaines: 4 },
+    { id: 7, secteur: 'PRODUCTION DES COLONNES', delaiSemaines: 4 },
+    { id: 8, secteur: 'INSTALLATION (Barrotins)', delaiSemaines: 3 },
+    { id: 9, secteur: 'INSTALLATION (Verres 5-6 mm)', delaiSemaines: 3 },
+    { id: 10, secteur: 'Projet d\'INSTALLATION de 6h et plus (vérifier avec planification)', delaiSemaines: 6 },
+    { id: 11, secteur: 'INSTALLATION (Verres 10-12 mm)', delaiSemaines: 4 },
+  ]);
+  
+  const [rupturesStock, setRupturesStock] = useState([
+    { id: 1, piece: 'Barrotin 3/4"', couleur: 'Noir', dateReception: '2026-02-26' },
+    { id: 2, piece: 'Barrotin 1 3/4"', couleur: 'Noir', dateReception: '2026-02-12' },
+  ]);
+  
+  const [nouvelleRupture, setNouvelleRupture] = useState({ piece: '', couleur: '', dateReception: '' });
+  
+  // === ÉTATS FOURNISSEURS ===
+  const [showAjouterFournisseurModal, setShowAjouterFournisseurModal] = useState(false);
+  const [showModifierFournisseurModal, setShowModifierFournisseurModal] = useState(false);
+  const [fournisseurEnEdition, setFournisseurEnEdition] = useState(null);
+  const [rechercheFournisseur, setRechercheFournisseur] = useState('');
+  
+  const [fournisseursList, setFournisseursList] = useState([
+    { id: 1, nom: 'Acier Picard', adresse: '3000 rue de l\'Etchemin Lévis', codePostal: 'G6W 7X6', ville: 'Lévis', province: 'QC', pays: 'Canada', telephone: '418-834-8300', fax: '', contact: '', email: '', transport: '', delaiMoyen: '5 jours' },
+    { id: 2, nom: 'Aiguisage Rousseau', adresse: '1005, av. Bergeron', codePostal: 'G0S 1Z0', ville: 'St-Agapit', province: 'QC', pays: 'Canada', telephone: '418-888-5646', fax: '418-888-4084', contact: '', email: 'info@aiguisage-rousseau.com', transport: '', delaiMoyen: '3 jours' },
+    { id: 3, nom: 'Aimé Champagne', adresse: '2186, Route Lagueux', codePostal: 'G7A 1A7', ville: 'Lévis', province: 'Québec', pays: 'Canada', telephone: '418-831-9960', fax: '418-831-9358', contact: '', email: '', transport: '', delaiMoyen: '4 jours' },
+    { id: 4, nom: 'Aluminium PS', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: 'Pierre Denis', email: 'pdenis@psaluminium.com', transport: '', delaiMoyen: '7 jours' },
+    { id: 5, nom: 'Les Attaches Viscan', adresse: '123 Rue Industrielle', codePostal: 'G1K 2L3', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-1234', fax: '', contact: 'Marc Simard', email: 'info@viscan.com', transport: '', delaiMoyen: '3 jours' },
+    { id: 6, nom: 'Les Emballages Carrousel', adresse: '456 Boul. Commerce', codePostal: 'G2J 4R5', ville: 'Québec', province: 'QC', pays: 'Canada', telephone: '418-555-5678', fax: '', contact: '', email: 'ventes@carrousel.com', transport: '', delaiMoyen: '2 jours' },
+    { id: 7, nom: 'RICHELIEU', adresse: '7900 Henri-Bourassa', codePostal: 'H1E 1P4', ville: 'Montréal', province: 'QC', pays: 'Canada', telephone: '514-555-9999', fax: '', contact: '', email: '', transport: '', delaiMoyen: '4 jours' },
+    { id: 8, nom: 'Fonderie Fondalco', adresse: '890 Rue Métallurgie', codePostal: 'G3A 2B1', ville: 'Trois-Rivières', province: 'QC', pays: 'Canada', telephone: '819-555-3333', fax: '', contact: 'Jean Laforge', email: 'commandes@fondalco.com', transport: '', delaiMoyen: '5 jours' },
+    { id: 9, nom: 'Euro Architectural Components', adresse: '', codePostal: '', ville: '', province: '', pays: '', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: '10 jours' },
+  ]);
+  
+  const [nouveauFournisseur, setNouveauFournisseur] = useState({
+    nom: '', adresse: '', codePostal: '', ville: '', province: 'QC', pays: 'Canada', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: ''
+  });
+  
+  // Types de commande
+  const typesCommande = ['Installation', 'Livraison', 'Cueillette', 'Transport'];
+  const statutsAchat = ['En attente', 'Commandée', 'En transit', 'Prête', 'Livrée', 'Annulée'];
+  
+  // === FONCTIONS UTILITAIRES ===
+  
+  // Calculer la date de livraison à partir des semaines
+  const calculerDateLivraison = (semaines) => {
+    const aujourd_hui = new Date();
+    const dateLivraison = new Date(aujourd_hui.getTime() + semaines * 7 * 24 * 60 * 60 * 1000);
+    return dateLivraison.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  
+  // Formater date
+  const formaterDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('fr-CA', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+  
+  // Couleur du statut achat
+  const getStatutAchatCouleur = (statut) => {
+    switch(statut) {
+      case 'Livrée': return 'bg-emerald-100 text-emerald-800';
+      case 'En transit': return 'bg-blue-100 text-blue-800';
+      case 'En attente': return 'bg-amber-100 text-amber-800';
+      case 'Commandée': return 'bg-purple-100 text-purple-800';
+      case 'Prête': return 'bg-teal-100 text-teal-800';
+      case 'Annulée': return 'bg-red-100 text-red-800';
+      default: return 'bg-slate-100 text-slate-800';
+    }
+  };
+  
+  // Couleur du type de commande
+  const getTypeCouleur = (type) => {
+    switch(type) {
+      case 'Installation': return 'bg-red-500 text-white';
+      case 'Livraison': return 'bg-blue-500 text-white';
+      case 'Cueillette': return 'bg-yellow-500 text-yellow-900';
+      case 'Transport': return 'bg-slate-600 text-white';
+      default: return 'bg-slate-400 text-white';
+    }
+  };
+  
+  // Filtrer les achats
+  const achatsFiltres = achatsData.filter(achat => {
+    const matchRecherche = !rechercheAchat || 
+      achat.numCommande.toLowerCase().includes(rechercheAchat.toLowerCase()) ||
+      achat.article.toLowerCase().includes(rechercheAchat.toLowerCase()) ||
+      achat.fournisseur.toLowerCase().includes(rechercheAchat.toLowerCase());
+    const matchClient = !filtreClient || achat.client === filtreClient;
+    const matchStatut = !filtreStatutAchat || achat.statut === filtreStatutAchat;
+    const matchType = !filtreTypeCommande || achat.typeCommande === filtreTypeCommande;
+    return matchRecherche && matchClient && matchStatut && matchType;
+  });
+  
+  // Clients uniques
+  const clientsUniques = [...new Set(achatsData.map(a => a.client))].sort();
+  
+  // Statistiques
+  const statsAchats = {
+    enAttente: achatsData.filter(a => a.statut === 'En attente').length,
+    commandees: achatsData.filter(a => a.statut === 'Commandée').length,
+    enTransit: achatsData.filter(a => a.statut === 'En transit').length,
+    livrees: achatsData.filter(a => a.statut === 'Livrée').length,
+    montantTotal: achatsData.reduce((sum, a) => sum + a.montant, 0),
+  };
+  
+  // === CRUD ACHATS ===
+  const ajouterAchat = () => {
+    if (!nouvelAchat.numCommande || !nouvelAchat.fournisseur || !nouvelAchat.article) {
+      alert('Veuillez remplir les champs obligatoires (# Commande, Fournisseur, Article)');
+      return;
+    }
+    const achat = { id: achatsData.length + 1, ...nouvelAchat };
+    setAchatsData([...achatsData, achat]);
+    setNouvelAchat({
+      numCommande: '', client: '', typeCommande: 'Installation', fournisseur: '', article: '',
+      quantite: 0, unite: '', dateCommande: new Date().toISOString().split('T')[0],
+      dateLivraisonPrevue: '', montant: 0, statut: 'En attente', notes: ''
+    });
+    setShowAjouterAchatModal(false);
+  };
+  
+  const modifierAchat = () => {
+    if (!achatEnEdition) return;
+    setAchatsData(achatsData.map(a => a.id === achatEnEdition.id ? achatEnEdition : a));
+    setShowModifierAchatModal(false);
+    setAchatEnEdition(null);
+  };
+  
+  const supprimerAchat = (id) => {
+    if (window.confirm('Supprimer cet achat ?')) {
+      setAchatsData(achatsData.filter(a => a.id !== id));
+    }
+  };
+  
+  // === CRUD FOURNISSEURS ===
+  const ajouterFournisseur = () => {
+    if (!nouveauFournisseur.nom) { alert('Nom requis'); return; }
+    setFournisseursList([...fournisseursList, { id: fournisseursList.length + 1, ...nouveauFournisseur }]);
+    setNouveauFournisseur({ nom: '', adresse: '', codePostal: '', ville: '', province: 'QC', pays: 'Canada', telephone: '', fax: '', contact: '', email: '', transport: '', delaiMoyen: '' });
+    setShowAjouterFournisseurModal(false);
+  };
+  
+  const modifierFournisseur = () => {
+    if (!fournisseurEnEdition) return;
+    setFournisseursList(fournisseursList.map(f => f.id === fournisseurEnEdition.id ? fournisseurEnEdition : f));
+    setShowModifierFournisseurModal(false);
+    setFournisseurEnEdition(null);
+  };
+  
+  const supprimerFournisseur = (id) => {
+    if (window.confirm('Supprimer ce fournisseur ?')) {
+      setFournisseursList(fournisseursList.filter(f => f.id !== id));
+    }
+  };
+  
+  // === DÉLAIS ===
+  const modifierDelai = (id, nouveauDelai) => {
+    setDelaisLivraison(delaisLivraison.map(d => d.id === id ? { ...d, delaiSemaines: parseInt(nouveauDelai) || 0 } : d));
+    setDelaiEnEdition(null);
+  };
+  
+  const ajouterRupture = () => {
+    if (!nouvelleRupture.piece) { alert('Pièce requise'); return; }
+    setRupturesStock([...rupturesStock, { id: rupturesStock.length + 1, ...nouvelleRupture }]);
+    setNouvelleRupture({ piece: '', couleur: '', dateReception: '' });
+    setShowAjouterRuptureForm(false);
+  };
+  
+  const supprimerRupture = (id) => {
+    if (window.confirm('Supprimer cette rupture ?')) {
+      setRupturesStock(rupturesStock.filter(r => r.id !== id));
+    }
+  };
+  
+  const envoyerDelaisParCourriel = () => {
+    let contenu = 'DÉLAIS DE LIVRAISON - Rampes Gardex\n\n';
+    delaisLivraison.forEach(d => {
+      contenu += `${d.secteur}: ${d.delaiSemaines} semaines (${calculerDateLivraison(d.delaiSemaines)})\n`;
+    });
+    if (rupturesStock.length > 0) {
+      contenu += '\n\nRUPTURES DE STOCK:\n';
+      rupturesStock.forEach(r => {
+        contenu += `${r.piece} (${r.couleur}) - Réception prévue: ${formaterDate(r.dateReception)}\n`;
+      });
+    }
+    console.log('📧 Envoi courriel délais:', contenu);
+    alert('✅ Liste des délais envoyée par courriel avec succès!');
+    setShowConfirmEnvoiDelais(false);
+  };
 
-    const [fournisseurs] = useState([
-      { id: 1, nom: 'Alu-Québec', contact: 'Martin Gagnon', telephone: '514-555-1000', email: 'martin@alu-quebec.ca', delaiMoyen: '5 jours' },
-      { id: 2, nom: 'Fasteners Pro', contact: 'Sophie Lavoie', telephone: '450-555-2000', email: 'sophie@fastenerspro.ca', delaiMoyen: '3 jours' },
-      { id: 3, nom: 'Rampes Canada', contact: 'Pierre Tremblay', telephone: '514-555-3000', email: 'pierre@rampescanada.ca', delaiMoyen: '7 jours' },
-    ]);
-
+  // =============================================
+  // === MODAL AJOUTER / MODIFIER ACHAT ===
+  // =============================================
+  const AchatFormModal = ({ show, onClose, achat, setAchat, onSave, titre }) => {
+    if (!show || !achat) return null;
+    
     return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-800">Achats</h1>
-            <p className="text-slate-500 mt-1">Gestion des commandes fournisseurs</p>
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-slate-200 bg-slate-800 text-white rounded-t-2xl">
+            <h2 className="text-xl font-bold">{titre}</h2>
           </div>
-          <button className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2 shadow-lg">
-            <Icon name="plus" size={20}/>Nouvelle commande
-          </button>
-        </div>
-
-        {/* Onglets */}
-        <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
-          <button onClick={() => setAchatsTab('commandes')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'commandes' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            Commandes fournisseurs
-          </button>
-          <button onClick={() => setAchatsTab('fournisseurs')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'fournisseurs' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
-            Fournisseurs
-          </button>
-        </div>
-
-        {/* COMMANDES FOURNISSEURS */}
-        {achatsTab === 'commandes' && (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-white p-4 rounded-xl border border-slate-100">
-                <p className="text-sm text-slate-500">En attente</p>
-                <p className="text-2xl font-bold text-amber-600 mt-1">{achatsData.filter(a => a.statut === 'En attente').length}</p>
+          
+          <div className="p-6 space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1"># Commande *</label>
+                <input type="text" value={achat.numCommande} onChange={(e) => setAchat({...achat, numCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
-              <div className="bg-white p-4 rounded-xl border border-blue-100">
-                <p className="text-sm text-slate-500">En transit</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{achatsData.filter(a => a.statut === 'En transit').length}</p>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Client</label>
+                <input type="text" value={achat.client} onChange={(e) => setAchat({...achat, client: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
               </div>
-              <div className="bg-white p-4 rounded-xl border border-emerald-100">
-                <p className="text-sm text-slate-500">Livrées ce mois</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">{achatsData.filter(a => a.statut === 'Livrée').length}</p>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Type de commande</label>
+                <select value={achat.typeCommande} onChange={(e) => setAchat({...achat, typeCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  {typesCommande.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Fournisseur *</label>
+                <select value={achat.fournisseur} onChange={(e) => setAchat({...achat, fournisseur: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  <option value="">Sélectionner...</option>
+                  {fournisseursList.map(f => <option key={f.id} value={f.nom}>{f.nom}</option>)}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Article *</label>
+                <input type="text" value={achat.article} onChange={(e) => setAchat({...achat, article: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Quantité</label>
+                <input type="number" value={achat.quantite} onChange={(e) => setAchat({...achat, quantite: parseInt(e.target.value) || 0})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Unité</label>
+                <input type="text" value={achat.unite} onChange={(e) => setAchat({...achat, unite: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date commande</label>
+                <input type="date" value={achat.dateCommande} onChange={(e) => setAchat({...achat, dateCommande: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Date livraison prévue</label>
+                <input type="date" value={achat.dateLivraisonPrevue} onChange={(e) => setAchat({...achat, dateLivraisonPrevue: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Montant ($)</label>
+                <input type="number" step="0.01" value={achat.montant} onChange={(e) => setAchat({...achat, montant: parseFloat(e.target.value) || 0})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Statut</label>
+                <select value={achat.statut} onChange={(e) => setAchat({...achat, statut: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg">
+                  {statutsAchat.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Notes</label>
+                <textarea value={achat.notes} onChange={(e) => setAchat({...achat, notes: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" rows={2}/>
               </div>
             </div>
+          </div>
+          
+          <div className="p-4 border-t border-slate-200 flex justify-end gap-3">
+            <button onClick={onClose} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={onSave} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-slate-50">
+  // =============================================
+  // === MODAL FOURNISSEUR (AJOUT / MODIF) ===
+  // =============================================
+  const FournisseurFormModal = ({ show, onClose, fournisseur, setFournisseur, onSave, titre }) => {
+    if (!show || !fournisseur) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="p-6 border-b border-slate-200 bg-slate-800 text-white rounded-t-2xl">
+            <h2 className="text-xl font-bold">{titre}</h2>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Nom *</label>
+                <input type="text" value={fournisseur.nom} onChange={(e) => setFournisseur({...fournisseur, nom: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div className="col-span-2">
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Adresse</label>
+                <input type="text" value={fournisseur.adresse} onChange={(e) => setFournisseur({...fournisseur, adresse: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Ville</label>
+                <input type="text" value={fournisseur.ville} onChange={(e) => setFournisseur({...fournisseur, ville: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Province</label>
+                <input type="text" value={fournisseur.province} onChange={(e) => setFournisseur({...fournisseur, province: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Code Postal</label>
+                <input type="text" value={fournisseur.codePostal} onChange={(e) => setFournisseur({...fournisseur, codePostal: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Pays</label>
+                <input type="text" value={fournisseur.pays} onChange={(e) => setFournisseur({...fournisseur, pays: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Téléphone</label>
+                <input type="tel" value={fournisseur.telephone} onChange={(e) => setFournisseur({...fournisseur, telephone: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Fax</label>
+                <input type="tel" value={fournisseur.fax} onChange={(e) => setFournisseur({...fournisseur, fax: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Contact</label>
+                <input type="text" value={fournisseur.contact} onChange={(e) => setFournisseur({...fournisseur, contact: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                <input type="email" value={fournisseur.email} onChange={(e) => setFournisseur({...fournisseur, email: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Transport</label>
+                <input type="text" value={fournisseur.transport} onChange={(e) => setFournisseur({...fournisseur, transport: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Délai moyen</label>
+                <input type="text" value={fournisseur.delaiMoyen} onChange={(e) => setFournisseur({...fournisseur, delaiMoyen: e.target.value})} className="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="ex: 5 jours" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-4 border-t border-slate-200 flex justify-end gap-3">
+            <button onClick={onClose} className="px-6 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">Annuler</button>
+            <button onClick={onSave} className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg">Enregistrer</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =============================================
+  // === MODAL MODIFIER DÉLAIS ===
+  // =============================================
+  const ModifierDelaisModal = () => {
+    if (!showModifierDelaisModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-center text-blue-600 underline mb-6">Modification des délais</h2>
+            
+            <div className="bg-white rounded-lg overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-200">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">N° Commande</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fournisseur</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Articles</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Date</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Montant</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Statut</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                    <th className="px-4 py-3 text-center text-blue-600">Secteur</th>
+                    <th className="px-4 py-3 text-center text-blue-600">Nombre de<br/>semaines</th>
+                    <th className="px-4 py-3 text-center w-16"></th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {achatsData.map(achat => (
-                    <tr key={achat.id} className="hover:bg-slate-50">
-                      <td className="px-6 py-4 font-mono font-semibold text-slate-800">{achat.numero}</td>
-                      <td className="px-6 py-4 text-slate-700">{achat.fournisseur}</td>
-                      <td className="px-6 py-4 text-slate-600 text-sm">{achat.items}</td>
-                      <td className="px-6 py-4 text-slate-600">{achat.date}</td>
-                      <td className="px-6 py-4 font-medium text-slate-800">{achat.montant.toLocaleString()} $</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${achat.statut === 'Livrée' ? 'bg-emerald-100 text-emerald-800' : achat.statut === 'En transit' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'}`}>
-                          {achat.statut}
-                        </span>
+                <tbody className="divide-y divide-slate-200">
+                  {delaisLivraison.map((delai, index) => (
+                    <tr key={delai.id} className={index % 2 === 0 ? 'bg-slate-100' : 'bg-white'}>
+                      <td className="px-4 py-3 font-semibold text-center">{delai.secteur}</td>
+                      <td className="px-4 py-3 text-center">
+                        {delaiEnEdition === delai.id ? (
+                          <input 
+                            type="number"
+                            defaultValue={delai.delaiSemaines}
+                            min="0"
+                            className="w-20 px-2 py-1 border rounded text-center mx-auto"
+                            onBlur={(e) => modifierDelai(delai.id, e.target.value)}
+                            onKeyDown={(e) => { if (e.key === 'Enter') modifierDelai(delai.id, e.target.value); }}
+                            autoFocus
+                          />
+                        ) : (
+                          <span className="text-xl font-bold">{delai.delaiSemaines}</span>
+                        )}
                       </td>
-                      <td className="px-6 py-4">
-                        <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
+                      <td className="px-4 py-3 text-center">
+                        <button 
+                          onClick={() => setDelaiEnEdition(delai.id)}
+                          className="text-blue-500 hover:text-blue-700"
+                        >
+                          <Icon name="edit" size={20}/>
+                        </button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          </>
-        )}
+          </div>
+          
+          <div className="p-4 flex justify-center">
+            <button onClick={() => { setShowModifierDelaisModal(false); setDelaiEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
+              Sortir
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-        {/* FOURNISSEURS */}
-        {achatsTab === 'fournisseurs' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-slate-50">
+  // =============================================
+  // === MODAL MODIFIER RUPTURES DE STOCK ===
+  // =============================================
+  const ModifierRupturesModal = () => {
+    if (!showModifierRupturesModal) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="p-6">
+            <h2 className="text-3xl font-bold text-center text-blue-600 underline mb-6">Modification des ruptures de stock</h2>
+            
+            <div className="bg-white rounded-lg overflow-hidden mb-4">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 text-center text-blue-600">Pièces</th>
+                    <th className="px-4 py-3 text-center text-blue-600">Couleur</th>
+                    <th className="px-4 py-3 text-center text-blue-600">Date de réception</th>
+                    <th className="px-4 py-3 text-center w-24"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {rupturesStock.map(rupture => (
+                    <tr key={rupture.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3">
+                        {ruptureEnEdition === rupture.id ? (
+                          <input type="text" defaultValue={rupture.piece} className="w-full px-2 py-1 border rounded"
+                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, piece: e.target.value} : r)); }}
+                          />
+                        ) : rupture.piece}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {ruptureEnEdition === rupture.id ? (
+                          <input type="text" defaultValue={rupture.couleur} className="w-full px-2 py-1 border rounded"
+                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, couleur: e.target.value} : r)); }}
+                          />
+                        ) : rupture.couleur}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {ruptureEnEdition === rupture.id ? (
+                          <input type="date" defaultValue={rupture.dateReception} className="px-2 py-1 border rounded"
+                            onBlur={(e) => { setRupturesStock(rupturesStock.map(r => r.id === rupture.id ? {...r, dateReception: e.target.value} : r)); }}
+                          />
+                        ) : formaterDate(rupture.dateReception)}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex gap-1 justify-center">
+                          <button onClick={() => setRuptureEnEdition(ruptureEnEdition === rupture.id ? null : rupture.id)} className="text-blue-500 hover:text-blue-700">
+                            <Icon name="edit" size={18}/>
+                          </button>
+                          <button onClick={() => supprimerRupture(rupture.id)} className="text-red-500 hover:text-red-700">
+                            <Icon name="trash" size={18}/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Formulaire ajout rupture */}
+            {showAjouterRuptureForm && (
+              <div className="bg-white rounded-lg p-4 mb-4 border-2 border-blue-300">
+                <h4 className="font-semibold text-slate-700 mb-3">Nouvelle rupture</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  <input type="text" placeholder="Pièce" value={nouvelleRupture.piece} onChange={(e) => setNouvelleRupture({...nouvelleRupture, piece: e.target.value})} className="px-3 py-2 border rounded-lg" />
+                  <input type="text" placeholder="Couleur" value={nouvelleRupture.couleur} onChange={(e) => setNouvelleRupture({...nouvelleRupture, couleur: e.target.value})} className="px-3 py-2 border rounded-lg" />
+                  <input type="date" value={nouvelleRupture.dateReception} onChange={(e) => setNouvelleRupture({...nouvelleRupture, dateReception: e.target.value})} className="px-3 py-2 border rounded-lg" />
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button onClick={ajouterRupture} className="px-4 py-2 bg-emerald-500 text-white rounded-lg">Ajouter</button>
+                  <button onClick={() => setShowAjouterRuptureForm(false)} className="px-4 py-2 border rounded-lg">Annuler</button>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <div className="p-4 flex justify-center gap-4">
+            <button onClick={() => { setShowModifierRupturesModal(false); setRuptureEnEdition(null); }} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
+              Sortir
+            </button>
+            <button onClick={() => setShowAjouterRuptureForm(true)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white text-xl font-semibold rounded-lg">
+              Ajouter Rupture
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // === MODAL CONFIRMER ENVOI DÉLAIS ===
+  const ConfirmEnvoiDelaisModal = () => {
+    if (!showConfirmEnvoiDelais) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-300 rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+          <p className="text-lg font-bold text-slate-800 mb-6">Confirmer l'envoi de la liste des délais</p>
+          <div className="flex justify-center gap-6">
+            <button onClick={envoyerDelaisParCourriel} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">
+              Confirmer
+            </button>
+            <button onClick={() => setShowConfirmEnvoiDelais(false)} className="px-10 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-lg">
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // =============================================
+  // === RENDU PRINCIPAL ===
+  // =============================================
+  return (
+    <div className="space-y-4">
+      {/* Modals */}
+      <AchatFormModal show={showAjouterAchatModal} onClose={() => setShowAjouterAchatModal(false)} achat={nouvelAchat} setAchat={setNouvelAchat} onSave={ajouterAchat} titre="Nouvel achat" />
+      <AchatFormModal show={showModifierAchatModal} onClose={() => { setShowModifierAchatModal(false); setAchatEnEdition(null); }} achat={achatEnEdition} setAchat={setAchatEnEdition} onSave={modifierAchat} titre="Modifier l'achat" />
+      <FournisseurFormModal show={showAjouterFournisseurModal} onClose={() => setShowAjouterFournisseurModal(false)} fournisseur={nouveauFournisseur} setFournisseur={setNouveauFournisseur} onSave={ajouterFournisseur} titre="Ajouter un fournisseur" />
+      <FournisseurFormModal show={showModifierFournisseurModal} onClose={() => { setShowModifierFournisseurModal(false); setFournisseurEnEdition(null); }} fournisseur={fournisseurEnEdition} setFournisseur={setFournisseurEnEdition} onSave={modifierFournisseur} titre="Modifier le fournisseur" />
+      <ModifierDelaisModal />
+      <ModifierRupturesModal />
+      <ConfirmEnvoiDelaisModal />
+
+      {/* Header */}
+      <div className="bg-slate-800 rounded-2xl p-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button className="p-2 text-white hover:bg-slate-700 rounded-lg">
+            <Icon name="chevron-left" size={28}/>
+          </button>
+          <h1 className="text-2xl font-bold text-white">Achats & Délais</h1>
+        </div>
+      </div>
+
+      {/* Onglets */}
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+        <button onClick={() => setAchatsTab('achats')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'achats' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          📦 Achats ({achatsData.length})
+        </button>
+        <button onClick={() => setAchatsTab('delais')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'delais' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          🕐 Délais de livraison
+        </button>
+        <button onClick={() => setAchatsTab('fournisseurs')} className={`px-5 py-2.5 rounded-lg font-medium transition-all ${achatsTab === 'fournisseurs' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-600'}`}>
+          🏭 Fournisseurs ({fournisseursList.length})
+        </button>
+      </div>
+
+      {/* ===================================== */}
+      {/* ONGLET ACHATS */}
+      {/* ===================================== */}
+      {achatsTab === 'achats' && (
+        <>
+          {/* Statistiques */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <div className="bg-white p-4 rounded-xl border border-amber-200">
+              <p className="text-xs text-slate-500">En attente</p>
+              <p className="text-2xl font-bold text-amber-600">{statsAchats.enAttente}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-purple-200">
+              <p className="text-xs text-slate-500">Commandées</p>
+              <p className="text-2xl font-bold text-purple-600">{statsAchats.commandees}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-blue-200">
+              <p className="text-xs text-slate-500">En transit</p>
+              <p className="text-2xl font-bold text-blue-600">{statsAchats.enTransit}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-emerald-200">
+              <p className="text-xs text-slate-500">Livrées</p>
+              <p className="text-2xl font-bold text-emerald-600">{statsAchats.livrees}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-slate-200">
+              <p className="text-xs text-slate-500">Montant total</p>
+              <p className="text-2xl font-bold text-slate-800">{statsAchats.montantTotal.toLocaleString()} $</p>
+            </div>
+          </div>
+
+          {/* Filtres et bouton ajout */}
+          <div className="bg-white rounded-xl p-4 border border-slate-200 flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px]">
+              <label className="block text-xs text-slate-500 mb-1">Recherche</label>
+              <input type="text" value={rechercheAchat} onChange={(e) => setRechercheAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="# commande, article, fournisseur..." />
+            </div>
+            <div className="min-w-[160px]">
+              <label className="block text-xs text-slate-500 mb-1">Client</label>
+              <select value={filtreClient} onChange={(e) => setFiltreClient(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous les clients</option>
+                {clientsUniques.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[140px]">
+              <label className="block text-xs text-slate-500 mb-1">Statut</label>
+              <select value={filtreStatutAchat} onChange={(e) => setFiltreStatutAchat(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous les statuts</option>
+                {statutsAchat.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="min-w-[140px]">
+              <label className="block text-xs text-slate-500 mb-1">Type</label>
+              <select value={filtreTypeCommande} onChange={(e) => setFiltreTypeCommande(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm">
+                <option value="">Tous les types</option>
+                {typesCommande.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <button onClick={() => setShowAjouterAchatModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow">
+              <Icon name="plus" size={18}/>Nouvel achat
+            </button>
+          </div>
+
+          {/* Tableau des achats */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-800 text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left"># Commande</th>
+                    <th className="px-4 py-3 text-left">Client</th>
+                    <th className="px-4 py-3 text-center">Type</th>
+                    <th className="px-4 py-3 text-left">Fournisseur</th>
+                    <th className="px-4 py-3 text-left">Article</th>
+                    <th className="px-4 py-3 text-center">Qté</th>
+                    <th className="px-4 py-3 text-center">Date commande</th>
+                    <th className="px-4 py-3 text-center">Livraison prévue</th>
+                    <th className="px-4 py-3 text-right">Montant</th>
+                    <th className="px-4 py-3 text-center">Statut</th>
+                    <th className="px-4 py-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {achatsFiltres.map((achat, index) => (
+                    <tr key={achat.id} className={`hover:bg-slate-50 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}>
+                      <td className="px-4 py-3 font-bold text-slate-800">{achat.numCommande}</td>
+                      <td className="px-4 py-3 text-slate-600">{achat.client}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${getTypeCouleur(achat.typeCommande)}`}>{achat.typeCommande}</span>
+                      </td>
+                      <td className="px-4 py-3 text-slate-600">{achat.fournisseur}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        <p>{achat.article}</p>
+                        {achat.notes && <p className="text-xs text-slate-400 mt-0.5">{achat.notes}</p>}
+                      </td>
+                      <td className="px-4 py-3 text-center font-semibold">{achat.quantite} {achat.unite}</td>
+                      <td className="px-4 py-3 text-center text-slate-600">{achat.dateCommande}</td>
+                      <td className="px-4 py-3 text-center text-slate-600">{achat.dateLivraisonPrevue}</td>
+                      <td className="px-4 py-3 text-right font-semibold">{achat.montant > 0 ? `${achat.montant.toLocaleString()} $` : '-'}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatutAchatCouleur(achat.statut)}`}>{achat.statut}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex gap-1 justify-center">
+                          <button onClick={() => { setAchatEnEdition({...achat}); setShowModifierAchatModal(true); }} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded" title="Modifier">
+                            <Icon name="edit" size={16}/>
+                          </button>
+                          <button onClick={() => supprimerAchat(achat.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded" title="Supprimer">
+                            <Icon name="trash" size={16}/>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {achatsFiltres.length === 0 && (
+              <div className="p-12 text-center text-slate-400">Aucun achat trouvé</div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ===================================== */}
+      {/* ONGLET DÉLAIS DE LIVRAISON */}
+      {/* ===================================== */}
+      {achatsTab === 'delais' && (
+        <>
+          {/* Boutons d'action */}
+          <div className="flex justify-end gap-3">
+            <button onClick={() => setShowModifierDelaisModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium">
+              <Icon name="clock" size={18}/>Modifier délai semaines
+            </button>
+            <button onClick={() => setShowModifierRupturesModal(true)} className="px-4 py-2 bg-white border border-slate-300 rounded-lg flex items-center gap-2 hover:bg-slate-50 text-sm font-medium">
+              <Icon name="file" size={18}/>Modifier ruptures de stock
+            </button>
+            <button onClick={() => setShowConfirmEnvoiDelais(true)} className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg flex items-center gap-2 text-sm font-medium">
+              <Icon name="mail" size={18}/>Envoi par courriel
+            </button>
+          </div>
+
+          {/* Tableau des délais */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Fournisseur</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Contact</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Téléphone</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Courriel</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Délai moyen</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase">Actions</th>
+                  <th className="px-6 py-3 text-left font-semibold text-slate-700 underline text-lg">Secteur</th>
+                  <th className="px-6 py-3 text-center font-semibold text-slate-700 underline text-lg" colSpan={2}>Délai</th>
+                  <th className="px-6 py-3 text-center font-semibold text-blue-600 underline text-lg">Date de livraison</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {fournisseurs.map(f => (
-                  <tr key={f.id} className="hover:bg-slate-50">
-                    <td className="px-6 py-4 font-semibold text-slate-800">{f.nom}</td>
-                    <td className="px-6 py-4 text-slate-600">{f.contact}</td>
-                    <td className="px-6 py-4 text-slate-600">{f.telephone}</td>
-                    <td className="px-6 py-4 text-slate-600">{f.email}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm">{f.delaiMoyen}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex gap-2">
-                        <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
-                        <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg"><Icon name="cart" size={18}/></button>
-                      </div>
-                    </td>
+                {delaisLivraison.map((delai, index) => (
+                  <tr key={delai.id} className={index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
+                    <td className="px-6 py-3 font-semibold text-slate-800">{delai.secteur}</td>
+                    <td className="px-4 py-3 text-right font-bold text-lg">{delai.delaiSemaines}</td>
+                    <td className="px-4 py-3 text-left text-slate-600 font-semibold">SEMAINES</td>
+                    <td className="px-6 py-3 text-center font-medium text-slate-700">{calculerDateLivraison(delai.delaiSemaines)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </div>
-    );
-  };
+
+          {/* Date début construction */}
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-slate-600">Début semaine de la construction:</span>
+            <input type="date" value={debutConstruction} onChange={(e) => setDebutConstruction(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg" />
+          </div>
+
+          {/* Ruptures de stock */}
+          {rupturesStock.length > 0 && (
+            <div>
+              <h3 className="text-2xl font-bold text-center text-slate-800 underline mb-4">Rupture de stock</h3>
+              <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-slate-200">
+                    {rupturesStock.map(rupture => (
+                      <tr key={rupture.id} className="hover:bg-slate-50">
+                        <td className="px-6 py-3 font-semibold">{rupture.piece}</td>
+                        <td className="px-6 py-3 text-center text-slate-600">{rupture.couleur}</td>
+                        <td className="px-6 py-3 text-center">
+                          <span className="bg-slate-100 px-3 py-1 rounded">{formaterDate(rupture.dateReception)}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ===================================== */}
+      {/* ONGLET FOURNISSEURS */}
+      {/* ===================================== */}
+      {achatsTab === 'fournisseurs' && (
+        <>
+          {/* Barre de recherche et ajout */}
+          <div className="flex items-center justify-between gap-4">
+            <input type="text" value={rechercheFournisseur} onChange={(e) => setRechercheFournisseur(e.target.value)} className="px-4 py-2 border border-slate-300 rounded-lg w-full max-w-md" placeholder="Rechercher un fournisseur..." />
+            <button onClick={() => setShowAjouterFournisseurModal(true)} className="px-5 py-2 bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-900 font-semibold rounded-lg flex items-center gap-2 shadow whitespace-nowrap">
+              <Icon name="plus" size={18}/>Ajouter un fournisseur
+            </button>
+          </div>
+
+          {/* Tableau des fournisseurs */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-800 text-white">
+                  <tr>
+                    <th className="px-4 py-3 text-left">Fournisseur</th>
+                    <th className="px-4 py-3 text-left">Adresse</th>
+                    <th className="px-4 py-3 text-center">Ville</th>
+                    <th className="px-4 py-3 text-center">Téléphone</th>
+                    <th className="px-4 py-3 text-center">Contact</th>
+                    <th className="px-4 py-3 text-center">Email</th>
+                    <th className="px-4 py-3 text-center">Délai moyen</th>
+                    <th className="px-4 py-3 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {fournisseursList
+                    .filter(f => !rechercheFournisseur || f.nom.toLowerCase().includes(rechercheFournisseur.toLowerCase()))
+                    .map((f, index) => (
+                    <tr key={f.id} className={`hover:bg-slate-50 ${index % 2 === 0 ? 'bg-white' : 'bg-sky-50'}`}>
+                      <td className="px-4 py-3 font-bold text-slate-800">{f.nom}</td>
+                      <td className="px-4 py-3 text-slate-600 text-xs">{f.adresse}</td>
+                      <td className="px-4 py-3 text-center text-slate-600">{f.ville}</td>
+                      <td className="px-4 py-3 text-center text-slate-600">{f.telephone}</td>
+                      <td className="px-4 py-3 text-center text-slate-600">{f.contact}</td>
+                      <td className="px-4 py-3 text-center text-slate-600 text-xs">{f.email}</td>
+                      <td className="px-4 py-3 text-center">
+                        {f.delaiMoyen && <span className="px-3 py-1 bg-slate-100 rounded-full text-xs">{f.delaiMoyen}</span>}
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="flex gap-1 justify-center">
+                          <button onClick={() => { setFournisseurEnEdition({...f}); setShowModifierFournisseurModal(true); }} className="px-3 py-1 bg-blue-500 text-white text-xs rounded">Modifier</button>
+                          <button onClick={() => supprimerFournisseur(f.id)} className="px-3 py-1 bg-red-500 text-white text-xs rounded">Supprimer</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
   // === RENTABILITÉ ===
 // === RENTABILITÉ DES INSTALLATIONS ===
@@ -8467,46 +9208,7 @@ const Attentes = () => {
   );
 };
 
-  // === DÉLAIS ===
-  const Delais = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Délais de livraison</h1>
-          <p className="text-slate-500 mt-1">Suivi des retards fournisseurs</p>
-        </div>
-        <div className="flex items-center gap-2 text-sm text-slate-500">
-          <Icon name="mail" size={16}/>Notification automatique aux représentants
-        </div>
-      </div>
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 divide-y divide-slate-100">
-        {delais.map(item => (
-          <div key={item.id} className="p-6">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-800">{item.produit}</p>
-                <p className="text-slate-500">{item.fournisseur}</p>
-                <p className="text-sm text-red-600 mt-2">{item.raison}</p>
-              </div>
-              <div className="flex items-center gap-6">
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Délai initial</p>
-                  <p className="font-medium text-slate-800 line-through">{item.delaiInitial}</p>
-                </div>
-                <div className="text-2xl text-slate-300">→</div>
-                <div className="text-center">
-                  <p className="text-xs text-slate-500">Nouveau délai</p>
-                  <p className="font-medium text-red-600">{item.nouveauDelai}</p>
-                </div>
-                <button className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><Icon name="edit" size={18}/></button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-  
+
 
   // === NON-CONFORMITÉS ===
 
@@ -8784,7 +9486,6 @@ const NonConformites = () => {
       case 'achats': return <Achats />;
       case 'rentabilite': return <Rentabilite />;
       case 'attentes': return <Attentes />;
-      case 'delais': return <Delais />;
       case 'nonconformites': return <NonConformites />;
       case 'multilogements': return <MultiLogements />;
       default: return <GenericScreen title={menuItems.find(m => m.id === currentScreen)?.label || 'Module'} />;
